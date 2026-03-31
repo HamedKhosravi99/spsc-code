@@ -2,6 +2,9 @@
 *.npz
 *.png
 
+# But include Paper figures for submission
+!Paper/*.png
+
 # Python
 __pycache__/
 *.pyc
