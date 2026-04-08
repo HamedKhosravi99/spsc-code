@@ -1,43 +1,37 @@
 """
-Statlog Shuttle *real-data-calibrated* bandit environment.
+Forest Covertype *real-data-calibrated* bandit environment (variable d).
 
-Uses the Statlog Shuttle dataset (58K samples, 9 features, 7 classes).
-All parameters derived from real data:
-  - Features: 9 original + 36 pairwise interactions = d=45
-  - theta_k: per-segment OLS fit of features -> class labels
-  - Segments: data sorted by feature 1 (time-like) creates non-stationarity
-  - Low-rank: few latent sensor modes -> documented r=2-3
-
-Data auto-downloaded via sklearn/OpenML.
+UCI Forest Covertype (581K samples, 54 features, 7 cover types).
+Supports target d by truncating or augmenting with pairwise interactions.
 """
 
 import numpy as np
-from sklearn.datasets import fetch_openml
+from sklearn.datasets import fetch_covtype
 from sklearn.preprocessing import StandardScaler
 
 
-class RealShuttleEnvironment:
+class RealCovtypeEnvironmentV2:
     """
-    Real-data-calibrated Shuttle bandit.
+    Real-data-calibrated Covertype bandit with configurable d.
 
-    Segments created by sorting data by primary feature.
-    theta_k = per-segment OLS of features -> class labels.
-    Reward follows paper's linear model: y = x^T theta_t + eps.
+    d <= 54: truncate standardized features.
+    d > 54: augment with pairwise interactions of first 10 quantitative features.
     """
 
     def __init__(
         self,
-        r: int = 2,
+        d: int = 55,
+        r: int = 3,
         n_actions: int = 40,
-        segment_size: int = 1000,
-        n_segments: int = 20,
+        segment_size: int = 500,
+        n_segments: int = 10,
         seed: int = 42,
     ):
         self.r = r
         self.n_actions = n_actions
         self.rng = np.random.default_rng(seed)
 
-        self._load_and_prepare_data()
+        self._load_and_prepare_data(d)
         self._build_segments(segment_size, n_segments)
         self._build_theta_and_subspaces()
 
@@ -47,35 +41,46 @@ class RealShuttleEnvironment:
         self.spectral_radius = 0.0
         self.sigma_eta = 0.0
 
-    def _load_and_prepare_data(self):
-        """Load Shuttle, build rich features with interactions."""
-        data = fetch_openml('shuttle', version=1, as_frame=False, parser='auto')
-        X_raw = data.data.astype(float)
-        y_raw = data.target.astype(float)
+    def _load_and_prepare_data(self, target_d):
+        X_raw, y_raw = fetch_covtype(return_X_y=True)
 
-        # Standardize
+        # Standardize all 54 features
         scaler = StandardScaler()
-        X_std = scaler.fit_transform(X_raw)
+        X_std = scaler.fit_transform(X_raw[:, :54].astype(float))
+        d_raw = X_std.shape[1]  # 54
 
-        # Pairwise interactions: 9*8/2 = 36 features
-        n_orig = X_std.shape[1]
-        interactions = []
-        for i in range(n_orig):
-            for j in range(i + 1, n_orig):
-                interactions.append(X_std[:, i] * X_std[:, j])
-        X_inter = np.column_stack(interactions)
+        if target_d <= d_raw:
+            X_full = X_std[:, :target_d]
+        else:
+            # Add pairwise interactions of first 10 quantitative features
+            X_quant = X_std[:, :10]
+            interactions = []
+            for i in range(10):
+                for j in range(i + 1, 10):
+                    interactions.append(X_quant[:, i] * X_quant[:, j])
+            X_inter = np.column_stack(interactions)  # 45 interactions
+            X_pool = np.hstack([X_std, X_inter])  # 54 + 45 = 99
 
-        # Full: 9 + 36 = 45 features
-        X_full = np.hstack([X_std, X_inter])
+            if target_d <= X_pool.shape[1]:
+                X_full = X_pool[:, :target_d]
+            else:
+                # Add more: pairwise of all 54 (capped)
+                more = []
+                for i in range(min(d_raw, 20)):
+                    for j in range(i + 1, min(d_raw, 20)):
+                        more.append(X_std[:, i] * X_std[:, j])
+                X_more = np.column_stack(more)
+                X_pool2 = np.hstack([X_pool, X_more])
+                X_full = X_pool2[:, :target_d]
 
         # Normalize to unit norm
         norms = np.linalg.norm(X_full, axis=1, keepdims=True)
         X_full /= np.maximum(norms, 1e-8)
 
-        # Sort by first feature to create non-stationarity
+        # Sort by elevation (column 0 of raw data) for non-stationarity
         sort_idx = np.argsort(X_raw[:, 0])
         self._features = X_full[sort_idx]
-        self._labels = (y_raw[sort_idx] - y_raw.mean())  # center
+        self._labels = (y_raw[sort_idx].astype(float) - 4.0)
         self.d = X_full.shape[1]
         self._n_total = len(self._features)
 
@@ -122,8 +127,9 @@ class RealShuttleEnvironment:
             residuals.extend(resid.tolist())
             self.theta[s:e] = theta_k[np.newaxis, :]
 
-            W = np.diag(np.abs(y_k[:min(len(y_k), 500)]) + 0.1)
-            X_sub = X_k[:min(len(y_k), 500)]
+            n_sub = min(len(y_k), 500)
+            W = np.diag(np.abs(y_k[:n_sub]) + 0.1)
+            X_sub = X_k[:n_sub]
             _, _, Vt = np.linalg.svd(W @ X_sub, full_matrices=False)
             B_k = Vt[:self.r].T
             Q, _ = np.linalg.qr(
@@ -135,11 +141,7 @@ class RealShuttleEnvironment:
         self.sigma_eps = float(np.std(residuals))
         self.S = float(np.max(np.linalg.norm(self.theta, axis=1)))
 
-    # ------------------------------------------------------------------
-    # Per-round interface
-    # ------------------------------------------------------------------
-
-    def get_action_set(self, t: int, rng=None):
+    def get_action_set(self, t, rng=None):
         _rng = rng if rng is not None else self.rng
         k = self.seg_of[t]
         s = self.tau[k]
@@ -148,32 +150,19 @@ class RealShuttleEnvironment:
         chosen = _rng.choice(e - s, size=n, replace=False) + s
         return self._seg_features[chosen]
 
-    def step(self, action: np.ndarray, t: int) -> float:
+    def step(self, action, t):
         eps = self.rng.normal(0.0, self.sigma_eps)
         eps = np.clip(eps, -self.L_eps, self.L_eps)
         return float(action @ self.theta[t]) + eps
 
-    def optimal_reward(self, action_set: np.ndarray, t: int) -> float:
+    def optimal_reward(self, action_set, t):
         return float(np.max(action_set @ self.theta[t]))
 
-    def segment_projector(self, k: int) -> np.ndarray:
+    def segment_projector(self, k):
         B = self.B_list[k]
         return B @ B.T
-
-    # ------------------------------------------------------------------
-    # Diagnostics
-    # ------------------------------------------------------------------
 
     def svd_spectrum(self):
         thetas = np.array([self.theta[self.tau[k]] for k in range(self.K)])
         _, svals, _ = np.linalg.svd(thetas, full_matrices=False)
         return svals / svals.sum()
-
-    def label_pca_spectrum(self):
-        X = self._seg_features
-        y = self._seg_labels
-        Xw = X * np.abs(y[:, None])
-        Xw -= Xw.mean(axis=0, keepdims=True)
-        _, svals, _ = np.linalg.svd(Xw, full_matrices=False)
-        var_explained = svals ** 2
-        return var_explained / var_explained.sum()

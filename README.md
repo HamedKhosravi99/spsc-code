@@ -1,152 +1,130 @@
-# Single-Play Subspace-Aware Control — Simulation Code
+# SPSC Experiment Code
 
-Simulation code for the paper
-**"Single-Play Subspace-Aware Control with Windowed r-Dimensional Exploitation"**
+Code for reproducing all experiments in:
 
----
+> **Single-Play Subspace-Calibrated Optimism for Piecewise-Stationary Low-Rank Bandits**
+> NeurIPS 2026 submission
 
-## Structure
-
-```
-Code/
-├── algorithm.py                    # SPSC Algorithm 1, LinUCB, OracleLinUCB
-├── environment.py                  # Synthetic piecewise-stationary low-rank LDS bandit
-├── covertype_environment.py        # Covertype dataset environment
-├── criteo_environment.py           # Criteo dataset environment
-├── movielens_environment.py        # MovieLens dataset environment
-│
-├── experiment1_main_benchmark.py   # Exp 1: SPSC vs LinUCB vs Oracle (synthetic)
-├── experiment2_subspace_recovery.py# Exp 2: Subspace estimation rate
-├── experiment3_probe_ablation.py   # Exp 3: Probe-rate sweep
-├── experiment4_changepoint_recovery.py # Exp 4: Change-point adaptation
-├── experiment5_dimension_scaling.py# Exp 5: Dimension scaling
-│
-├── experiment_covertype.py         # Covertype benchmark
-├── experiment_shuttle.py           # Shuttle benchmark (5 methods)
-├── experiment_phase_diagram.py     # Pendigits phase diagram (SPSC operating regime)
-├── experiment_satimage.py          # Satimage benchmark (7 methods)
-├── satimage_final_plots.py         # Double rings, dot-strip, win-count plots
-├── visualize_phase_extras.py       # 3D surface, rings, bubble from cached data
-├── extend_pendigits_seeds.py       # Extend Pendigits from 5 to 15 seeds
-├── extend_satimage_seeds.py        # Extend Satimage from 5 to 15 seeds
-│
-├── experiment1_notebook.ipynb      # Google Colab notebook for Experiment 1
-├── run_all_experiments.py          # Runs experiments 1-5 in sequence
-├── requirements.txt                # Python dependencies
-└── .gitignore
-```
-
----
-
-## Requirements
-
-Python 3.9+ and:
+## Setup
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
+Python 3.9+ required. Dependencies: NumPy, SciPy, Matplotlib, scikit-learn.
 
-## Quick Start
+## Paper-to-Code Mapping
 
-**Run Experiment 1 (simplest, ~5 min):**
+Every figure and table with experimental data in the paper is listed below with the script that generates it.
+
+### Main Paper (Section 6)
+
+| # | Paper Reference | Script | Output |
+|---|-----------------|--------|--------|
+| 1 | Fig 1: Synthetic phase transition | `experiment1_main_benchmark.py` (data) | `experiment1_main_benchmark.png` |
+| 1 | Fig 1: Phase-transition contour | `experiment1_final_figure.py` (plot) | `experiment1_synthetic_phase.png` |
+| 2 | Table 1: Covertype multi-baseline | `experiment_covertype.py` | `experiment_covertype.png` + printed tables |
+| 3 | Table 6 + Fig 11: Warfarin dosing | `experiment_real_bandit.py` (data) + `plot_warfarin.py` (plot) | `experiment_warfarin.png` |
+| 4 | Fig 7: Robustness A/B/C | `experiment_robustness_abc.py` | `experiment_robustness_abc.png` |
+
+### Appendix: Regime Characterization
+
+| # | Paper Reference | Script | Output |
+|---|-----------------|--------|--------|
+| 3 | Fig 5: Pendigits regime | `experiment_pendigits_operating_regime.py` | `experiment_pendigits_operating_regime.png` |
+| 4 | Fig 6: Satimage 7-method | `experiment_real_satimage_regime.py` | `experiment_real_satimage_double_rings.png` |
+| - | Fig 10: Satimage aggregate | `satimage_final_plots.py` | `satimage_wincount.png` |
+
+### Appendix: Mechanism Validation
+
+| # | Paper Reference | Script | Output |
+|---|-----------------|--------|--------|
+| 5 | Fig 4: Probe-rate ablation | `experiment3_probe_ablation.py` | `experiment3_probe_ablation.png` |
+| 6 | Fig 8: Subspace recovery rate | `experiment2_subspace_recovery.py` | `experiment2_subspace_recovery.png` |
+| 7 | Fig 9: Change-point adaptation | `experiment4_changepoint_recovery.py` | `experiment4_changepoint_recovery.png` |
+| 8 | Fig 10: Dimension scaling | `experiment5_dimension_scaling.py` | `experiment5_dimension_scaling.png` |
+
+### Appendix: Robustness and Sensitivity
+
+| # | Paper Reference | Script | Output |
+|---|-----------------|--------|--------|
+| 9-11 | Fig 7: Variance / cross-corr / coverage | `experiment_robustness_abc.py` | `experiment_robustness_abc.png` |
+| - | Fig 7b + Table 3: Rank misspecification | `experiment_rank_misspec.py` | `experiment_rank_misspec.png` |
+| 12 | Fig + Table: Noise robustness | `experiment6_noise_robustness.py` | `experiment6_noise_robustness.png` |
+| 13 | Fig + Table: Changepoint frequency | `experiment7_changepoint_frequency.py` | `experiment7_changepoint_frequency.png` |
+| 14 | Fig + Table: Drift speed | `experiment8_drift_speed.py` | `experiment8_drift_speed.png` |
+
+### Appendix: SOTA and Full Tables
+
+| # | Paper Reference | Script | Output |
+|---|-----------------|--------|--------|
+| 15 | Fig + Table: SOTA benchmark | `experiment9_sota_benchmark.py` | `experiment9_sota_benchmark.png` |
+| 16 | Tables 4-7: Covertype full | `experiment_covertype.py` | Printed tables |
+
+## File Inventory
+
+### Core (2 files)
+
+| File | Description |
+|------|-------------|
+| `algorithm.py` | SPSC Algorithm 1, LinUCB, Oracle-LinUCB, `K_inverse` operator |
+| `environment.py` | Synthetic `LowRankLDSEnvironment` |
+
+### Dataset Environments (5 files)
+
+| File | Used By | Dataset |
+|------|---------|---------|
+| `covertype_environment.py` | `experiment_covertype.py` | UCI Covertype (semi-synthetic) |
+| `real_covtype_environment_v2.py` | `experiment_rank_misspec.py` | Covertype (variable d) |
+| `real_pendigits_environment.py` | `experiment_pendigits_operating_regime.py` | UCI Pendigits |
+| `real_satimage_environment.py` | `experiment_real_satimage_regime.py` | UCI Satimage |
+| `warfarin_environment.py` | `experiment_real_bandit.py` | Warfarin clinical dosing (d=93) |
+
+All UCI datasets auto-download via `sklearn.datasets`. No manual download needed.
+
+### Experiment Scripts (18 files)
+
+See Paper-to-Code Mapping above.
+
+### Utilities (3 files)
+
+| File | Description |
+|------|-------------|
+| `run_all_experiments.py` | Batch runner (`--main`, `--synthetic`, `--real` flags) |
+| `requirements.txt` | Python dependencies |
+| `README.md` | This file |
+
+## Running Experiments
+
 ```bash
-python experiment1_main_benchmark.py
-```
-
-**Google Colab:** Open `experiment1_notebook.ipynb` in Colab, upload `algorithm.py` + `environment.py`, and run cells top to bottom.
-
-**All synthetic experiments (1-5):**
-```bash
+# Run everything
 python run_all_experiments.py
+
+# Main paper only (Exp 1-4)
+python run_all_experiments.py --main
+
+# Synthetic experiments only
+python run_all_experiments.py --synthetic
+
+# Real-data experiments only
+python run_all_experiments.py --real
+
+# Individual experiment
+python experiment6_noise_robustness.py
 ```
 
-Each experiment prints a results table and saves a `.png` figure in the same directory.
+## Algorithm
 
----
+`algorithm.py` implements:
 
-## Experiments
+- **SPSC_Algorithm1**: Algorithm 1 from the paper. Single-play probing with K-inverse lifted estimation, windowed ridge regression in the learned r-dimensional subspace.
+- **LinUCB**: Ambient-space ridge UCB (Abbasi-Yadkori et al., 2011).
+- **OracleLinUCB**: UCB with oracle subspace knowledge (performance ceiling).
 
-### Synthetic Experiments
+Nonstationary baselines (D-LinUCB, SW-LinUCB, Restart-LinUCB, LowRank-Reward) are implemented within individual experiment scripts.
 
-| # | File | What it tests | Setup | Runtime |
-|---|---|---|---|---|
-| 1 | `experiment1_main_benchmark.py` | SPSC vs LinUCB vs Oracle | d=4, r=1, K=4, T=6000, 10 seeds | ~5 min |
-| 2 | `experiment2_subspace_recovery.py` | Subspace error decays as 1/sqrt(m) | d=4, r=1, 20 seeds | ~3 min |
-| 3 | `experiment3_probe_ablation.py` | Probe-rate tradeoff sweep | probe_every in {5..300}, 10 seeds | ~10 min |
-| 4 | `experiment4_changepoint_recovery.py` | Re-learning after segment boundaries | d=4, r=1, K=4 | ~5 min |
-| 5 | `experiment5_dimension_scaling.py` | Low-rank benefit grows with d | d in {4,8,12}, r=2, 10 seeds | ~10 min |
+## Reproducibility
 
-### Semi-Synthetic Benchmarks (Real Datasets)
-
-| File | Dataset | Methods | Grid | Seeds | Runtime |
-|---|---|---|---|---|---|
-| `experiment_covertype.py` | UCI Covertype | 3 | fixed | 10 | ~10 min |
-| `experiment_shuttle.py` | UCI Shuttle | 5 | fixed | 10 | ~5 min |
-| `experiment_phase_diagram.py` | UCI Pendigits | 3 | d x r = 6x4 | 15 | ~30 min |
-| `experiment_satimage.py` | UCI Satimage | 7 | d x r = 4x4 | 15 | ~60 min |
-
-**Satimage baselines (7 methods):**
-1. SPSC Algorithm 1 (ours)
-2. LinUCB (Abbasi-Yadkori+ 2011)
-3. D-LinUCB — discounted ridge (Russac+ 2019)
-4. SW-LinUCB — sliding window (Cheung+ 2019)
-5. Restart-LinUCB — periodic restart (Auer+ 2019)
-6. LowRank-Reward-UCB — subspace from rewards (LowESTR spirit)
-7. Oracle-LinUCB — known subspace (unattainable ceiling)
-
-### Extending Seeds
-
-To extend from 5 to 15 seeds (loads cached 5-seed results, runs 10 more, combines):
-```bash
-python extend_pendigits_seeds.py
-python extend_satimage_seeds.py
-```
-
-### Regenerating Plots from Cache
-
-```bash
-python experiment_phase_diagram.py --replot
-python satimage_final_plots.py
-python visualize_phase_extras.py
-```
-
----
-
-## Key Results
-
-| Benchmark | SPSC wins | Avg regret reduction |
-|---|---|---|
-| Synthetic (Exp 1) | SPSC/LinUCB = 0.59 | 41% |
-| Shuttle (5 methods) | Beats all baselines | 8-12% |
-| Pendigits (phase diagram) | 23/24 cells | 2-38% |
-| Satimage (7 methods) | 13-16/16 cells vs each baseline | 6-24% |
-
----
-
-## Algorithm Notes
-
-### Buffer Reprojection
-The exploitation buffer stores raw actions `x_s`. At each round, all buffered actions are reprojected with the current subspace estimate `U_hat`:
-```python
-z_s = U_hat.T @ x_s   # consistent basis for all window entries
-```
-
-### K-inverse Operator
-For sphere probes `u = sqrt(d) * z/||z||`, `z ~ N(0, I_d)`:
-```
-K_inv(N) = (d+2)/(2d) * N - tr(N)/(2d) * I_d
-```
-This gives the unbiased lifted estimator `E[K_inv(s_t u_t u_t^T)] = theta_t theta_t^T`.
-
----
-
-## Environment Parameters (Synthetic)
-
-| Parameter | Value | Role |
-|---|---|---|
-| `sigma_eta` | 0.04 | LDS innovation std |
-| `spectral_radius` | 0.99 | AR(1) coefficient; correlation time ~100 |
-| `sigma_eps` | 0.3 | Observation noise std |
-| `n_actions` | 80 | Fresh unit-sphere arms per round |
+- All experiments use explicit random seeds (default: 10 seeds; SOTA benchmark: 30 seeds).
+- NumPy 1.x was used for the paper. NumPy 2.x produces different RNG streams.
+- Qualitative conclusions are stable across platforms.

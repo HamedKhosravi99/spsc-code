@@ -755,3 +755,296 @@ class OracleLinUCB:
             metrics.costed_regret[t]  = r_opt - r_t
 
         return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: Restarted Explore-Then-Commit Low-Rank  (Jedra et al. 2024 spirit)
+# ---------------------------------------------------------------------------
+
+class ETCLowRank:
+    """
+    Explore-then-commit low-rank bandit with oracle segment-boundary restarts.
+
+    Captures the paradigm of Jedra et al. (ICML 2024) adapted to the
+    piecewise-stationary vector bandit setting: at each segment boundary,
+    run a pure exploration phase to recover the subspace, then exploit with
+    projected LinUCB for the remainder of the segment.
+
+    Subspace estimation uses SPSC's K^{-1} lifting operator on isotropic
+    sphere probes, so the *only* difference from SPSC Algorithm 1 is the
+    scheduling: hard explore/exploit split vs. interleaved probing.
+
+    This isolates the benefit of interleaving probing with exploitation.
+    """
+
+    def __init__(
+        self,
+        env: "LowRankLDSEnvironment",
+        m_explore: int = 50,
+        probe_cost: float = 0.1,
+        window: int = 200,
+        lam: float = 1.0,
+        delta: float = 0.05,
+        seed: int = 0,
+    ):
+        self.env       = env
+        self.m_explore = m_explore
+        self.c         = probe_cost
+        self.W         = window
+        self.lam       = lam
+        self.delta     = delta
+        self.rng       = np.random.default_rng(seed)
+
+        self.d = env.d
+        self.r = env.r
+        self.L_x       = env.L_x
+        self.sigma_eps = env.sigma_eps
+        self.S         = env.S
+
+    def _beta_r(self, n_exploit: int) -> float:
+        effective_n = min(n_exploit, self.W)
+        arg = max(1.0 + effective_n * self.L_x ** 2 / self.lam, 1.0 + 1e-12)
+        return (
+            self.sigma_eps * np.sqrt(self.r * np.log(arg / self.delta))
+            + np.sqrt(self.lam) * self.S
+        )
+
+    def run(self) -> "RunMetrics":
+        env = self.env
+        d, r, T = self.d, self.r, env.T
+        metrics = RunMetrics(name="ETC-LowRank", T=T)
+
+        U_hat     = np.eye(d, r)
+        current_k = -1
+        seg_round = 0
+        M_sum     = np.zeros((d, d))
+        m_done    = 0
+        expl_buf: List[tuple] = []
+
+        for t in range(T):
+            k = env.seg_of[t]
+
+            # ---- Segment boundary: reset everything ----
+            if k != current_k:
+                M_sum     = np.zeros((d, d))
+                m_done    = 0
+                seg_round = 0
+                expl_buf  = []
+                U_hat     = np.eye(d, r)
+                current_k = k
+
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt      = env.optimal_reward(action_set, t)
+
+            # ==========================================================
+            # EXPLORATION PHASE — first m_explore rounds of each segment
+            # ==========================================================
+            if seg_round < self.m_explore:
+                metrics.probe_flags[t] = True
+
+                z_probe = self.rng.standard_normal(d)
+                u_t     = np.sqrt(d) * z_probe / (np.linalg.norm(z_probe) + 1e-12)
+                y_t     = env.step(u_t, t)
+
+                s_t = y_t ** 2 - self.sigma_eps ** 2
+                G_t = K_inverse(s_t * np.outer(u_t, u_t), d)
+                M_sum += G_t
+                m_done += 1
+
+                if m_done >= 2:
+                    M_hat = M_sum / m_done
+                    eig_vals, eig_vecs = np.linalg.eigh(M_hat)
+                    U_hat = eig_vecs[:, -r:]
+
+                P_true = env.segment_projector(k)
+                P_hat  = U_hat @ U_hat.T
+                metrics.subspace_error[t] = np.linalg.norm(P_hat - P_true, ord=2)
+
+                r_t = float(u_t @ env.theta[t])
+                metrics.control_regret[t] = r_opt - r_t
+                metrics.costed_regret[t]  = r_opt - r_t + self.c
+
+            # ==========================================================
+            # EXPLOITATION PHASE — projected windowed LinUCB (fixed U_hat)
+            # ==========================================================
+            else:
+                window_entries = [(x_s, y_s) for (x_s, y_s, s) in expl_buf
+                                 if s >= t - self.W]
+                V_tilde = self.lam * np.eye(r)
+                b_tilde = np.zeros(r)
+                for x_s, y_s in window_entries:
+                    z_s = U_hat.T @ x_s
+                    V_tilde += np.outer(z_s, z_s)
+                    b_tilde += z_s * y_s
+
+                a_hat  = np.linalg.solve(V_tilde, b_tilde)
+                beta_t = self._beta_r(len(window_entries))
+
+                Z       = action_set @ U_hat
+                V_inv_Z = np.linalg.solve(V_tilde, Z.T).T
+                ellip   = np.sqrt(np.einsum('ij,ij->i', Z, V_inv_Z))
+                ucb     = Z @ a_hat + beta_t * ellip
+
+                x_dep = action_set[int(np.argmax(ucb))]
+                y_t   = env.step(x_dep, t)
+                expl_buf.append((x_dep, y_t, t))
+                if len(expl_buf) > self.W + 10:
+                    expl_buf = [(x_s, y_s, s) for (x_s, y_s, s) in expl_buf
+                                if s >= t - self.W]
+
+                r_t = float(x_dep @ env.theta[t])
+                metrics.control_regret[t] = r_opt - r_t
+                metrics.costed_regret[t]  = r_opt - r_t
+
+            seg_round += 1
+
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: Restarted Reward-PCA Low-Rank  (Jang et al. 2024 spirit)
+# ---------------------------------------------------------------------------
+
+class RewardPCALowRank:
+    """
+    Explore-then-commit low-rank bandit with reward-PCA subspace estimation
+    and oracle segment-boundary restarts.
+
+    Captures the paradigm of Jang et al. (ICML 2024) adapted to the
+    piecewise-stationary setting: at each segment boundary, play random
+    actions, estimate the subspace from second-order reward statistics,
+    then exploit with projected LinUCB.
+
+    Unlike ETC-LowRank (which uses SPSC's K^{-1} lifting operator), this
+    method estimates the subspace via PCA on the noise-corrected
+    reward-weighted action covariance:
+
+        M_hat = (1/m) sum_t  y_t^2  x_t x_t^T  -  sigma^2  Sigma_hat
+
+    where Sigma_hat = (1/m) sum_t x_t x_t^T is the empirical action
+    covariance.  This is the natural "learn subspace from reward data"
+    approach without the K^{-1} lifting.
+    """
+
+    def __init__(
+        self,
+        env: "LowRankLDSEnvironment",
+        m_explore: int = 50,
+        probe_cost: float = 0.1,
+        window: int = 200,
+        lam: float = 1.0,
+        delta: float = 0.05,
+        seed: int = 0,
+    ):
+        self.env       = env
+        self.m_explore = m_explore
+        self.c         = probe_cost
+        self.W         = window
+        self.lam       = lam
+        self.delta     = delta
+        self.rng       = np.random.default_rng(seed)
+
+        self.d = env.d
+        self.r = env.r
+        self.L_x       = env.L_x
+        self.sigma_eps = env.sigma_eps
+        self.S         = env.S
+
+    def _beta_r(self, n_exploit: int) -> float:
+        effective_n = min(n_exploit, self.W)
+        arg = max(1.0 + effective_n * self.L_x ** 2 / self.lam, 1.0 + 1e-12)
+        return (
+            self.sigma_eps * np.sqrt(self.r * np.log(arg / self.delta))
+            + np.sqrt(self.lam) * self.S
+        )
+
+    def run(self) -> "RunMetrics":
+        env = self.env
+        d, r, T = self.d, self.r, env.T
+        metrics = RunMetrics(name="Reward-PCA-LR", T=T)
+
+        U_hat     = np.eye(d, r)
+        current_k = -1
+        seg_round = 0
+        M_sum     = np.zeros((d, d))
+        Sigma_sum = np.zeros((d, d))
+        m_done    = 0
+        expl_buf: List[tuple] = []
+
+        for t in range(T):
+            k = env.seg_of[t]
+
+            if k != current_k:
+                M_sum     = np.zeros((d, d))
+                Sigma_sum = np.zeros((d, d))
+                m_done    = 0
+                seg_round = 0
+                expl_buf  = []
+                U_hat     = np.eye(d, r)
+                current_k = k
+
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt      = env.optimal_reward(action_set, t)
+
+            # ==========================================================
+            # EXPLORATION — random actions, reward-PCA estimation
+            # ==========================================================
+            if seg_round < self.m_explore:
+                metrics.probe_flags[t] = True
+
+                idx = self.rng.integers(0, len(action_set))
+                x_t = action_set[idx]
+                y_t = env.step(x_t, t)
+
+                M_sum     += y_t ** 2 * np.outer(x_t, x_t)
+                Sigma_sum += np.outer(x_t, x_t)
+                m_done    += 1
+
+                if m_done >= 2:
+                    M_hat = M_sum / m_done - self.sigma_eps ** 2 * (Sigma_sum / m_done)
+                    eig_vals, eig_vecs = np.linalg.eigh(M_hat)
+                    U_hat = eig_vecs[:, -r:]
+
+                P_true = env.segment_projector(k)
+                P_hat  = U_hat @ U_hat.T
+                metrics.subspace_error[t] = np.linalg.norm(P_hat - P_true, ord=2)
+
+                r_t = float(x_t @ env.theta[t])
+                metrics.control_regret[t] = r_opt - r_t
+                metrics.costed_regret[t]  = r_opt - r_t + self.c
+
+            # ==========================================================
+            # EXPLOITATION — projected windowed LinUCB (fixed U_hat)
+            # ==========================================================
+            else:
+                window_entries = [(x_s, y_s) for (x_s, y_s, s) in expl_buf
+                                 if s >= t - self.W]
+                V_tilde = self.lam * np.eye(r)
+                b_tilde = np.zeros(r)
+                for x_s, y_s in window_entries:
+                    z_s = U_hat.T @ x_s
+                    V_tilde += np.outer(z_s, z_s)
+                    b_tilde += z_s * y_s
+
+                a_hat  = np.linalg.solve(V_tilde, b_tilde)
+                beta_t = self._beta_r(len(window_entries))
+
+                Z       = action_set @ U_hat
+                V_inv_Z = np.linalg.solve(V_tilde, Z.T).T
+                ellip   = np.sqrt(np.einsum('ij,ij->i', Z, V_inv_Z))
+                ucb     = Z @ a_hat + beta_t * ellip
+
+                x_dep = action_set[int(np.argmax(ucb))]
+                y_t   = env.step(x_dep, t)
+                expl_buf.append((x_dep, y_t, t))
+                if len(expl_buf) > self.W + 10:
+                    expl_buf = [(x_s, y_s, s) for (x_s, y_s, s) in expl_buf
+                                if s >= t - self.W]
+
+                r_t = float(x_dep @ env.theta[t])
+                metrics.control_regret[t] = r_opt - r_t
+                metrics.costed_regret[t]  = r_opt - r_t
+
+            seg_round += 1
+
+        return metrics
