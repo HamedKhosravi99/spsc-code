@@ -128,3 +128,7 @@ Nonstationary baselines (D-LinUCB, SW-LinUCB, Restart-LinUCB, LowRank-Reward) ar
 - All experiments use explicit random seeds (default: 10 seeds; SOTA benchmark: 30 seeds).
 - NumPy 1.x was used for the paper. NumPy 2.x produces different RNG streams.
 - Qualitative conclusions are stable across platforms.
+
+## License
+
+MIT
