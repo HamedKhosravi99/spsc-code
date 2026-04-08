@@ -24,8 +24,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, os.path.dirname(__file__))
-from covertype_environment import CovtypeEnvironment
+from environments import CovtypeEnvironment
 from algorithm import SPSC_Algorithm1, LinUCB, OracleLinUCB
 
 # ---------------------------------------------------------------------------

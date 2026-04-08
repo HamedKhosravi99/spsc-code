@@ -15,8 +15,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, os.path.dirname(__file__))
-from real_covtype_environment_v2 import RealCovtypeEnvironmentV2
+from environments import RealCovtypeEnvironmentV2
 from algorithm import SPSC_Algorithm1, LinUCB, RunMetrics
 
 OUT_DIR = os.path.dirname(os.path.abspath(__file__))

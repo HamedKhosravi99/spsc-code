@@ -22,103 +22,10 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, os.path.dirname(__file__))
-from warfarin_environment import WarfarinEnvironment
-from algorithm import SPSC_Algorithm1, LinUCB, OracleLinUCB, RunMetrics
+from environments import WarfarinEnvironment
+from algorithm import SPSC_Algorithm1, LinUCB, OracleLinUCB, RunMetrics, RandomSubspaceUCB
 
 OUT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-# ---------------------------------------------------------------------------
-# Random Subspace UCB — same exploitation as SPSC but with a random basis
-# ---------------------------------------------------------------------------
-
-class RandomSubspaceUCB:
-    """
-    Windowed ridge UCB in a *fixed random* r-dimensional subspace.
-    No probing, no subspace learning — pure dimensionality reduction.
-    Resets random subspace at each segment boundary (like SPSC resets its learned one).
-    """
-
-    def __init__(self, env, window=200, lam=1.0, delta=0.05, seed=0):
-        self.env = env
-        self.W = window
-        self.lam = lam
-        self.delta = delta
-        self.rng = np.random.default_rng(seed)
-        self.d, self.r = env.d, env.r
-        self.L_x = env.L_x
-        self.sigma_eps = env.sigma_eps
-        self.S = env.S
-
-    def _beta(self, n_exploit):
-        effective_n = min(n_exploit, self.W)
-        arg = max(1.0 + effective_n * self.L_x**2 / self.lam, 1.0 + 1e-12)
-        return (self.sigma_eps * np.sqrt(self.r * np.log(arg / self.delta))
-                + np.sqrt(self.lam) * self.S)
-
-    def run(self):
-        env = self.env
-        d, r, T = self.d, self.r, env.T
-        metrics = RunMetrics(name="RandomSub-UCB", T=T)
-
-        U_hat = None
-        current_k = -1
-        expl_buf = []
-
-        for t in range(T):
-            k = env.seg_of[t]
-
-            # Segment boundary: draw a fresh random orthonormal basis
-            if k != current_k:
-                Z = self.rng.standard_normal((d, r))
-                U_hat, _ = np.linalg.qr(Z)
-                U_hat = U_hat[:, :r]
-                expl_buf = []
-                current_k = k
-
-                # Record subspace error vs true
-                P_hat = U_hat @ U_hat.T
-                P_true = env.segment_projector(k)
-                metrics.subspace_error[t] = np.linalg.norm(P_hat - P_true, ord=2)
-
-            action_set = env.get_action_set(t, rng=self.rng)
-            r_opt = env.optimal_reward(action_set, t)
-
-            # Windowed ridge in random r-dim subspace
-            window_entries = [(x_s, y_s) for (x_s, y_s, s) in expl_buf
-                              if s >= t - self.W]
-
-            V_tilde = self.lam * np.eye(r)
-            b_tilde = np.zeros(r)
-            for x_s, y_s in window_entries:
-                z_s = U_hat.T @ x_s
-                V_tilde += np.outer(z_s, z_s)
-                b_tilde += z_s * y_s
-
-            a_hat = np.linalg.solve(V_tilde, b_tilde)
-            beta_t = self._beta(len(window_entries))
-
-            Z_act = action_set @ U_hat
-            V_inv_Z = np.linalg.solve(V_tilde, Z_act.T).T
-            ellip = np.sqrt(np.einsum('ij,ij->i', Z_act, V_inv_Z))
-            # No gamma term — no subspace mismatch compensation
-            ucb = Z_act @ a_hat + beta_t * ellip
-
-            best_idx = int(np.argmax(ucb))
-            x_dep = action_set[best_idx]
-            y_t = env.step(x_dep, t)
-
-            expl_buf.append((x_dep, y_t, t))
-            if len(expl_buf) > self.W + 10:
-                expl_buf = [(x_s, y_s, s) for (x_s, y_s, s) in expl_buf
-                            if s >= t - self.W]
-
-            r_t = float(x_dep @ env.theta[t])
-            metrics.control_regret[t] = r_opt - r_t
-            metrics.costed_regret[t] = r_opt - r_t  # no probe cost
-
-        return metrics
 
 
 # ---------------------------------------------------------------------------

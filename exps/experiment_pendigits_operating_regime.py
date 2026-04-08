@@ -14,8 +14,7 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import TwoSlopeNorm
 
-sys.path.insert(0, os.path.dirname(__file__))
-from real_pendigits_environment import RealPendigitsEnvironment
+from environments import RealPendigitsEnvironment
 from algorithm import SPSC_Algorithm1, LinUCB, OracleLinUCB, RunMetrics
 
 # ---------------------------------------------------------------------------

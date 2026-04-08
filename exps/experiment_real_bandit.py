@@ -24,116 +24,14 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-sys.path.insert(0, os.path.dirname(__file__))
-from warfarin_environment import WarfarinEnvironment
+from environments import WarfarinEnvironment
 try:
     from yahoo_environment import YahooR6Environment
 except ImportError:
     YahooR6Environment = None  # Yahoo benchmark not used in paper
-from algorithm import SPSC_Algorithm1, LinUCB, OracleLinUCB, RunMetrics
+from algorithm import SPSC_Algorithm1, LinUCB, OracleLinUCB, RunMetrics, SWLinUCB, DLinUCB, OracleResetLinUCB
 
 OUT_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-# ---------------------------------------------------------------------------
-# Baselines
-# ---------------------------------------------------------------------------
-
-class SWLinUCB:
-    def __init__(self, env, window=200, lam=1.0, delta=0.05, seed=1):
-        self.env, self.W, self.lam, self.delta = env, window, lam, delta
-        self.rng = np.random.default_rng(seed)
-        self.S, self.sigma_eps, self.L_x = env.S, env.sigma_eps, env.L_x
-    def _beta(self, n):
-        d = self.env.d
-        arg = max(1.0 + n * self.L_x**2 / self.lam, 1.0 + 1e-12)
-        return self.sigma_eps * np.sqrt(d * np.log(arg / self.delta)) + np.sqrt(self.lam) * self.S
-    def run(self):
-        env = self.env; d, T = env.d, env.T
-        metrics = RunMetrics(name="SW-LinUCB", T=T)
-        buf, current_k = [], -1
-        for t in range(T):
-            k = env.seg_of[t]
-            if k != current_k: buf, current_k = [], k
-            action_set = env.get_action_set(t, rng=self.rng)
-            r_opt = env.optimal_reward(action_set, t)
-            win = [(xs, ys) for xs, ys, s in buf if s >= t - self.W]
-            V = self.lam * np.eye(d); b = np.zeros(d)
-            for xs, ys in win: V += np.outer(xs, xs); b += xs * ys
-            theta_hat = np.linalg.solve(V, b)
-            beta_t = self._beta(len(win))
-            V_inv_A = np.linalg.solve(V, action_set.T).T
-            ucb = action_set @ theta_hat + beta_t * np.sqrt(np.einsum('ij,ij->i', action_set, V_inv_A))
-            x_dep = action_set[int(np.argmax(ucb))]
-            y = env.step(x_dep, t)
-            buf.append((x_dep, y, t))
-            if len(buf) > self.W + 10:
-                buf = [(xs, ys, s) for xs, ys, s in buf if s >= t - self.W]
-            metrics.control_regret[t] = r_opt - float(x_dep @ env.theta[t])
-            metrics.costed_regret[t] = metrics.control_regret[t]
-        return metrics
-
-
-class DLinUCB:
-    def __init__(self, env, gamma=0.995, lam=1.0, delta=0.05, seed=1):
-        self.env, self.gamma, self.lam, self.delta = env, gamma, lam, delta
-        self.rng = np.random.default_rng(seed)
-        self.S, self.sigma_eps, self.L_x = env.S, env.sigma_eps, env.L_x
-    def _beta(self, t):
-        d = self.env.d
-        eff_n = min(t + 1, 1.0 / (1.0 - self.gamma + 1e-12))
-        arg = max(1.0 + eff_n * self.L_x**2 / self.lam, 1.0 + 1e-12)
-        return self.sigma_eps * np.sqrt(d * np.log(arg / self.delta)) + np.sqrt(self.lam) * self.S
-    def run(self):
-        env = self.env; d, T = env.d, env.T
-        metrics = RunMetrics(name="D-LinUCB", T=T)
-        V = self.lam * np.eye(d); b = np.zeros(d); current_k = -1
-        for t in range(T):
-            k = env.seg_of[t]
-            if k != current_k: V = self.lam * np.eye(d); b = np.zeros(d); current_k = k
-            action_set = env.get_action_set(t, rng=self.rng)
-            r_opt = env.optimal_reward(action_set, t)
-            theta_hat = np.linalg.solve(V, b)
-            beta_t = self._beta(t)
-            V_inv_A = np.linalg.solve(V, action_set.T).T
-            ucb = action_set @ theta_hat + beta_t * np.sqrt(np.einsum('ij,ij->i', action_set, V_inv_A))
-            x_dep = action_set[int(np.argmax(ucb))]
-            y = env.step(x_dep, t)
-            V = self.gamma * V + np.outer(x_dep, x_dep)
-            b = self.gamma * b + x_dep * y
-            metrics.control_regret[t] = r_opt - float(x_dep @ env.theta[t])
-            metrics.costed_regret[t] = metrics.control_regret[t]
-        return metrics
-
-
-class RestartLinUCB:
-    def __init__(self, env, lam=1.0, delta=0.05, seed=1):
-        self.env, self.lam, self.delta = env, lam, delta
-        self.rng = np.random.default_rng(seed)
-        self.S, self.sigma_eps, self.L_x = env.S, env.sigma_eps, env.L_x
-    def _beta(self, n):
-        d = self.env.d
-        arg = max(1.0 + n * self.L_x**2 / self.lam, 1.0 + 1e-12)
-        return self.sigma_eps * np.sqrt(d * np.log(arg / self.delta)) + np.sqrt(self.lam) * self.S
-    def run(self):
-        env = self.env; d, T = env.d, env.T
-        metrics = RunMetrics(name="Restart-LinUCB", T=T)
-        V = self.lam * np.eye(d); b = np.zeros(d); n_seg = 0; current_k = -1
-        for t in range(T):
-            k = env.seg_of[t]
-            if k != current_k: V = self.lam * np.eye(d); b = np.zeros(d); n_seg = 0; current_k = k
-            action_set = env.get_action_set(t, rng=self.rng)
-            r_opt = env.optimal_reward(action_set, t)
-            theta_hat = np.linalg.solve(V, b)
-            beta_t = self._beta(n_seg)
-            V_inv_A = np.linalg.solve(V, action_set.T).T
-            ucb = action_set @ theta_hat + beta_t * np.sqrt(np.einsum('ij,ij->i', action_set, V_inv_A))
-            x_dep = action_set[int(np.argmax(ucb))]
-            y = env.step(x_dep, t)
-            V += np.outer(x_dep, x_dep); b += x_dep * y; n_seg += 1
-            metrics.control_regret[t] = r_opt - float(x_dep @ env.theta[t])
-            metrics.costed_regret[t] = metrics.control_regret[t]
-        return metrics
 
 
 # ---------------------------------------------------------------------------
@@ -184,8 +82,8 @@ def run_cell(env_class, env_kwargs, r, n_seeds, probe_every=10, probe_cost=0.1, 
                 m = SWLinUCB(env, window=200, lam=1.0, delta=0.05,
                              seed=seed + 3000).run()
             elif name == "Restart-LinUCB":
-                m = RestartLinUCB(env, lam=1.0, delta=0.05,
-                                  seed=seed + 4000).run()
+                m = OracleResetLinUCB(env, lam=1.0, delta=0.05,
+                                      seed=seed + 4000).run()
             elif name == "LinUCB":
                 m = LinUCB(env, lam=1.0, delta=0.05, seed=seed + 5000).run()
             results[name].append(m)

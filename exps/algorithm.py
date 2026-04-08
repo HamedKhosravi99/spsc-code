@@ -36,7 +36,7 @@ import numpy as np
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional
 
-from environment import LowRankLDSEnvironment
+from environments import LowRankLDSEnvironment
 
 
 # ---------------------------------------------------------------------------
@@ -958,7 +958,7 @@ class RewardPCALowRank:
             + np.sqrt(self.lam) * self.S
         )
 
-    def run(self) -> "RunMetrics":
+    def run(self) -> "RunMetrics":  
         env = self.env
         d, r, T = self.d, self.r, env.T
         metrics = RunMetrics(name="Reward-PCA-LR", T=T)
@@ -1047,4 +1047,496 @@ class RewardPCALowRank:
 
             seg_round += 1
 
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: Sliding-Window LinUCB (Cheung+ NeurIPS 2019)
+# ---------------------------------------------------------------------------
+
+class SWLinUCB:
+    """Sliding-window LinUCB. Resets at oracle segment boundaries."""
+    def __init__(self, env, window=200, lam=1.0, delta=0.05, seed=1):
+        self.env = env
+        self.W = window
+        self.lam = lam
+        self.delta = delta
+        self.rng = np.random.default_rng(seed)
+        self.S = env.S
+        self.sigma_eps = env.sigma_eps
+        self.L_x = env.L_x
+
+    def _beta(self, n):
+        d = self.env.d
+        arg = max(1.0 + n * self.L_x**2 / self.lam, 1.0 + 1e-12)
+        return self.sigma_eps * np.sqrt(d * np.log(arg / self.delta)) + np.sqrt(self.lam) * self.S
+
+    def run(self):
+        env = self.env
+        d, T = env.d, env.T
+        metrics = RunMetrics(name="SW-LinUCB", T=T)
+        buf = []
+        current_k = -1
+        for t in range(T):
+            k = env.seg_of[t]
+            if k != current_k:
+                buf = []
+                current_k = k
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt = env.optimal_reward(action_set, t)
+            win = [(xs, ys) for xs, ys, s in buf if s >= t - self.W]
+            V = self.lam * np.eye(d)
+            b = np.zeros(d)
+            for xs, ys in win:
+                V += np.outer(xs, xs)
+                b += xs * ys
+            theta_hat = np.linalg.solve(V, b)
+            beta_t = self._beta(len(win))
+            V_inv_A = np.linalg.solve(V, action_set.T).T
+            ucb = action_set @ theta_hat + beta_t * np.sqrt(
+                np.einsum('ij,ij->i', action_set, V_inv_A))
+            x_dep = action_set[int(np.argmax(ucb))]
+            y = env.step(x_dep, t)
+            buf.append((x_dep, y, t))
+            if len(buf) > self.W + 10:
+                buf = [(xs, ys, s) for xs, ys, s in buf if s >= t - self.W]
+            r_t = float(x_dep @ env.theta[t])
+            metrics.control_regret[t] = r_opt - r_t
+            metrics.costed_regret[t] = r_opt - r_t
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: Periodic-Restart LinUCB
+# ---------------------------------------------------------------------------
+
+class RestartLinUCB:
+    """Periodic-restart LinUCB. Restarts every restart_period rounds."""
+    def __init__(self, env, restart_period=500, lam=1.0, delta=0.05, seed=1):
+        self.env = env
+        self.restart_period = restart_period
+        self.lam = lam
+        self.delta = delta
+        self.rng = np.random.default_rng(seed)
+        self.S = env.S
+        self.sigma_eps = env.sigma_eps
+        self.L_x = env.L_x
+
+    def _beta(self, n):
+        d = self.env.d
+        arg = max(1.0 + n * self.L_x**2 / self.lam, 1.0 + 1e-12)
+        return self.sigma_eps * np.sqrt(d * np.log(arg / self.delta)) + np.sqrt(self.lam) * self.S
+
+    def run(self):
+        env = self.env
+        d, T = env.d, env.T
+        metrics = RunMetrics(name="Restart-LinUCB", T=T)
+        V = self.lam * np.eye(d)
+        b = np.zeros(d)
+        n_since = 0
+        for t in range(T):
+            if n_since >= self.restart_period:
+                V = self.lam * np.eye(d)
+                b = np.zeros(d)
+                n_since = 0
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt = env.optimal_reward(action_set, t)
+            theta_hat = np.linalg.solve(V, b)
+            beta_t = self._beta(n_since)
+            V_inv_A = np.linalg.solve(V, action_set.T).T
+            ucb = action_set @ theta_hat + beta_t * np.sqrt(
+                np.einsum('ij,ij->i', action_set, V_inv_A))
+            x_dep = action_set[int(np.argmax(ucb))]
+            y = env.step(x_dep, t)
+            V += np.outer(x_dep, x_dep)
+            b += x_dep * y
+            n_since += 1
+            r_t = float(x_dep @ env.theta[t])
+            metrics.control_regret[t] = r_opt - r_t
+            metrics.costed_regret[t] = r_opt - r_t
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: Oracle-Reset LinUCB (resets at true change points)
+# ---------------------------------------------------------------------------
+
+class OracleResetLinUCB:
+    """LinUCB with oracle knowledge of change-point locations."""
+    def __init__(self, env, lam=1.0, delta=0.05, seed=1):
+        self.env = env
+        self.lam = lam
+        self.delta = delta
+        self.rng = np.random.default_rng(seed)
+        self.S = env.S
+        self.sigma_eps = env.sigma_eps
+        self.L_x = env.L_x
+
+    def _beta(self, n):
+        d = self.env.d
+        arg = max(1.0 + n * self.L_x**2 / self.lam, 1.0 + 1e-12)
+        return self.sigma_eps * np.sqrt(d * np.log(arg / self.delta)) + np.sqrt(self.lam) * self.S
+
+    def run(self):
+        env = self.env
+        d, T = env.d, env.T
+        metrics = RunMetrics(name="Reset-LinUCB", T=T)
+        V = self.lam * np.eye(d)
+        b = np.zeros(d)
+        n_since = 0
+        current_k = -1
+        for t in range(T):
+            k = env.seg_of[t]
+            if k != current_k:
+                V = self.lam * np.eye(d)
+                b = np.zeros(d)
+                n_since = 0
+                current_k = k
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt = env.optimal_reward(action_set, t)
+            theta_hat = np.linalg.solve(V, b)
+            beta_t = self._beta(n_since)
+            V_inv_A = np.linalg.solve(V, action_set.T).T
+            ucb = action_set @ theta_hat + beta_t * np.sqrt(
+                np.einsum('ij,ij->i', action_set, V_inv_A))
+            x_dep = action_set[int(np.argmax(ucb))]
+            y = env.step(x_dep, t)
+            V += np.outer(x_dep, x_dep)
+            b += x_dep * y
+            n_since += 1
+            r_t = float(x_dep @ env.theta[t])
+            metrics.control_regret[t] = r_opt - r_t
+            metrics.costed_regret[t] = r_opt - r_t
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: Discounted LinUCB (Russac+ NeurIPS 2019)
+# ---------------------------------------------------------------------------
+
+class DLinUCB:
+    """Discounted LinUCB with exponential forgetting factor."""
+    def __init__(self, env, gamma=0.995, lam=1.0, delta=0.05, seed=1):
+        self.env = env
+        self.gamma = gamma
+        self.lam = lam
+        self.delta = delta
+        self.rng = np.random.default_rng(seed)
+        self.S = env.S
+        self.sigma_eps = env.sigma_eps
+        self.L_x = env.L_x
+
+    def _beta(self, t):
+        d = self.env.d
+        eff_n = min(t + 1, 1.0 / (1.0 - self.gamma + 1e-12))
+        arg = max(1.0 + eff_n * self.L_x**2 / self.lam, 1.0 + 1e-12)
+        return self.sigma_eps * np.sqrt(d * np.log(arg / self.delta)) + np.sqrt(self.lam) * self.S
+
+    def run(self):
+        env = self.env
+        d, T = env.d, env.T
+        metrics = RunMetrics(name="D-LinUCB", T=T)
+        V = self.lam * np.eye(d)
+        b = np.zeros(d)
+        current_k = -1
+        for t in range(T):
+            k = env.seg_of[t]
+            if k != current_k:
+                V = self.lam * np.eye(d)
+                b = np.zeros(d)
+                current_k = k
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt = env.optimal_reward(action_set, t)
+            theta_hat = np.linalg.solve(V, b)
+            beta_t = self._beta(t)
+            V_inv_A = np.linalg.solve(V, action_set.T).T
+            ucb = action_set @ theta_hat + beta_t * np.sqrt(
+                np.einsum('ij,ij->i', action_set, V_inv_A))
+            x_dep = action_set[int(np.argmax(ucb))]
+            y = env.step(x_dep, t)
+            V = self.gamma * V + np.outer(x_dep, x_dep)
+            b = self.gamma * b + x_dep * y
+            r_t = float(x_dep @ env.theta[t])
+            metrics.control_regret[t] = r_opt - r_t
+            metrics.costed_regret[t] = r_opt - r_t
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: Random Subspace UCB (ablation control)
+# ---------------------------------------------------------------------------
+
+class RandomSubspaceUCB:
+    """Windowed ridge UCB in a fixed random r-dim subspace (ablation control)."""
+    def __init__(self, env, window=200, lam=1.0, delta=0.05, seed=0):
+        self.env = env
+        self.W = window
+        self.lam = lam
+        self.delta = delta
+        self.rng = np.random.default_rng(seed)
+        self.d, self.r = env.d, env.r
+        self.L_x = env.L_x
+        self.sigma_eps = env.sigma_eps
+        self.S = env.S
+
+    def _beta(self, n_exploit):
+        effective_n = min(n_exploit, self.W)
+        arg = max(1.0 + effective_n * self.L_x**2 / self.lam, 1.0 + 1e-12)
+        return (self.sigma_eps * np.sqrt(self.r * np.log(arg / self.delta))
+                + np.sqrt(self.lam) * self.S)
+
+    def run(self):
+        env = self.env
+        d, r, T = self.d, self.r, env.T
+        metrics = RunMetrics(name="RandomSub-UCB", T=T)
+        U_hat = None
+        current_k = -1
+        expl_buf = []
+        for t in range(T):
+            k = env.seg_of[t]
+            if k != current_k:
+                Z = self.rng.standard_normal((d, r))
+                U_hat, _ = np.linalg.qr(Z)
+                U_hat = U_hat[:, :r]
+                expl_buf = []
+                current_k = k
+                P_hat = U_hat @ U_hat.T
+                P_true = env.segment_projector(k)
+                metrics.subspace_error[t] = np.linalg.norm(P_hat - P_true, ord=2)
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt = env.optimal_reward(action_set, t)
+            window_entries = [(x_s, y_s) for (x_s, y_s, s) in expl_buf
+                              if s >= t - self.W]
+            V_tilde = self.lam * np.eye(r)
+            b_tilde = np.zeros(r)
+            for x_s, y_s in window_entries:
+                z_s = U_hat.T @ x_s
+                V_tilde += np.outer(z_s, z_s)
+                b_tilde += z_s * y_s
+            a_hat = np.linalg.solve(V_tilde, b_tilde)
+            beta_t = self._beta(len(window_entries))
+            Z_act = action_set @ U_hat
+            V_inv_Z = np.linalg.solve(V_tilde, Z_act.T).T
+            ellip = np.sqrt(np.einsum('ij,ij->i', Z_act, V_inv_Z))
+            ucb = Z_act @ a_hat + beta_t * ellip
+            x_dep = action_set[int(np.argmax(ucb))]
+            y_t = env.step(x_dep, t)
+            expl_buf.append((x_dep, y_t, t))
+            if len(expl_buf) > self.W + 10:
+                expl_buf = [(x_s, y_s, s) for (x_s, y_s, s) in expl_buf
+                            if s >= t - self.W]
+            r_t = float(x_dep @ env.theta[t])
+            metrics.control_regret[t] = r_opt - r_t
+            metrics.costed_regret[t] = r_opt - r_t
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: LowRank Reward UCB (LowESTR/VOFUL spirit)
+# ---------------------------------------------------------------------------
+
+class LowRankRewardUCB:
+    """Learn subspace from reward data, r-dim UCB."""
+    def __init__(self, env, window=200, pca_warmup=50, lam=1.0, delta=0.05, seed=1):
+        self.env = env
+        self.W = window
+        self.pca_warmup = pca_warmup
+        self.lam = lam
+        self.delta = delta
+        self.rng = np.random.default_rng(seed)
+        self.S = env.S
+        self.sigma_eps = env.sigma_eps
+        self.L_x = env.L_x
+
+    def _beta_r(self, n, gamma=0.0):
+        r = self.env.r
+        arg = max(1.0 + n * self.L_x**2 / self.lam, 1.0 + 1e-12)
+        return (self.sigma_eps * np.sqrt(r * np.log(arg / self.delta))
+                + np.sqrt(self.lam) * self.S
+                + gamma * self.S * self.L_x)
+
+    def run(self):
+        env = self.env
+        d, r, T = env.d, env.r, env.T
+        metrics = RunMetrics(name="LowRank-Reward-UCB", T=T)
+        xy_buf = []
+        expl_buf = []
+        P_hat = np.eye(d)[:, :r]
+        current_k = -1
+        for t in range(T):
+            k = env.seg_of[t]
+            if k != current_k:
+                xy_buf = []
+                expl_buf = []
+                P_hat = np.eye(d)[:, :r]
+                current_k = k
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt = env.optimal_reward(action_set, t)
+            if len(xy_buf) >= self.pca_warmup:
+                M = np.zeros((d, d))
+                recent = xy_buf[-(self.W):]
+                for x_s, y_s, s in recent:
+                    M += np.outer(x_s * y_s, x_s * y_s)
+                M /= len(recent)
+                try:
+                    eigvals, eigvecs = np.linalg.eigh(M)
+                    P_hat = eigvecs[:, -r:]
+                except Exception:
+                    pass
+            Z = action_set @ P_hat
+            win = [(zs, ys) for zs, ys, s in expl_buf if s >= t - self.W]
+            V_r = self.lam * np.eye(r)
+            b_r = np.zeros(r)
+            for zs, ys in win:
+                V_r += np.outer(zs, zs)
+                b_r += zs * ys
+            a_hat = np.linalg.solve(V_r, b_r)
+            beta_t = self._beta_r(len(win), gamma=0.3)
+            V_inv_Z = np.linalg.solve(V_r, Z.T).T
+            ucb = Z @ a_hat + beta_t * np.sqrt(
+                np.einsum('ij,ij->i', Z, V_inv_Z))
+            idx = int(np.argmax(ucb))
+            x_dep = action_set[idx]
+            z_dep = Z[idx]
+            y = env.step(x_dep, t)
+            xy_buf.append((x_dep, y, t))
+            expl_buf.append((z_dep, y, t))
+            r_t = float(x_dep @ env.theta[t])
+            metrics.control_regret[t] = r_opt - r_t
+            metrics.costed_regret[t] = r_opt - r_t
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# SPSC with robustness knobs (for Experiments A-C)
+# ---------------------------------------------------------------------------
+
+class SPSC_Robustness:
+    """SPSC Algorithm 1 with robustness knobs for Experiments A-C."""
+
+    def __init__(self, env, probe_every=30, probe_cost=0.1, window=200,
+                 lam=1.0, delta=0.05, seed=0,
+                 delta_sigma=0.0, eps_cross=0.0, coverage_dim=None):
+        self.env = env
+        self.probe_every = probe_every
+        self.c = probe_cost
+        self.W = window
+        self.lam = lam
+        self.delta = delta
+        self.rng = np.random.default_rng(seed)
+        d, r = env.d, env.r
+        self.d, self.r = d, r
+        self.L_x = env.L_x
+        self.sigma_eps = env.sigma_eps
+        self.S = env.S
+        self.delta_sigma = delta_sigma
+        self.eps_cross = eps_cross
+        self.coverage_dim = coverage_dim if coverage_dim is not None else d
+
+    def _is_probe(self, t, k):
+        seg_start = self.env.tau[k]
+        if t == seg_start:
+            return True
+        return ((t - seg_start) % self.probe_every) == 0
+
+    def _beta(self, n):
+        eff = min(n, self.W)
+        arg = max(1.0 + eff * self.L_x**2 / self.lam, 1.0 + 1e-12)
+        return (self.sigma_eps * np.sqrt(self.r * np.log(arg / self.delta))
+                + np.sqrt(self.lam) * self.S)
+
+    def _gamma(self, m, G_norms, M_hat=None):
+        if m < 2:
+            return float(self.S)
+        K_inv_op = (self.d + 2) / (2.0 * self.d)
+        R_X_hat = (float(np.percentile(G_norms, 90)) if len(G_norms) >= 2
+                   else K_inv_op * self.d * ((self.S + 1.0)**2 + self.sigma_eps**2))
+        if M_hat is not None:
+            eigs = np.sort(np.linalg.eigvalsh(M_hat))[::-1]
+            gap = max(float(eigs[self.r - 1] - eigs[self.r]), 1e-4) if len(eigs) > self.r else 1e-4
+        else:
+            gap = 1e-4
+        return 8.0 * self.S * R_X_hat / gap * np.sqrt(
+            np.log(2.0 * self.d / self.delta) / m)
+
+    def run(self):
+        env = self.env
+        d, r, T = self.d, self.r, env.T
+        metrics = RunMetrics(name="SPSC-Robust", T=T)
+        M_sum = np.zeros((d, d))
+        U_hat = np.eye(d, r)
+        m_probe_seg = 0
+        current_k = -1
+        G_norms = []
+        expl_buf = []
+        sigma_sq_used = self.sigma_eps**2 + self.delta_sigma
+        for t in range(T):
+            k = env.seg_of[t]
+            if k != current_k:
+                M_sum = np.zeros((d, d))
+                m_probe_seg = 0
+                G_norms = []
+                expl_buf = []
+                current_k = k
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt = env.optimal_reward(action_set, t)
+            if self._is_probe(t, k):
+                metrics.probe_flags[t] = True
+                z_probe = self.rng.standard_normal(d)
+                if self.coverage_dim < d:
+                    z_probe[self.coverage_dim:] = 0.0
+                norm_z = np.linalg.norm(z_probe)
+                if norm_z < 1e-12:
+                    z_probe[0] = 1.0
+                    norm_z = 1.0
+                u_t = np.sqrt(d) * z_probe / norm_z
+                eps_base = self.rng.normal(0.0, self.sigma_eps)
+                eps_base = np.clip(eps_base, -env.L_eps, env.L_eps)
+                cross_term = self.eps_cross * float(u_t @ env.theta[t])
+                y_t = float(u_t @ env.theta[t]) + eps_base + cross_term
+                s_t = y_t**2 - sigma_sq_used
+                G_t = K_inverse(s_t * np.outer(u_t, u_t), d)
+                G_norms.append(float(np.linalg.norm(G_t, ord=2)))
+                M_sum += G_t
+                m_probe_seg += 1
+                M_hat = None
+                if m_probe_seg >= 2:
+                    M_hat = M_sum / m_probe_seg
+                    _, eig_vecs = np.linalg.eigh(M_hat)
+                    U_hat = eig_vecs[:, -r:]
+                P_true = env.segment_projector(k)
+                P_hat = U_hat @ U_hat.T
+                metrics.subspace_error[t] = np.linalg.norm(P_hat - P_true, ord=2)
+                r_t = float(u_t @ env.theta[t])
+                metrics.control_regret[t] = r_opt - r_t
+                metrics.costed_regret[t] = r_opt - r_t + self.c
+            else:
+                win = [(xs, ys) for xs, ys, s in expl_buf if s >= t - self.W]
+                V = self.lam * np.eye(r)
+                b = np.zeros(r)
+                for xs, ys in win:
+                    zs = U_hat.T @ xs
+                    V += np.outer(zs, zs)
+                    b += zs * ys
+                a_hat = np.linalg.solve(V, b)
+                bt = self._beta(len(win))
+                M_hat_curr = M_sum / m_probe_seg if m_probe_seg >= 2 else None
+                gt = self._gamma(m_probe_seg, G_norms, M_hat_curr)
+                Z = action_set @ U_hat
+                ViZ = np.linalg.solve(V, Z.T).T
+                el = np.sqrt(np.einsum('ij,ij->i', Z, ViZ))
+                xn = np.linalg.norm(action_set, axis=1)
+                ucb = Z @ a_hat + bt * el + gt * xn
+                x_dep = action_set[int(np.argmax(ucb))]
+                eps_base = self.rng.normal(0.0, self.sigma_eps)
+                eps_base = np.clip(eps_base, -env.L_eps, env.L_eps)
+                cross_term = self.eps_cross * float(x_dep @ env.theta[t])
+                y_t = float(x_dep @ env.theta[t]) + eps_base + cross_term
+                expl_buf.append((x_dep, y_t, t))
+                if len(expl_buf) > self.W + 10:
+                    expl_buf = [(xs, ys, s) for xs, ys, s in expl_buf
+                                if s >= t - self.W]
+                r_t = float(x_dep @ env.theta[t])
+                metrics.control_regret[t] = r_opt - r_t
+                metrics.costed_regret[t] = r_opt - r_t
         return metrics
