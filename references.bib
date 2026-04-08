@@ -1,0 +1,434 @@
+% =============================================================
+% Corrected references for the SPSC paper
+% All entries verified against primary sources (March 2026)
+% =============================================================
+
+% --- Core bandits ---
+
+@article{international2009estimation,
+    title={Estimation of the warfarin dose with clinical and pharmacogenomic data},
+    author={{International Warfarin Pharmacogenetics Consortium}},
+    journal={New England Journal of Medicine},
+    volume={360},
+    number={8},
+    pages={753--764},
+    year={2009},
+  }
+@inproceedings{abbasi2011improved,
+  title     = {Improved Algorithms for Linear Stochastic Bandits},
+  author    = {Abbasi-Yadkori, Yasin and P{\'a}l, D{\'a}vid and Szepesv{\'a}ri, Csaba},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {24},
+  year      = {2011}
+}
+
+@inproceedings{li2010contextual,
+  title     = {A Contextual-Bandit Approach to Personalized News Article Recommendation},
+  author    = {Li, Lihong and Chu, Wei and Langford, John and Schapire, Robert E.},
+  booktitle = {Proceedings of the 19th International Conference on World Wide Web},
+  pages     = {661--670},
+  year      = {2010}
+}
+
+% --- Low-rank bandits ---
+
+% NOTE: CDC 2019 publication could not be independently verified.
+% Citing as arXiv preprint for safety.
+@article{lale2019stochastic,
+  title   = {Stochastic Linear Bandits with Hidden Low Rank Structure},
+  author  = {Lale, Sahin and Azizzadenesheli, Kamyar and Anandkumar, Anima and Hassibi, Babak},
+  journal = {arXiv preprint arXiv:1901.09490},
+  year    = {2019}
+}
+
+@inproceedings{jun2019bilinear,
+  title     = {Bilinear Bandits with Low-Rank Structure},
+  author    = {Jun, Kwang-Sung and Willett, Rebecca and Wright, Stephen and Nowak, Robert},
+  booktitle = {Proceedings of the 36th International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {97},
+  pages     = {3163--3172},
+  year      = {2019}
+}
+
+% REMOVED: jedra2024low — duplicate of pmlr-v235-jedra24a with incorrect venue
+% (was listed as NeurIPS 2024; correct venue is ICML 2024) and missing co-authors.
+
+% FIXED: was arXiv-only, not AAAI 2017. Authors corrected to actual author list.
+@article{kveton2017stochastic,
+  title   = {Stochastic Low-Rank Bandits},
+  author  = {Kveton, Branislav and Szepesv{\'a}ri, Csaba and Rao, Anup and Wen, Zheng and Abbasi-Yadkori, Yasin and Muthukrishnan, S.},
+  journal = {arXiv preprint arXiv:1712.04644},
+  year    = {2017}
+}
+
+@inproceedings{lu2021lowrank,
+  title     = {Low-Rank Generalized Linear Bandit Problems},
+  author    = {Lu, Yangyi and Meisami, Amirhossein and Tewari, Ambuj},
+  booktitle = {Proceedings of The 24th International Conference on Artificial Intelligence and Statistics},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {130},
+  pages     = {460--468},
+  year      = {2021}
+}
+
+% REMOVED: lu2021low — exact duplicate of lu2021lowrank
+
+% --- Non-stationary bandits ---
+
+% REMOVED: he2022nonstationary — no paper with these authors/title/venue found.
+% Title duplicates qin2022nonstationary but with different authors (He, Zhang, Gu)
+% and different venue (ICML 2022). Extensive search found no such paper.
+
+@article{qin2022nonstationary,
+  title   = {Non-Stationary Representation Learning in Sequential Linear Bandits},
+  author  = {Qin, Yuzhen and Menara, Tommaso and Oymak, Samet and Ching, ShiNung and Pasqualetti, Fabio},
+  journal = {IEEE Open Journal of Control Systems},
+  volume  = {1},
+  pages   = {41--56},
+  year    = {2022},
+  doi     = {10.1109/OJCSYS.2022.3178540}
+}
+
+@inproceedings{cheung2019learning,
+  title     = {Learning to Optimize under Non-Stationarity},
+  author    = {Cheung, Wang Chi and Simchi-Levi, David and Zhu, Ruihao},
+  booktitle = {Proceedings of the 22nd International Conference on Artificial Intelligence and Statistics},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {89},
+  pages     = {1079--1087},
+  year      = {2019}
+}
+
+@inproceedings{russac2019weighted,
+  title     = {Weighted Linear Bandits for Non-Stationary Environments},
+  author    = {Russac, Yoan and Vernade, Claire and Capp{\'e}, Olivier},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {32},
+  year      = {2019}
+}
+
+@inproceedings{auer2019adaptively,
+  title     = {Adaptively Tracking the Best Bandit Arm with an Unknown Number of Distribution Changes},
+  author    = {Auer, Peter and Gajane, Pratik and Ortner, Ronald},
+  booktitle = {Conference on Learning Theory},
+  pages     = {138--158},
+  year      = {2019},
+  organization = {PMLR}
+}
+
+@inproceedings{auer2019achieving,
+  title     = {Achieving Optimal Dynamic Regret for Non-Stationary Bandits without Prior Information},
+  author    = {Auer, Peter and Chen, Yifang and Gajane, Pratik and Lee, Chung-Wei and Luo, Haipeng and Ortner, Ronald and Wei, Chen-Yu},
+  booktitle = {Conference on Learning Theory},
+  pages     = {159--163},
+  year      = {2019},
+  organization = {PMLR}
+}
+
+@inproceedings{garivier2011upper,
+  title     = {On Upper-Confidence Bound Policies for Switching Bandit Problems},
+  author    = {Garivier, Aur{\'e}lien and Moulines, Eric},
+  booktitle = {International Conference on Algorithmic Learning Theory},
+  pages     = {174--188},
+  year      = {2011},
+  organization = {Springer}
+}
+
+% FIXED: corrected to the actual JMLR 2023 paper. Pages corrected to 1--37.
+@article{abbasi2023dynamic,
+  title   = {A New Look at Dynamic Regret for Non-Stationary Stochastic Bandits},
+  author  = {Abbasi-Yadkori, Yasin and Gy{\"o}rgy, Andr{\'a}s and Lazi{\'c}, Nevena},
+  journal = {Journal of Machine Learning Research},
+  volume  = {24},
+  number  = {288},
+  pages   = {1--37},
+  year    = {2023}
+}
+
+% --- Costly observations / probing ---
+
+@inproceedings{seldin2014paid,
+  title     = {Prediction with Limited Advice and Multiarmed Bandits with Paid Observations},
+  author    = {Seldin, Yevgeny and Bartlett, Peter L. and Crammer, Koby and Abbasi-Yadkori, Yasin},
+  booktitle = {Proceedings of the 31st International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {32},
+  pages     = {280--287},
+  year      = {2014}
+}
+
+% FIXED: author names corrected (Caleb Biddulph, Claire Wang). Pages added.
+@inproceedings{tucker2023costly,
+  title     = {Bandits with Costly Reward Observations},
+  author    = {Tucker, Aaron D. and Biddulph, Caleb and Wang, Claire and Joachims, Thorsten},
+  booktitle = {Proceedings of the 39th Conference on Uncertainty in Artificial Intelligence},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {216},
+  pages     = {2147--2156},
+  year      = {2023}
+}
+
+@article{elumar2025costly,
+  title   = {Multi-Armed Bandits With Costly Probes},
+  author  = {Elumar, Eray Can and Tekin, Cem and Ya{\u{g}}an, Osman},
+  journal = {IEEE Transactions on Information Theory},
+  volume  = {71},
+  number  = {1},
+  pages   = {618--643},
+  year    = {2025},
+  doi     = {10.1109/TIT.2024.3506866}
+}
+
+@article{cesa2005minimizing,
+  title   = {Minimizing Regret with Label Efficient Prediction},
+  author  = {Cesa-Bianchi, Nicol{\`o} and Lugosi, G{\'a}bor and Stoltz, Gilles},
+  journal = {IEEE Transactions on Information Theory},
+  volume  = {51},
+  number  = {6},
+  pages   = {2152--2162},
+  year    = {2005}
+}
+
+@inproceedings{zuo2020observe,
+  title     = {Observe Before Play: Multi-Armed Bandit with Pre-Observations},
+  author    = {Zuo, Jinhang and Zhang, Xiaoxi and Joe-Wong, Carlee},
+  booktitle = {Proceedings of the AAAI Conference on Artificial Intelligence},
+  volume    = {34},
+  number    = {02},
+  pages     = {2218--2225},
+  year      = {2020}
+}
+
+% --- Active / preference-based ---
+
+@article{sekhari2023contextual,
+  title={Contextual bandits and imitation learning with preference-based active queries},
+  author={Sekhari, Ayush and Sridharan, Karthik and Sun, Wen and Wu, Runzhe},
+  journal={Advances in Neural Information Processing Systems},
+  volume={36},
+  pages={11261--11295},
+  year={2023}
+}
+@inproceedings{sekhari2023aurora,
+  title     = {Selective Sampling and Imitation Learning via Online Regression},
+  author    = {Sekhari, Ayush and Sridharan, Karthik and Sun, Wen and Wu, Runzhe},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {36},
+  year      = {2023}
+}
+
+% --- Matrix estimation / sensing ---
+
+@article{tropp2012user,
+  title   = {User-Friendly Tail Bounds for Sums of Random Matrices},
+  author  = {Tropp, Joel A.},
+  journal = {Foundations of Computational Mathematics},
+  volume  = {12},
+  number  = {4},
+  pages   = {389--434},
+  year    = {2012}
+}
+
+@article{davis1970rotation,
+  title   = {The Rotation of Eigenvectors by a Perturbation. {III}},
+  author  = {Davis, Chandler and Kahan, William Morton},
+  journal = {SIAM Journal on Numerical Analysis},
+  volume  = {7},
+  number  = {1},
+  pages   = {1--46},
+  year    = {1970}
+}
+
+@article{yu2015useful,
+  title   = {A Useful Variant of the {Davis--Kahan} Theorem for Statisticians},
+  author  = {Yu, Yi and Wang, Tengyao and Samworth, Richard J.},
+  journal = {Biometrika},
+  volume  = {102},
+  number  = {2},
+  pages   = {315--323},
+  year    = {2015}
+}
+
+@article{han2025matrixinference,
+  title   = {Online Statistical Inference in Decision-Making with Matrix Context},
+  author  = {Han, Qiyu and Sun, Will Wei and Zhang, Yichen},
+  journal = {The Annals of Statistics},
+  volume  = {53},
+  number  = {5},
+  pages   = {1963--1986},
+  year    = {2025}
+}
+
+@inproceedings{lattimore2021phase,
+  title     = {Bandit Phase Retrieval},
+  author    = {Lattimore, Tor and Hao, Botao},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {34},
+  year      = {2021}
+}
+
+@inproceedings{kacham2023adaptive,
+  title     = {Lower Bounds on Adaptive Sensing for Matrix Recovery},
+  author    = {Kacham, Praneeth and Woodruff, David P.},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {36},
+  year      = {2023}
+}
+
+% --- VOFUL / representation learning bandits ---
+
+
+
+@article{cesabianchi2023colt,
+  title   = {A Definition of Non-Stationary Bandits},
+  author  = {Cesa-Bianchi, Nicol{\`o} and Esposito, Emanuel and Maran, Davide},
+  journal = {arXiv preprint arXiv:2302.12202},
+  year    = {2023}
+}
+
+@inproceedings{agarwal2014taming,
+  title     = {Taming the Monster: A Fast and Simple Algorithm for Contextual Bandits},
+  author    = {Agarwal, Alekh and Hsu, Daniel and Kale, Satyen and Langford, John and Li, Lihong and Schapire, Robert},
+  booktitle = {Proceedings of the 31st International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {32},
+  pages     = {1638--1646},
+  year      = {2014}
+}
+
+% FIXED: second author corrected from Krishnamurthy to Rakhlin.
+@inproceedings{foster2020beyond,
+  title     = {Beyond {UCB}: Optimal and Efficient Contextual Bandits with Regression Oracles},
+  author    = {Foster, Dylan J. and Rakhlin, Alexander},
+  booktitle = {Proceedings of the 37th International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {119},
+  pages     = {3199--3210},
+  year      = {2020}
+}
+
+% FIXED: title and venue corrected. Original had wrong title
+% ("Contextual Bandit Algorithms with Supervised Learning Guarantees",
+% which is a 2011 paper by Beygelzimer et al.) and wrong venue (AISTATS 2021).
+@article{bietti2021contextual,
+  title   = {A Contextual Bandit Bake-off},
+  author  = {Bietti, Alberto and Agarwal, Alekh and Langford, John},
+  journal = {Journal of Machine Learning Research},
+  volume  = {22},
+  number  = {133},
+  pages   = {1--49},
+  year    = {2021}
+}
+
+
+@article{cai2024transfer,
+  title   = {Transfer Learning for Contextual Multi-Armed Bandits},
+  author  = {Cai, Changxiao and Cai, T. Tony and Li, Hongzhe},
+  journal = {The Annals of Statistics},
+  volume  = {52},
+  number  = {1},
+  pages   = {207--232},
+  year    = {2024}
+}
+
+% --- Spectral / latent continuity ---
+
+@inproceedings{stojanovic2023spectral,
+  title     = {Spectral Entry-wise Matrix Estimation for Low-Rank Reinforcement Learning},
+  author    = {Stojanovic, Stefan and Jedra, Yassir and Proutiere, Alexandre},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {36},
+  year      = {2023}
+}
+
+
+@article{park2024latentcontinuity,
+  title   = {Transfer Learning in Bandits with Latent Continuity},
+  author  = {Park, Hyejin and Shin, Seiyun and Jun, Kwang-Sung and Ok, Jungseul},
+  journal = {IEEE Transactions on Information Theory},
+  volume  = {70},
+  number  = {11},
+  pages   = {7952--7970},
+  year    = {2024},
+  doi     = {10.1109/TIT.2024.3441669}
+}
+
+
+@inproceedings{memmel2024asid,
+  title     = {{ASID}: Active Exploration for System Identification in Robotic Manipulation},
+  author    = {Memmel, Marius and Wagenmaker, Andrew and Zhu, Chuning and Yin, Patrick and Fox, Dieter and Gupta, Abhishek},
+  booktitle = {The Twelfth International Conference on Learning Representations},
+  year      = {2024}
+}
+
+
+@inproceedings{hou2024pslb,
+  title     = {Almost Minimax Optimal Best Arm Identification in Piecewise Stationary Linear Bandits},
+  author    = {Hou, Yunlong and Tan, Vincent Y. F. and Zhong, Zixin},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {37},
+  year      = {2024}
+}
+
+
+@inproceedings{kang2022gestt,
+  title     = {Efficient Frameworks for Generalized Low-Rank Matrix Bandit Problems},
+  author    = {Kang, Yue and Hsieh, Cho-Jui and Lee, Thomas C.M.},
+  booktitle = {Advances in Neural Information Processing Systems},
+  volume    = {35},
+  year      = {2022}
+}
+
+
+@article{komiyama2024adr,
+  title   = {Finite-time Analysis of Globally Nonstationary Multi-Armed Bandits},
+  author  = {Komiyama, Junpei and Fouch{\'e}, Edouard and B{\"o}hm, Klemens},
+  journal = {Journal of Machine Learning Research},
+  volume  = {25},
+  number  = {112},
+  pages   = {1--56},
+  year    = {2024}
+}
+
+
+@inproceedings{pmlr-v235-jang24e,
+  title     = {Efficient Low-Rank Matrix Estimation, Experimental Design, and Arm-Set-Dependent Low-Rank Bandits},
+  author    = {Jang, Kyoungseok and Zhang, Chicheng and Jun, Kwang-Sung},
+  booktitle = {Proceedings of the 41st International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {235},
+  pages     = {18696--18746},
+  year      = {2024}
+}
+
+
+@inproceedings{pmlr-v235-jedra24a,
+  title     = {Low-Rank Bandits via Tight Two-to-Infinity Singular Subspace Recovery},
+  author    = {Jedra, Yassir and Reveillard, William and Stojanovic, Stefan and Proutiere, Alexandre},
+  booktitle = {Proceedings of the 41st International Conference on Machine Learning},
+  series    = {Proceedings of Machine Learning Research},
+  volume    = {235},
+  year      = {2024}
+}
+
+
+
+
+
+
+
+
+@article{srinivasan1990statlog,
+  title   = {{Statlog} ({Landsat Satellite}) Data Set},
+  author  = {Srinivasan, Ashwin},
+  journal = {UCI Machine Learning Repository},
+  year    = {1990}
+}
+
+@misc{shuttle1995,
+  title        = {Statlog ({Shuttle}) Data Set},
+  author       = {{UCI Machine Learning Repository}},
+  year         = {1995},
+  howpublished = {\url{https://archive.ics.uci.edu/ml/datasets/Statlog+(Shuttle)}}
+}
