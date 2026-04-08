@@ -2,7 +2,7 @@
 
 Code for reproducing all experiments in:
 
-> **Single-Play Subspace-Calibrated Optimism for Piecewise-Stationary Low-Rank Bandits**
+> **Subspace Identifiability Boundaries for Piecewise Stationary Low Rank Bandits**
 > NeurIPS 2026 submission
 
 ## Setup
