@@ -668,7 +668,7 @@ m_{\mathrm{relearn}}
 
     \begin{figure}[!htpb]
         \centering
-        \includegraphics[width=0.84\textwidth]{experiment1_synthetic_phase.png}
+        \includegraphics[width=0.84\textwidth]{figs/experiment1_synthetic_phase.png}
         \caption{Synthetic phase-transition benchmark.
         \textbf{(a)}~SPSC/LinUCB ratio contour.
         Solid black: empirical ratio${=}1$.
@@ -3701,7 +3701,7 @@ Theorem~\ref{thm:closed_dynamic_regret} optimizes $W$ for the worst-case within-
 \end{remark}
 \begin{figure}[!htpb]
     \centering
-    \includegraphics[width=\textwidth]{experiment3_probe_ablation.png}
+    \includegraphics[width=\textwidth]{figs/experiment3_probe_ablation.png}
     \caption{Probe-rate ablation. Left: final regret versus probe frequency, showing the predicted U-shaped tradeoff. Right: final control regret versus late-segment subspace error.}
     \label{fig:probe-ablation}
 \end{figure}
@@ -3728,7 +3728,7 @@ Figure~\ref{fig:pendigits-regime} validates the phase transition on real data (U
 
 \begin{figure}[!htpb]
     \centering
-    \includegraphics[width=0.84\textwidth]{experiment_pendigits_operating_regime.png}
+    \includegraphics[width=0.84\textwidth]{figs/experiment_pendigits_operating_regime.png}
     \caption{Pendigits regime study.
     (a)~SPSC/LinUCB ratio. (b)~Empirical vs.\ $\sqrt{r/d}$.
     (c)~SPSC/Oracle ratio.}
@@ -3744,7 +3744,7 @@ Figure~\ref{fig:pendigits-regime} validates the phase transition on real data (U
 
  \begin{figure}[!htpb]
       \centering
-      \includegraphics[width=\textwidth]{April 8/experiment_real_satimage_double_rings.png}
+      \includegraphics[width=\textwidth]{figs/experiment_real_satimage_double_rings.png}
       \caption{Satimage operating-regime study ($K{=}10$, $T{=}5{,}000$,
       probe period 10, 10 seeds per cell).
       Same layout as Figure~\ref{fig:pendigits-regime}.
@@ -3828,7 +3828,7 @@ Figure~\ref{fig:pendigits-regime} validates the phase transition on real data (U
 
   \begin{figure}[!htpb]
       \centering
-      \includegraphics[width=\textwidth]{experiment_robustness_abc.png}
+      \includegraphics[width=\textwidth]{figs/experiment_robustness_abc.png}
       \caption{Robustness and necessity experiments ($d{=}4$, $r{=}1$,
       $K{=}4$, $T{=}6{,}000$, 10 seeds).
       (a)~Variance misspecification: regret and subspace error are stable
@@ -3850,7 +3850,7 @@ We test SPSC with misspecified rank on the Covertype benchmark ($d = 155$, true 
 
 \begin{figure}[!htpb]
 \centering
-\includegraphics[width=0.65\textwidth]{experiment_rank_misspec.png}
+\includegraphics[width=0.65\textwidth]{figs/experiment_rank_misspec.png}
 \caption{Rank misspecification robustness (Covertype, $d{=}155$, $r^\star{=}10$). SPSC beats LinUCB for $r \in [15, 50]$, with the sweet spot at $r{=}30$ ($10\%$ improvement). The U-shape confirms that extreme overestimation degrades toward the ambient baseline.}
 \label{fig:rank_misspec}
 \end{figure}
@@ -3877,7 +3877,7 @@ With denser probing (probe period 10), the binned mean subspace error $\|\wideha
 
 \begin{figure}[!htpb]
     \centering
-    \includegraphics[width=\textwidth]{experiment2_subspace_recovery.png}
+    \includegraphics[width=\textwidth]{figs/experiment2_subspace_recovery.png}
     \caption{Subspace recovery vs.\ probe count within a segment. Left: linear scale with $1/\sqrt{m}$ guide. Right: log-log scale.}
     \label{fig:subspace-recovery}
 \end{figure}
@@ -3889,7 +3889,7 @@ The subspace error jumps at each change point and then decays as fresh probe obs
 
 \begin{figure}[!htpb]
     \centering
-    \includegraphics[width=\textwidth]{experiment4_changepoint_recovery.png}
+    \includegraphics[width=\textwidth]{figs/experiment4_changepoint_recovery.png}
     \caption{Change-point adaptation. Left: smoothed instantaneous control regret. Right: SPSC subspace-error trajectory.}
     \label{fig:changepoint-adaptation}
 \end{figure}
@@ -3903,7 +3903,7 @@ We treat this as preliminary evidence that the method remains useful beyond the 
 
 \begin{figure}[!htpb]
     \centering
-    \includegraphics[width=\textwidth]{experiment5_dimension_scaling.png}
+    \includegraphics[width=\textwidth]{figs/experiment5_dimension_scaling.png}
     \caption{Preliminary dimension-sensitivity study with $r=2$ fixed and $d\in\{4,8,12\}$. SPSC remains better than ambient LinUCB across this range, but the relative advantage does not increase monotonically with $d$.}
     \label{fig:dimension-scaling}
 \end{figure}
@@ -3922,7 +3922,7 @@ The SPSC/Oracle ratio remains stable at approximately $1.55\times$ throughout, i
 
 \begin{figure}[!htpb]
   \centering
-  \includegraphics[width=\linewidth]{experiment6_noise_robustness.png}
+  \includegraphics[width=\linewidth]{figs/experiment6_noise_robustness.png}
   \caption{Noise robustness. (a) Final control regret vs.\ $\sigma_\varepsilon$. (b) SPSC/LinUCB and SPSC/Oracle ratios.}
   \label{fig:exp6}
 \end{figure}
@@ -3963,7 +3963,7 @@ At $K{=}1$, SPSC/LinUCB $= 0.414$; at $K{=}12$, the ratio rises to 0.855.
 
 \begin{figure}[!htpb]
   \centering
-  \includegraphics[width=\linewidth]{experiment7_changepoint_frequency.png}
+  \includegraphics[width=\linewidth]{figs/experiment7_changepoint_frequency.png}
   \caption{Changepoint frequency. (a) Costed regret vs.\ $K$. (b) Control regret vs.\ $K$. (c) Regret ratios vs.\ $K$.}
   \label{fig:exp7}
 \end{figure}
@@ -4006,7 +4006,7 @@ The subspace error is nearly constant across all $\rho$ (0.28--0.33), confirming
 
 \begin{figure}[!htpb]
   \centering
-  \includegraphics[width=\linewidth]{experiment8_drift_speed.png}
+  \includegraphics[width=\linewidth]{figs/experiment8_drift_speed.png}
   \caption{Drift speed. (a) Control regret vs.\ $\rho$. (b) Regret ratios vs.\ $\rho$. (c) Subspace error vs.\ $\rho$.}
   \label{fig:exp8}
 \end{figure}
@@ -4050,7 +4050,7 @@ Probe overhead is negligible (costed regret 2249 vs.\ control regret 2229, a 0.9
 
 \begin{figure}[!htpb]
   \centering
-  \includegraphics[width=\linewidth]{experiment9_sota_benchmark.png}
+  \includegraphics[width=\linewidth]{figs/experiment9_sota_benchmark.png}
   \caption{SOTA comparison (Russac et al.\ NeurIPS 2019 benchmark). Left: cumulative regret curves. Right: final regret bar chart.}
   \label{fig:exp9}
 \end{figure}
@@ -4077,7 +4077,7 @@ Reset-LinUCB (oracle reset) & $4647 \pm 147$ & $4647$ & $+11.5\%$ \\
 
 \begin{figure}[!htpb]
     \centering
-    \includegraphics[width=\textwidth]{satimage_wincount.png}
+    \includegraphics[width=\textwidth]{figs/satimage_wincount.png}
     \caption{Aggregate comparison on Satimage.
     (a)~Win count: number of $(d,r)$ cells (out of 16) where SPSC achieves lower costed regret than each non-oracle baseline.
     (b)~Average SPSC/Baseline regret ratio; values below~1 indicate SPSC advantage.
@@ -4292,7 +4292,7 @@ The additional experiments collectively characterise the operating envelope of S
 
   \begin{figure}[t]
   \centering
-  \includegraphics[width=\textwidth]{experiment_warfarin.png}
+  \includegraphics[width=\textwidth]{figs/experiment_warfarin.png}
   \caption{Warfarin clinical dosing benchmark ($d{=}93$, $K{=}8$, $T{=}5{,}000$, 10 seeds).
   \textbf{(a)}~Absolute regret at $r{=}5$ (best SPSC configuration): SPSC reduces regret by $31.7\%$ vs.\ LinUCB and beats all
   nonstationary baselines.
@@ -4363,7 +4363,7 @@ To isolate whether SPSC's gains on Warfarin arise from the \emph{learned} subspa
   reduction and ${\approx}14.1\%$ from the learned subspace.
   \begin{figure}[!htpb]
   \centering
-  \includegraphics[width=\textwidth]{ablation_warfarin_random_subspace.png}
+  \includegraphics[width=\textwidth]{figs/ablation_warfarin_random_subspace.png}
   \caption{Warfarin random subspace ablation ($d{=}93$, $K{=}8$, $T{=}5{,}000$, 10 seeds).
   \textbf{(a)}~Absolute regret: SPSC (learned subspace) $<$ RandomSub (random subspace) $<$ LinUCB (ambient).
   \textbf{(b)}~Ratio to LinUCB: both subspace methods beat LinUCB, but SPSC's learned subspace provides
