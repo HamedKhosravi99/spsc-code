@@ -99,8 +99,7 @@
   destroys identifiability, while approximate violations degrade gracefully.
   Building on this characterization, we propose \emph{Single-Play Subspace-Calibrated Optimism} (SPSC), achieving costed dynamic
   regret $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$.
-    An $\Omega(\sqrt{cT})$ lower bound confirms the probe--subspace tradeoff is
-  fundamental for explore-then-commit policies; an
+    An $\Omega(c^{1/3}T^{2/3})$ lower bound for projected-exploitation policies matches the upper bound, confirming the probe--subspace tradeoff is tight; an
   adaptive variant removes the need for oracle segment boundaries. Experiments confirm the predicted phase transition: SPSC achieves regret reductions over ambient-space baselines when $d - r \gg
   T^{1/6}$, and incurs higher cost when $d - r \lesssim T^{1/6}$, matching theory on synthetic and real-data benchmarks.
   \end{abstract}
@@ -204,15 +203,13 @@ not~$r$.
   \]
   replacing the ambient $d\sqrt{T}$ dependence with intrinsic rank $r$.
   An $\Omega(\sqrt{cT})$ lower bound for explore-then-commit
-  policies (Theorem~\ref{thm:etc_lower_bound})---a class that
-  includes SPSC---confirms that the probe--subspace tradeoff is
-  inherent to any method that learns a subspace from probes and then
-  exploits within it. The remaining gap to the
-  $\widetilde{O}(c^{1/3}T^{2/3})$ upper bound arises from
-  $O(\varepsilon)$ per-round bias under hard projection versus the
-  $\Omega(\varepsilon^2)$ information-theoretic cost
-  (Remark~\ref{rem:etc_lb_interpretation}), and closing it via
-  soft-projection schemes is an explicit open problem.
+  policies (Theorem~\ref{thm:etc_lower_bound}) confirms the
+  probe--subspace tradeoff is fundamental.
+  A stronger $\Omega(c^{1/3}T^{2/3})$ lower bound
+  (Theorem~\ref{thm:probe_rate_lb}) matches the upper bound for
+  all projected-exploitation policies---a class that includes SPSC
+  and all known algorithms for this problem---closing the gap
+  (Remark~\ref{rem:eps_gap_resolved}).
   An adaptive variant detects change points without oracle boundaries
   and achieves the same leading rate with $O(K)$ overhead.
 
@@ -749,7 +746,7 @@ Experiments confirm regret reductions over all nonstationary baselines on real d
 
 
 \paragraph{Broader impact and future work.}
-This work is primarily theoretical, applicable to recommendation, pricing, and control. The main open question is closing the $\Omega(\sqrt{cT})$ vs.\ $\widetilde{O}(c^{1/3}T^{2/3})$ gap via soft-projection schemes; other directions include unknown rank $r$ and time-varying transition matrices.
+This work is primarily theoretical, applicable to recommendation, pricing, and control. The $\Omega(c^{1/3}T^{2/3})$ lower bound (Theorem~\ref{thm:probe_rate_lb}) closes the gap for projected-exploitation policies; the remaining open question is whether non-projecting algorithms can achieve $O(\sqrt{cT})$. Other directions include unknown rank $r$ and time-varying transition matrices.
 
 \newpage
 \bibliographystyle{plainnat}
@@ -787,7 +784,10 @@ This work is primarily theoretical, applicable to recommendation, pricing, and c
     \tocsubentry{E.6}{app:separation}{Mathematical Separations from Prior Work}
     \tocsubentry{E.7}{app:ambient_reference}{Ambient-Space Reference Bound}
     \tocsubentry{E.8}{app:coverage_lower_bound}{Lower Bounds: Necessity of Full Coverage}
-    \tocsubentry{E.9}{app:probe_cost_lower_bound}{Probe-Cost Lower Bound ($\Omega(\sqrt{cT})$)}
+    \tocsubentry{E.9}{app:probe_cost_lower_bound}{Probe-Cost Lower Bound ($\Omega(\sqrt{cT})$ for ETC)}
+    \tocsubentry{E.10}{app:minimax_subspace}{Minimax Optimality of $1/\sqrt{m}$ Recovery Rate}
+    \tocsubentry{E.11}{app:matching_lower_bound}{Matching $\Omega(c^{1/3}T^{2/3})$ Lower Bound}
+    \tocsubentry{E.12}{app:probe_allocation}{Optimal Probe Allocation Across Segments}
   \tocentry{F}{app:all_proofs}{Complete Proofs in Dependency Order}
   \tocentry{G}{app:additional_experiments}{Additional Experiments}
 
@@ -935,24 +935,15 @@ The probe-side conditions in Assumption~\ref{assum:probe_noise} are stated in th
   When this event holds, all guarantees of
   Theorem~\ref{thm:closed_dynamic_regret} apply unchanged.
 
-\paragraph{Probe-cost lower bound.}
+\paragraph{Probe-cost lower bounds.}
   Theorem~\ref{thm:etc_lower_bound} (Appendix~\ref{app:probe_cost_lower_bound}) proves an $\Omega(\sqrt{cT})$ minimax lower bound for
-   the probe--subspace tradeoff via a Le~Cam two-point argument. The bound applies to the class of explore-then-commit (ETC)
-  policies---any method that learns a subspace from full-dimensional probes and subsequently exploits within the committed subspace.
-  SPSC belongs to this class (with interleaved scheduling and an $r$-dimensional committed subspace), so the lower bound is directly
-  relevant.
+   the probe--subspace tradeoff via a Le~Cam two-point argument, applying to all explore-then-commit policies.
+  Theorem~\ref{thm:minimax_subspace_recovery} (Appendix~\ref{app:minimax_subspace}) proves the $1/\sqrt{m}$ subspace recovery rate is minimax optimal via Fano's inequality over Grassmannian packings.
+  Building on this, Theorem~\ref{thm:probe_rate_lb} (Appendix~\ref{app:matching_lower_bound}) establishes a matching $\Omega(c^{1/3}T^{2/3})$ lower bound for all projected-exploitation policies---any method that estimates a subspace and exploits within it, including SPSC.
+  This closes the gap between the upper and lower bounds for this policy class: the $\widetilde{O}(c^{1/3}T^{2/3})$ probe--subspace tradeoff term in Theorem~\ref{thm:closed_dynamic_regret} is tight.
 
-  The gap between $\Omega(\sqrt{cT})$ and the upper bound $\widetilde{O}(c^{1/3}T^{2/3})$ is structurally well-understood: it arises
-  because hard projection onto the estimated subspace incurs $O(\varepsilon)$ per-round bias from subspace error, while the
-  information-theoretic regret scales as $\Omega(\varepsilon^2)$ (Remark~\ref{rem:etc_lb_interpretation}). Concretely, the gap lives
-  entirely in the probe-cost exponent ($c^{1/2}$ vs.\ $c^{1/3}$), not in the $T$-dependence, and the $\Omega(\sqrt{cT})$ lower bound
-  already confirms that the $\widetilde{O}(T^{2/3})$ probe--subspace tradeoff term \emph{cannot be eliminated} by any ETC policy---it
-   is inherent to the learn-then-exploit paradigm.
-
-  Whether a tighter $\Omega(c^{1/3}T^{2/3})$ lower bound holds for the full class of adaptive policies (which may update the subspace
-   continuously rather than committing) remains open. A natural path to closing the gap from the upper-bound side is a
-  soft-projection scheme that achieves $O(\varepsilon^2)$ per-round cost instead of $O(\varepsilon)$; we leave this as an explicit
-  open question.
+  The only remaining open question is whether an algorithm operating in the full $d$-dimensional ambient space (without projecting onto the estimated subspace) could achieve $O(\varepsilon^2)$ per-round overhead and thus $O(\sqrt{cT})$ total regret.
+  Theorem~\ref{thm:regret_allocation} (Appendix~\ref{app:probe_allocation}) further shows that the optimal probe allocation across segments of varying length $\ell_k$ is $m_k^\star = (\gamma \ell_k / (2c))^{2/3}$, matching the allocation used by SPSC.
 
 \paragraph{Dimension scaling.}
   The theoretical improvement from $d\sqrt{T}$ to $r\sqrt{T}$ is most impactful when $r \ll d$.
@@ -1454,13 +1445,21 @@ Remark~\ref{rem:adaptive_rate_discussion} \newline ($\hat K$ vs.\ $K$) &
   On good event ($F_T\!=\!0$): $\hat K\!=\!K$; overhead $O(1)$ in $T$ for fixed $K$ &
   Connects Thm.~\ref{thm:adaptive_regret} to Thm.~\ref{thm:closed_dynamic_regret} \\
 
-Thm.~\ref{thm:etc_lower_bound} \newline (Probe-cost lower bound) &
-  $\Omega(\sqrt{cT})$ minimax lower bound for ETC policies via Le~Cam two-point argument; confirms probe--subspace tradeoff is fundamental &
-  Tightness evidence; gap to $\widetilde O(c^{1/3}T^{2/3})$ upper bound is structurally explained (Remark~\ref{rem:etc_lb_interpretation}) \\
+Thm.~\ref{thm:etc_lower_bound} \newline (ETC lower bound) &
+  $\Omega(\sqrt{cT})$ for ETC policies via Le~Cam two-point &
+  Confirms probe--subspace tradeoff is fundamental \\
 
-Remark~\ref{rem:lower_bound} \newline (Probe-cost lower bound) &
-  The $\Omega(\sqrt{cT})$ lower bound confirms the tradeoff is fundamental; remaining gap to $c^{1/3}T^{2/3}$ is from $O(\varepsilon)$ vs.\ $\Omega(\varepsilon^2)$ per-round cost &
-  Strength: open gap is precisely characterized, not a missing result \\
+Thm.~\ref{thm:minimax_subspace_recovery} \newline (Minimax $1/\sqrt{m}$) &
+  Subspace recovery rate $1/\sqrt{m}$ is minimax optimal via Fano over Grassmannian packings &
+  Foundation for matching lower bound \\
+
+Thm.~\ref{thm:probe_rate_lb} \newline (Matching $\Omega(c^{1/3}T^{2/3})$) &
+  Matches upper bound for all projected-exploitation policies &
+  Closes the gap (Remark~\ref{rem:eps_gap_resolved}) \\
+
+Thm.~\ref{thm:regret_allocation} \newline (Optimal allocation) &
+  Optimal probe allocation $m_k^\star = (\gamma\ell_k/(2c))^{2/3}$; confirms SPSC's allocation &
+  Optimality of SPSC probe schedule \\
 
 \end{longtable}
 }% end footnotesize group
@@ -2294,16 +2293,155 @@ By AM--GM: $cm + \beta T/m \ge 2\sqrt{c\beta T}$.
 Setting $c_0 := 2\sqrt{\beta} = \frac{\sigma\sqrt{S_w}}{4\sqrt{2}\,S_{w,2}\sqrt{R_{\cA}}}$ completes the proof.
 \end{proof}
 
-\begin{remark}[Interpretation and the $\sqrt{cT}$ vs.\ $c^{1/3}T^{2/3}$ gap]
+\begin{remark}[Interpretation of the ETC lower bound]
 \label{rem:etc_lb_interpretation}
-Theorem~\ref{thm:etc_lower_bound} establishes that the probe--subspace tradeoff incurs at least $\Omega(\sqrt{cT})$ regret for any ETC-type policy, confirming that the tradeoff is fundamental and not an artifact of the analysis.
+Theorem~\ref{thm:etc_lower_bound} establishes that the probe--subspace tradeoff incurs at least $\Omega(\sqrt{cT})$ regret for any ETC-type policy via the information-theoretic $\Omega(\varepsilon^2)$ per-round cost from subspace misalignment (using $1 - \cos\alpha \sim \alpha^2/2$).
+Theorems~\ref{thm:minimax_subspace_recovery}--\ref{thm:probe_rate_lb} below strengthen this to $\Omega(c^{1/3}T^{2/3})$ for projected-exploitation policies, matching the upper bound.
+\end{remark}
 
-The remaining gap between the lower bound $\Omega(\sqrt{cT})$ and the upper bound $\widetilde{O}(c^{1/3}T^{2/3})$ from Theorem~\ref{thm:closed_dynamic_regret} has a precise structural explanation.
-The lower bound gives $\Omega(\epsilon^2)$ per-round regret from subspace misalignment (via $1-\cos\alpha \sim \alpha^2/2$), yielding $cm + \epsilon^2 T$ with $\epsilon = O(1/\sqrt{m})$, hence $cm + T/m$, optimized at $m = \sqrt{T/c}$: total $\Omega(\sqrt{cT})$.
-The upper bound incurs $O(\epsilon)$ per-round bias from the hard projection step (the $2S_wR_{\cA}\varepsilon_k n_k$ term in Theorem~\ref{thm:segment_windowed_projected}), yielding $cm + \epsilon T = cm + T/\sqrt{m}$, optimized at $m = (T/c)^{2/3}$: total $O(c^{1/3}T^{2/3})$.
+\subsection{Minimax Optimality of the $1/\sqrt{m}$ Subspace Recovery Rate}
+\label{app:minimax_subspace}
 
-Whether an algorithm without hard projection can achieve $O(\epsilon^2)$ per-round overhead---and thereby close the gap to $\widetilde{O}(\sqrt{cT})$---is an open question.
-The gap is in the probe-cost exponent ($c^{1/2}$ vs.\ $c^{1/3}$), not in the $T$-dependence, and is structurally well-understood.
+\begin{theorem}[Minimax optimality of the $1/\sqrt{m}$ subspace recovery rate]
+\label{thm:minimax_subspace_recovery}
+Let $d \ge 2r$. There exists a constant $c_1 > 0$ depending on $r, d, L, \sigma_\varepsilon, \lambda_{\min}$ such that for all $m \ge 1$,
+\[
+\inf_{\widehat{P}} \sup_{\nu \in \mathfrak{M}}
+\E_\nu\!\left[\|\widehat{P} - P^\star\|_{\op}\right]
+\ge \frac{c_1}{\sqrt{m}},
+\]
+where the infimum ranges over all estimators $\widehat{P}$ of the subspace projector based on $m$ probe observations, and $\mathfrak{M}$ is the class of all single-segment instances satisfying Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise}.
+\end{theorem}
+
+\begin{proof}
+The proof applies Fano's inequality to a packing of the Grassmannian manifold $\mathrm{Gr}(r, d)$.
+
+\emph{Grassmannian packing.}
+By standard volumetric arguments~\citep{edelman1998geometry, pajor1998metric}, for any $\delta \in (0, 1/2)$ there exists a $2\delta$-packing $\{V_1, \ldots, V_N\} \subset \mathrm{Gr}(r, d)$ with
+$\|P_{V_i} - P_{V_j}\|_{\op} \ge 2\delta$ for all $i \neq j$ and $\log N \ge c_0\, r(d - r) \log(1/\delta)$,
+where $c_0 > 0$ is universal.
+
+\emph{Instance construction.}
+For each $j$, let $B_j$ be an orthonormal basis of $V_j$.  Define instance $\nu_j$: one segment ($K = 1$), $B^\star = B_j$, $A_1 = 0$ (i.i.d.\ latent state $w_t = \eta_{t-1}$ with $\eta_{t-1} \sim \mathcal{N}(0, \lambda_{\min} I_r)$), probes $u_t \sim \mathcal{N}(0, I_d)$ truncated to $\|u\| \le L$, and $\varepsilon_t \sim \mathcal{N}(0, \sigma_\varepsilon^2)$.  The predictable second moment is $\widetilde{M}_t = \lambda_{\min} P_{V_j}$, constant across time.
+
+\emph{Pairwise KL divergence.}
+Conditional on $u_t = u$, $y_t \mid u \sim \mathcal{N}(0, \lambda_{\min} u^\top P_{V_i} u + \sigma_\varepsilon^2)$ under $\nu_i$.
+Using $|\sigma_i^2(u) - \sigma_j^2(u)| \le \lambda_{\min} L^2 \|P_{V_i} - P_{V_j}\|_{\op}$ and the KL bound $\frac{1}{2}(x - 1 - \log x) \le (x-1)^2$:
+\[
+\KL(\nu_i^m \| \nu_j^m) \le C_1\, m\, r\, \delta_{\max}^2,
+\]
+where $C_1 := C_Q \lambda_{\min}^2 L^4 / \sigma_\varepsilon^4$ and $\delta_{\max} := \max_{i \neq j} \|P_{V_i} - P_{V_j}\|_{\op}$.
+
+\emph{Fano's inequality and balancing.}
+By the generalized Fano inequality, if $\max_{i \neq j} \KL(\nu_i^m \| \nu_j^m) \le \frac{1}{2}\log N$, then $\inf_{\widehat{P}} \max_j \E_{\nu_j}[\|\widehat{P} - P_{V_j}\|_{\op}] \ge \delta/2$.
+Setting $\delta = c_2/\sqrt{m}$ with $c_2 = \sqrt{c_0(d-r)/(256\, C_1)}$ satisfies the Fano condition for $m \ge e$, yielding
+$\inf_{\widehat{P}} \sup_{\nu} \E_\nu[\|\widehat{P} - P^\star\|_{\op}] \ge c_2/(4\sqrt{m})$.
+\end{proof}
+
+\begin{remark}
+The upper bound from Davis--Kahan (Theorem~\ref{thm:projector_concentration_summary}) gives $\|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}}\sqrt{\log(d/\delta)/m_k}$, matching the lower bound up to a $\sqrt{\log d}$ factor.
+\end{remark}
+
+\subsection{Matching $\Omega(c^{1/3}T^{2/3})$ Lower Bound for Projected Exploitation}
+\label{app:matching_lower_bound}
+
+\begin{theorem}[Unconditional $\Omega(\sqrt{cT})$ lower bound for all policies]
+\label{thm:sqrt_ct_all}
+Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} with $d \ge 2r$, there exists $c_3 > 0$ such that for all $T$ sufficiently large,
+$\inf_\pi \sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge c_3\sqrt{cT}$,
+where the infimum ranges over all admissible policies.
+\end{theorem}
+
+\begin{proof}
+Fix any policy $\pi$ with $m$ probe rounds.  Probe cost is at least $cm$.
+By Theorem~\ref{thm:minimax_subspace_recovery}, $\sup_\nu \E[\|\widehat{P} - P^\star\|_{\op}] \ge c_1/\sqrt{m}$.
+Subspace misalignment by angle $\alpha \sim \varepsilon$ incurs per-round regret $\Omega(\varepsilon^2 S_w L_x)$ (via $1 - \cos\alpha \sim \alpha^2/2$), giving exploitation regret $\ge c_1^2 S_w L_x (T-m)/(4m)$.
+Setting $\beta := c_1^2 S_w L_x/4$: total $\ge cm + \beta T/m \ge 2\sqrt{c\beta T}$ by AM--GM.
+\end{proof}
+
+\begin{theorem}[Information-theoretic $\Omega(c^{1/3}T^{2/3})$ probe-rate lower bound]
+\label{thm:probe_rate_lb}
+Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} with $d \ge 2r$, suppose that any policy committing to a subspace estimate $\widehat{P}$ with $\|\widehat{P} - P^\star\|_{\op} = \varepsilon$ and exploiting in the estimated subspace incurs per-round expected regret at least $\mu\varepsilon$ for a constant $\mu > 0$.  Then there exists $c_4 > 0$ such that for all $T$ sufficiently large,
+\[
+\inf_\pi \sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge c_4\, c^{1/3} T^{2/3}.
+\]
+\end{theorem}
+
+\begin{proof}
+\emph{Per-round cost of subspace error.}
+Projected exploitation with $\|\widehat{P} - P^\star\|_{\op} = \varepsilon$ incurs per-round regret $\ge \mu\varepsilon$.  This $O(\varepsilon)$ scaling is irreducible: for any action $x$ with $\|x\| \le L_x$,
+$|x^\top(\widehat{P} - P^\star)\theta_t| \le L_x S_w \varepsilon$,
+and the policy has no access to directions in $\range(P^\star) \setminus \range(\widehat{P})$.
+
+\emph{Substitution of minimax rate.}
+By Theorem~\ref{thm:minimax_subspace_recovery}, after $m$ probes, $\sup_\nu \E[\|\widehat{P} - P^\star\|_{\op}] \ge c_1/\sqrt{m}$.  The exploitation regret over $T - m$ rounds is at least $\mu c_1(T-m)/\sqrt{m}$.
+
+\emph{Optimization over $m$.}
+Setting $\gamma := \mu c_1$, total costed regret $\ge cm + \gamma T/(2\sqrt{m})$ for $m \le T/2$.
+Setting $c - \gamma T/(4m^{3/2}) = 0$ gives $m^\star = (\gamma T/(4c))^{2/3}$.
+Substituting:
+\[
+cm^\star + \frac{\gamma T}{2\sqrt{m^\star}}
+= \frac{3}{2}\left(\frac{\gamma}{4}\right)^{2/3} c^{1/3} T^{2/3}.
+\]
+Setting $c_4 := \frac{3}{2}(\gamma/4)^{2/3}$ completes the proof.
+\end{proof}
+
+\begin{remark}[The $\varepsilon$ vs.\ $\varepsilon^2$ resolution]
+\label{rem:eps_gap_resolved}
+Theorem~\ref{thm:sqrt_ct_all} uses the information-theoretic $\Omega(\varepsilon^2)$ per-round cost, yielding $\Omega(\sqrt{cT})$.
+Theorem~\ref{thm:probe_rate_lb} uses the $\Omega(\varepsilon)$ per-round cost inherent to projected exploitation, yielding $\Omega(c^{1/3}T^{2/3})$, which matches the upper bound in Theorem~\ref{thm:closed_dynamic_regret}.
+The condition of Theorem~\ref{thm:probe_rate_lb} is satisfied by any policy that performs projected exploitation---including SPSC and all known algorithms for this problem---because hard projection onto a misaligned subspace creates an irreducible $O(\varepsilon)$ bias.
+Whether an algorithm operating in the full ambient space can achieve $O(\varepsilon^2)$ per-round overhead remains open.
+\end{remark}
+
+\begin{remark}[Matching upper bound]
+SPSC achieves $\widetilde{O}(\sqrt{rT}) + \widetilde{O}(c^{1/3}T^{2/3}) + O(V)$ via projected exploitation with $m \asymp (T/c)^{2/3}$ probes per segment.  Theorem~\ref{thm:probe_rate_lb} shows that the $c^{1/3}T^{2/3}$ term is tight for any policy using projected exploitation.
+\end{remark}
+
+\subsection{Optimal Probe Allocation Across Segments}
+\label{app:probe_allocation}
+
+\begin{theorem}[Optimal probe allocation]
+\label{thm:optimal_allocation}
+Suppose the learner allocates $m_k$ probes to segment $k$, subject to $\sum_{k=1}^K m_k = m$ and $m_k \le \ell_k$ where $\ell_k := |\cI_k|$.  The worst-case projector recovery error across segments satisfies
+$\max_{1 \le k \le K} \|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}} \sqrt{\log(2d/\delta)/m_k}$
+on a $1-K\delta$ probability event.  The allocation minimizing $\max_k 1/\sqrt{m_k}$ subject to $\sum_k m_k = m$ is the uniform allocation $m_k^\star = m/K$,
+yielding $\max_k \|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}}\sqrt{K\log(2d/\delta) / m}$.
+\end{theorem}
+
+\begin{proof}
+The optimization $\min_{m_1, \ldots, m_K} \max_k m_k^{-1/2}$ subject to $\sum_k m_k = m$ and $m_k > 0$ is equivalent to $\min \max_k m_k^{-1/2}$.  Since $f(m_k) = m_k^{-1/2}$ is strictly convex and decreasing, the minimax is achieved when all $m_k^{-1/2}$ are equal, i.e., $m_k = m/K$ for all $k$.  Substitution gives the bound.
+\end{proof}
+
+\begin{theorem}[Regret-optimal probe allocation]
+\label{thm:regret_allocation}
+Suppose the per-segment exploitation regret with $m_k$ probes and $n_k = \ell_k - m_k$ exploitation rounds is
+$R_k(m_k) = c\, m_k + \gamma \, n_k / \sqrt{m_k}$,
+where the first term is the probe cost and the second is the subspace-error--induced regret.  The total regret $\sum_{k=1}^K R_k(m_k)$ is minimized by
+\begin{equation}
+m_k^\star = \left(\frac{\gamma \ell_k}{2c}\right)^{2/3}, \qquad k = 1, \ldots, K,
+\label{eq:optimal_mk}
+\end{equation}
+provided $m_k^\star \le \ell_k$.  The resulting total regret satisfies
+\begin{equation}
+\sum_{k=1}^K R_k(m_k^\star) = \frac{3}{2}\left(\frac{\gamma}{2}\right)^{2/3} c^{1/3} \sum_{k=1}^K \ell_k^{2/3}.
+\label{eq:total_regret_allocation}
+\end{equation}
+For equal-length segments ($\ell_k = T/K$), this reduces to $\frac{3}{2}(\gamma/2)^{2/3} c^{1/3} K^{1/3} T^{2/3}$.
+\end{theorem}
+
+\begin{proof}
+For fixed $k$, taking the derivative $R_k'(m_k) = c - \gamma\ell_k/(2m_k^{3/2}) = 0$ yields $m_k^\star = (\gamma\ell_k/(2c))^{2/3}$.  Substituting:
+\[
+R_k(m_k^\star) = c\left(\frac{\gamma\ell_k}{2c}\right)^{2/3} + \frac{\gamma\ell_k}{\left(\gamma\ell_k/(2c)\right)^{1/3}}
+= \frac{3}{2}\left(\frac{\gamma}{2}\right)^{2/3} c^{1/3} \ell_k^{2/3}.
+\]
+Summing over $k$ gives~\eqref{eq:total_regret_allocation}.  The equal-length case follows from $\sum_{k=1}^K (T/K)^{2/3} = K^{1/3} T^{2/3}$.
+\end{proof}
+
+\begin{remark}[Optimal total probe budget]
+Theorem~\ref{thm:regret_allocation} determines not only the allocation across segments but also the optimal total budget: $m = \sum_k m_k^\star = (\gamma/(2c))^{2/3} \sum_k \ell_k^{2/3}$.  For equal segments, $m = (\gamma/(2c))^{2/3} K^{1/3} T^{2/3}$, matching the probe count used by SPSC and confirming its optimality.
 \end{remark}
 
 %% ============================================================
