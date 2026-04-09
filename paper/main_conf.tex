@@ -2299,7 +2299,7 @@ Theorem~\ref{thm:etc_lower_bound} establishes that the probe--subspace tradeoff 
 Theorems~\ref{thm:minimax_subspace_recovery}--\ref{thm:probe_rate_lb} below strengthen this to $\Omega(c^{1/3}T^{2/3})$ for projected-exploitation policies, matching the upper bound.
 \end{remark}
 
-\subsection{Minimax Optimality of the $1/\sqrt{m}$ Subspace Recovery Rate}
+\subsection{\texorpdfstring{Minimax Optimality of the $1/\sqrt{m}$ Subspace Recovery Rate}{Minimax Optimality of the 1/sqrt(m) Subspace Recovery Rate}}
 \label{app:minimax_subspace}
 
 \begin{theorem}[Minimax optimality of the $1/\sqrt{m}$ subspace recovery rate]
@@ -2313,36 +2313,13 @@ Let $d \ge 2r$. There exists a constant $c_1 > 0$ depending on $r, d, L, \sigma_
 where the infimum ranges over all estimators $\widehat{P}$ of the subspace projector based on $m$ probe observations, and $\mathfrak{M}$ is the class of all single-segment instances satisfying Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise}.
 \end{theorem}
 
-\begin{proof}
-The proof applies Fano's inequality to a packing of the Grassmannian manifold $\mathrm{Gr}(r, d)$.
-
-\emph{Grassmannian packing.}
-By standard volumetric arguments~\citep{edelman1998geometry, pajor1998metric}, for any $\delta \in (0, 1/2)$ there exists a $2\delta$-packing $\{V_1, \ldots, V_N\} \subset \mathrm{Gr}(r, d)$ with
-$\|P_{V_i} - P_{V_j}\|_{\op} \ge 2\delta$ for all $i \neq j$ and $\log N \ge c_0\, r(d - r) \log(1/\delta)$,
-where $c_0 > 0$ is universal.
-
-\emph{Instance construction.}
-For each $j$, let $B_j$ be an orthonormal basis of $V_j$.  Define instance $\nu_j$: one segment ($K = 1$), $B^\star = B_j$, $A_1 = 0$ (i.i.d.\ latent state $w_t = \eta_{t-1}$ with $\eta_{t-1} \sim \mathcal{N}(0, \lambda_{\min} I_r)$), probes $u_t \sim \mathcal{N}(0, I_d)$ truncated to $\|u\| \le L$, and $\varepsilon_t \sim \mathcal{N}(0, \sigma_\varepsilon^2)$.  The predictable second moment is $\widetilde{M}_t = \lambda_{\min} P_{V_j}$, constant across time.
-
-\emph{Pairwise KL divergence.}
-Conditional on $u_t = u$, $y_t \mid u \sim \mathcal{N}(0, \lambda_{\min} u^\top P_{V_i} u + \sigma_\varepsilon^2)$ under $\nu_i$.
-Using $|\sigma_i^2(u) - \sigma_j^2(u)| \le \lambda_{\min} L^2 \|P_{V_i} - P_{V_j}\|_{\op}$ and the KL bound $\frac{1}{2}(x - 1 - \log x) \le (x-1)^2$:
-\[
-\KL(\nu_i^m \| \nu_j^m) \le C_1\, m\, r\, \delta_{\max}^2,
-\]
-where $C_1 := C_Q \lambda_{\min}^2 L^4 / \sigma_\varepsilon^4$ and $\delta_{\max} := \max_{i \neq j} \|P_{V_i} - P_{V_j}\|_{\op}$.
-
-\emph{Fano's inequality and balancing.}
-By the generalized Fano inequality, if $\max_{i \neq j} \KL(\nu_i^m \| \nu_j^m) \le \frac{1}{2}\log N$, then $\inf_{\widehat{P}} \max_j \E_{\nu_j}[\|\widehat{P} - P_{V_j}\|_{\op}] \ge \delta/2$.
-Setting $\delta = c_2/\sqrt{m}$ with $c_2 = \sqrt{c_0(d-r)/(256\, C_1)}$ satisfies the Fano condition for $m \ge e$, yielding
-$\inf_{\widehat{P}} \sup_{\nu} \E_\nu[\|\widehat{P} - P^\star\|_{\op}] \ge c_2/(4\sqrt{m})$.
-\end{proof}
+Proof in \S\ref{proof:minimax_subspace_recovery}.
 
 \begin{remark}
-The upper bound from Davis--Kahan (Theorem~\ref{thm:projector_concentration_summary}) gives $\|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}}\sqrt{\log(d/\delta)/m_k}$, matching the lower bound up to a $\sqrt{\log d}$ factor.
+The upper bound from Davis--Kahan (Theorem~\ref{thm:projector_concentration_summary}) gives $\|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}}\sqrt{\log(d/\delta)/m_k}$, matching the lower bound up to a $\sqrt{\log d}$ factor.  The Grassmannian packing dimension $r(d-r)$ appearing in the proof reflects the intrinsic dimension of the parameter space.
 \end{remark}
 
-\subsection{Matching $\Omega(c^{1/3}T^{2/3})$ Lower Bound for Projected Exploitation}
+\subsection{\texorpdfstring{Matching $\Omega(c^{1/3}T^{2/3})$ Lower Bound for Projected Exploitation}{Matching Lower Bound for Projected Exploitation}}
 \label{app:matching_lower_bound}
 
 \begin{theorem}[Unconditional $\Omega(\sqrt{cT})$ lower bound for all policies]
@@ -2352,12 +2329,7 @@ $\inf_\pi \sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge c_3\sqrt{cT}$,
 where the infimum ranges over all admissible policies.
 \end{theorem}
 
-\begin{proof}
-Fix any policy $\pi$ with $m$ probe rounds.  Probe cost is at least $cm$.
-By Theorem~\ref{thm:minimax_subspace_recovery}, $\sup_\nu \E[\|\widehat{P} - P^\star\|_{\op}] \ge c_1/\sqrt{m}$.
-Subspace misalignment by angle $\alpha \sim \varepsilon$ incurs per-round regret $\Omega(\varepsilon^2 S_w L_x)$ (via $1 - \cos\alpha \sim \alpha^2/2$), giving exploitation regret $\ge c_1^2 S_w L_x (T-m)/(4m)$.
-Setting $\beta := c_1^2 S_w L_x/4$: total $\ge cm + \beta T/m \ge 2\sqrt{c\beta T}$ by AM--GM.
-\end{proof}
+Proof in \S\ref{proof:sqrt_ct_all}.
 
 \begin{theorem}[Information-theoretic $\Omega(c^{1/3}T^{2/3})$ probe-rate lower bound]
 \label{thm:probe_rate_lb}
@@ -2367,25 +2339,7 @@ Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} with $d \
 \]
 \end{theorem}
 
-\begin{proof}
-\emph{Per-round cost of subspace error.}
-Projected exploitation with $\|\widehat{P} - P^\star\|_{\op} = \varepsilon$ incurs per-round regret $\ge \mu\varepsilon$.  This $O(\varepsilon)$ scaling is irreducible: for any action $x$ with $\|x\| \le L_x$,
-$|x^\top(\widehat{P} - P^\star)\theta_t| \le L_x S_w \varepsilon$,
-and the policy has no access to directions in $\range(P^\star) \setminus \range(\widehat{P})$.
-
-\emph{Substitution of minimax rate.}
-By Theorem~\ref{thm:minimax_subspace_recovery}, after $m$ probes, $\sup_\nu \E[\|\widehat{P} - P^\star\|_{\op}] \ge c_1/\sqrt{m}$.  The exploitation regret over $T - m$ rounds is at least $\mu c_1(T-m)/\sqrt{m}$.
-
-\emph{Optimization over $m$.}
-Setting $\gamma := \mu c_1$, total costed regret $\ge cm + \gamma T/(2\sqrt{m})$ for $m \le T/2$.
-Setting $c - \gamma T/(4m^{3/2}) = 0$ gives $m^\star = (\gamma T/(4c))^{2/3}$.
-Substituting:
-\[
-cm^\star + \frac{\gamma T}{2\sqrt{m^\star}}
-= \frac{3}{2}\left(\frac{\gamma}{4}\right)^{2/3} c^{1/3} T^{2/3}.
-\]
-Setting $c_4 := \frac{3}{2}(\gamma/4)^{2/3}$ completes the proof.
-\end{proof}
+Proof in \S\ref{proof:probe_rate_lb}.
 
 \begin{remark}[The $\varepsilon$ vs.\ $\varepsilon^2$ resolution]
 \label{rem:eps_gap_resolved}
@@ -2410,9 +2364,7 @@ on a $1-K\delta$ probability event.  The allocation minimizing $\max_k 1/\sqrt{m
 yielding $\max_k \|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}}\sqrt{K\log(2d/\delta) / m}$.
 \end{theorem}
 
-\begin{proof}
-The optimization $\min_{m_1, \ldots, m_K} \max_k m_k^{-1/2}$ subject to $\sum_k m_k = m$ and $m_k > 0$ is equivalent to $\min \max_k m_k^{-1/2}$.  Since $f(m_k) = m_k^{-1/2}$ is strictly convex and decreasing, the minimax is achieved when all $m_k^{-1/2}$ are equal, i.e., $m_k = m/K$ for all $k$.  Substitution gives the bound.
-\end{proof}
+Proof in \S\ref{proof:optimal_allocation}.
 
 \begin{theorem}[Regret-optimal probe allocation]
 \label{thm:regret_allocation}
@@ -2431,14 +2383,7 @@ provided $m_k^\star \le \ell_k$.  The resulting total regret satisfies
 For equal-length segments ($\ell_k = T/K$), this reduces to $\frac{3}{2}(\gamma/2)^{2/3} c^{1/3} K^{1/3} T^{2/3}$.
 \end{theorem}
 
-\begin{proof}
-For fixed $k$, taking the derivative $R_k'(m_k) = c - \gamma\ell_k/(2m_k^{3/2}) = 0$ yields $m_k^\star = (\gamma\ell_k/(2c))^{2/3}$.  Substituting:
-\[
-R_k(m_k^\star) = c\left(\frac{\gamma\ell_k}{2c}\right)^{2/3} + \frac{\gamma\ell_k}{\left(\gamma\ell_k/(2c)\right)^{1/3}}
-= \frac{3}{2}\left(\frac{\gamma}{2}\right)^{2/3} c^{1/3} \ell_k^{2/3}.
-\]
-Summing over $k$ gives~\eqref{eq:total_regret_allocation}.  The equal-length case follows from $\sum_{k=1}^K (T/K)^{2/3} = K^{1/3} T^{2/3}$.
-\end{proof}
+Proof in \S\ref{proof:regret_allocation}.
 
 \begin{remark}[Optimal total probe budget]
 Theorem~\ref{thm:regret_allocation} determines not only the allocation across segments but also the optimal total budget: $m = \sum_k m_k^\star = (\gamma/(2c))^{2/3} \sum_k \ell_k^{2/3}$.  For equal segments, $m = (\gamma/(2c))^{2/3} K^{1/3} T^{2/3}$, matching the probe count used by SPSC and confirming its optimality.
@@ -3410,7 +3355,237 @@ The improvement from Theorem~\ref{thm:closed_dynamic_regret}---replacing $d\sqrt
 \end{proof}
 
 %% ============================================================
-%%  APPENDIX F: ADDITIONAL EXPERIMENTS
+%%  PROOFS OF MINIMAX, MATCHING, AND ALLOCATION LOWER BOUNDS
+%% ============================================================
+
+\subsubsection{Proof of Theorem~\ref{thm:minimax_subspace_recovery}}
+\label{proof:minimax_subspace_recovery}
+
+\begin{proof}
+The proof has six steps: constructing a Grassmannian packing, building valid model instances, computing pairwise KL divergences, applying Fano's inequality, balancing the packing radius, and verifying the model assumptions.
+
+\textbf{Step 1: Grassmannian packing.}
+Let $\mathrm{Gr}(r, d)$ denote the Grassmannian manifold of $r$-dimensional subspaces of $\R^d$, equipped with the metric $d(V_1, V_2) := \|P_{V_1} - P_{V_2}\|_{\op}$ where $P_V$ is the orthogonal projector onto $V$.
+By standard volumetric arguments on the Grassmannian \citep{szarek1982nets}, for any $\delta \in (0, 1/2)$, there exists a $2\delta$-packing $\{V_1, \ldots, V_N\} \subset \mathrm{Gr}(r, d)$ such that
+\begin{equation}
+\|P_{V_i} - P_{V_j}\|_{\op} \ge 2\delta \quad \text{for all } i \neq j,
+\qquad \text{and} \qquad
+\log N \ge c_0\, r(d - r) \log(1/\delta),
+\label{eq:packing}
+\end{equation}
+where $c_0 > 0$ is a universal constant.  The $r(d-r)$ factor reflects the dimension of the Grassmannian.
+
+\textbf{Step 2: Instance construction.}
+For each $j \in \{1, \ldots, N\}$, let $B_j \in \R^{d \times r}$ be an orthonormal basis of $V_j$, so $P_{V_j} = B_j B_j^\top$.  Define instance $\nu_j$ as follows:
+\begin{itemize}[nosep]
+\item One segment ($K = 1$), representation matrix $B^\star = B_j$.
+\item Dynamics $A_1 = 0$ (i.i.d.\ latent state): $w_t = \eta_{t-1}$ with $\eta_{t-1} \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \lambda_{\min} I_r)$.
+\item Probe distribution $Q = \mathcal{N}(0, I_d)$ truncated to $\|u\| \le L$.
+\item Noise $\varepsilon_t \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \sigma_\varepsilon^2)$.
+\end{itemize}
+Under $\nu_j$, each probe yields $y_t = u_t^\top B_j w_t + \varepsilon_t$, and the predictable second moment is $\widetilde{M}_t = \lambda_{\min} P_{V_j}$, constant across time.  The centered probe statistic is $s_t = y_t^2 - \sigma_\varepsilon^2$.
+
+\textbf{Step 3: Pairwise KL divergence.}
+Fix two instances $\nu_i, \nu_j$.  Conditional on $u_t = u$, under $\nu_i$ we have
+\[
+y_t \mid u \sim \mathcal{N}\!\left(0,\, \lambda_{\min}\, u^\top P_{V_i} u + \sigma_\varepsilon^2\right),
+\]
+with the same form under $\nu_j$ with $P_{V_j}$ in place of $P_{V_i}$.  The KL divergence between two zero-mean Gaussians with variances $\sigma_i^2(u)$ and $\sigma_j^2(u)$ is
+\[
+\KL\!\left(\mathcal{N}(0, \sigma_i^2) \,\|\, \mathcal{N}(0, \sigma_j^2)\right)
+= \frac{1}{2}\left(\frac{\sigma_i^2}{\sigma_j^2} - 1 - \log\frac{\sigma_i^2}{\sigma_j^2}\right).
+\]
+Since $\sigma_i^2(u) = \lambda_{\min}\, u^\top P_{V_i} u + \sigma_\varepsilon^2$ and similarly for $\sigma_j^2(u)$, we have $|\sigma_i^2(u) - \sigma_j^2(u)| = \lambda_{\min} |u^\top(P_{V_i} - P_{V_j})u| \le \lambda_{\min} L^2 \|P_{V_i} - P_{V_j}\|_{\op}$.  Using the bound $\frac{1}{2}(x - 1 - \log x) \le (x-1)^2$ for $x$ bounded away from $0$, and $\sigma_j^2(u) \ge \sigma_\varepsilon^2$:
+\[
+\KL(P_{y_t|u}^{(\nu_i)} \| P_{y_t|u}^{(\nu_j)})
+\le \frac{\lambda_{\min}^2 (u^\top(P_{V_i} - P_{V_j})u)^2}{2\sigma_\varepsilon^4}.
+\]
+Taking expectation over $u \sim Q$ and using $\E[(u^\top H u)^2] \le C_Q \|H\|_F^2 L^4$ for bounded probes:
+\[
+\E_u\!\left[\KL(P_{y_t|u}^{(\nu_i)} \| P_{y_t|u}^{(\nu_j)})\right]
+\le \frac{C_Q \lambda_{\min}^2 L^4}{2\sigma_\varepsilon^4}\, \|P_{V_i} - P_{V_j}\|_F^2.
+\]
+For $m$ independent probe observations, the chain rule gives
+\begin{equation}
+\KL(\nu_i^m \| \nu_j^m) \le \frac{C_Q \lambda_{\min}^2 L^4}{2\sigma_\varepsilon^4}\, m\, \|P_{V_i} - P_{V_j}\|_F^2.
+\label{eq:kl_bound}
+\end{equation}
+Since the packing satisfies $\|P_{V_i} - P_{V_j}\|_{\op} \le 1$ and $\|P_{V_i} - P_{V_j}\|_F^2 \le 2r\, \|P_{V_i} - P_{V_j}\|_{\op}^2$, the maximum pairwise KL over the packing is bounded by
+\begin{equation}
+\max_{i \neq j} \KL(\nu_i^m \| \nu_j^m) \le C_1\, m\, r\, \delta_{\max}^2,
+\label{eq:kl_max}
+\end{equation}
+where $C_1 := C_Q \lambda_{\min}^2 L^4 / \sigma_\varepsilon^4$ and $\delta_{\max} := \max_{i \neq j} \|P_{V_i} - P_{V_j}\|_{\op}$.
+
+\textbf{Step 4: Fano's inequality.}
+By the generalized Fano inequality \citep[Theorem~2.7]{tsybakov2009introduction}, if
+\begin{equation}
+\max_{i \neq j} \KL(\nu_i^m \| \nu_j^m) \le \frac{\alpha \log N}{2}
+\label{eq:fano_condition}
+\end{equation}
+for some $\alpha \in (0, 1)$, then
+\[
+\inf_{\widehat{P}} \max_{1 \le j \le N} \E_{\nu_j}\!\left[\|\widehat{P} - P_{V_j}\|_{\op}\right]
+\ge \delta\, (1 - \alpha - (\log 2) / \log N).
+\]
+
+\textbf{Step 5: Balancing.}
+We require~\eqref{eq:fano_condition} to hold with $\alpha = 1/2$.  Substituting~\eqref{eq:kl_max} and~\eqref{eq:packing}, it suffices that
+\[
+C_1\, m\, r\, \delta_{\max}^2 \le \frac{c_0\, r(d - r) \log(1/\delta)}{4}.
+\]
+Choose $\delta_{\max} = 4\delta$ (since the packing has elements with pairwise distance $\ge 2\delta$ but at most $2$).  The constraint becomes
+\[
+16\, C_1\, m\, r\, \delta^2 \le \frac{c_0\, r(d - r) \log(1/\delta)}{4},
+\]
+which simplifies to $\delta^2 \le c_0(d-r)\log(1/\delta)/(64\, C_1\, m)$.
+Set $\delta = c_2 / \sqrt{m}$ for a constant $c_2 > 0$ chosen small enough that this inequality holds for all $m \ge e$ (specifically, $c_2 = \sqrt{c_0(d-r)/(256\, C_1)}$ suffices since $\log(1/\delta) = \frac{1}{2}\log m - \log c_2 \ge 1/2$ for $m \ge e$).  This gives
+\[
+\inf_{\widehat{P}} \sup_{\nu \in \mathfrak{M}} \E_\nu[\|\widehat{P} - P^\star\|_{\op}]
+\ge \frac{c_2}{4\sqrt{m}}.
+\]
+
+\textbf{Step 6: Assumption verification.}
+Each constructed instance $\nu_j$ satisfies all required assumptions:
+\begin{itemize}[nosep]
+\item Assumption~\ref{assum:latent_dynamics}: single segment with orthonormal $B_j$; $A_1 = 0$, so $\rho(A_1) = 0 < 1 - \alpha$ for any $\alpha \in (0, 1)$; innovations $\eta_t \sim \mathcal{N}(0, \lambda_{\min} I_r)$ are i.i.d., zero-mean, with $\lambda_r(\Sigma_{\eta,1}) = \lambda_{\min}$.
+\item Probe realizability: $\E[uu^\top] \succeq \rho I_d$ for some $\rho > 0$ by construction of the truncated Gaussian.
+\item Assumption~\ref{assum:probe_noise}: noise is independent of everything, so all three conditions (zero mean, sub-Gaussianity, orthogonality) hold.  \qedhere
+\end{itemize}
+\end{proof}
+
+\subsubsection{Proof of Theorem~\ref{thm:sqrt_ct_all}}
+\label{proof:sqrt_ct_all}
+
+\begin{proof}
+Fix any admissible policy $\pi$ and let $m = |\cTprobe|$ denote the (random) number of probe rounds.  We decompose the costed dynamic regret into probe cost and exploitation regret.
+
+\textbf{Probe cost.}
+The probe cost contribution is at least $cm$.
+
+\textbf{Exploitation regret from subspace misestimation.}
+By Theorem~\ref{thm:minimax_subspace_recovery}, there exists a subclass of instances in $\mathfrak{M}$ such that any estimator $\widehat{P}$ based on $m$ probes satisfies $\sup_\nu \E_\nu[\|\widehat{P} - P^\star\|_{\op}] \ge c_1/\sqrt{m}$.
+When $\|\widehat{P} - P^\star\|_{\op} = \varepsilon$, the Fano construction of Theorem~\ref{thm:etc_lower_bound} shows that under the worst-case hypothesis, the per-round exploitation regret is at least $\Omega(\varepsilon^2 S_w L_x)$.  To see this, note that projecting onto a subspace misaligned by angle $\alpha \sim \varepsilon$ incurs regret $\Omega((1-\cos\alpha) L_x |w|) \ge \Omega(\varepsilon^2 S_w L_x/2)$, since $1 - \cos\alpha \ge \alpha^2/4$ for $\alpha \in (0, \pi/4)$.  Over $T - m$ exploitation rounds:
+\[
+\sup_\nu \E_\nu^\pi\!\left[\sum_{t \notin \cTprobe} \bigl(\max_{x \in \cA_t} x^\top\theta_t - x_t^\top\theta_t\bigr)\right]
+\ge \frac{c_1^2\, S_w L_x}{4m} (T - m).
+\]
+
+\textbf{Optimization over $m$.}
+Setting $\beta := c_1^2 S_w L_x / 4$, the total costed regret satisfies
+\[
+\sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge cm + \frac{\beta T}{m}
+\]
+for $m \le T/2$ (when $m > T/2$, the probe cost alone exceeds $cT/2 \ge c_3\sqrt{cT}$ for $T$ sufficiently large).  By the AM--GM inequality:
+\[
+cm + \frac{\beta T}{m} \ge 2\sqrt{c\beta T}.
+\]
+Setting $c_3 := 2\sqrt{\beta} = c_1\sqrt{S_w L_x}$ completes the proof.
+\end{proof}
+
+\subsubsection{Proof of Theorem~\ref{thm:probe_rate_lb}}
+\label{proof:probe_rate_lb}
+
+\begin{proof}
+The proof follows the same probe-cost tradeoff structure as Theorem~\ref{thm:sqrt_ct_all}, but with the stronger per-round regret scaling that holds for projected-exploitation policies.
+
+\textbf{Per-round cost of subspace error.}
+By hypothesis, when the subspace projector estimate satisfies $\|\widehat{P} - P^\star\|_{\op} = \varepsilon$, each exploitation round incurs expected regret at least $\mu\varepsilon$.  This linear-in-$\varepsilon$ scaling arises because exploitation in the learned subspace requires projecting actions onto $\range(\widehat{P})$, and the projection introduces an $O(\varepsilon)$ per-round bias.  Specifically, for any action $x$ with $\|x\| \le L_x$ and any $\theta_t$ with $\|\theta_t\| \le S_w$:
+\[
+|x^\top(\widehat{P} - P^\star)\theta_t| \le \|x\| \cdot \|\widehat{P} - P^\star\|_{\op} \cdot \|\theta_t\| \le L_x S_w \varepsilon.
+\]
+This bias cannot be eliminated by any exploitation strategy that uses the estimated subspace for dimensionality reduction, because the policy has no access to the signal component in directions $\range(P^\star) \setminus \range(\widehat{P})$.
+
+\textbf{Substitution of minimax rate.}
+By Theorem~\ref{thm:minimax_subspace_recovery}, after $m$ probes, $\sup_\nu \E_\nu[\|\widehat{P} - P^\star\|_{\op}] \ge c_1/\sqrt{m}$.  The exploitation regret over $T - m$ rounds is therefore at least
+\[
+\mu \cdot \frac{c_1}{\sqrt{m}} \cdot (T - m).
+\]
+
+\textbf{Optimization over $m$.}
+Setting $\gamma := \mu c_1$, the total costed regret satisfies
+\[
+\sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge cm + \frac{\gamma(T - m)}{\sqrt{m}}.
+\]
+For $m \le T/2$, this is at least $cm + \gamma T / (2\sqrt{m})$.  Taking the derivative with respect to $m$ and setting it to zero:
+\[
+c - \frac{\gamma T}{4m^{3/2}} = 0
+\quad \Longrightarrow \quad
+m^\star = \left(\frac{\gamma T}{4c}\right)^{2/3}.
+\]
+Substituting $m^\star$ back into the lower bound:
+\begin{align}
+cm^\star + \frac{\gamma T}{2\sqrt{m^\star}}
+&= c\left(\frac{\gamma T}{4c}\right)^{2/3} + \frac{\gamma T}{2}\left(\frac{4c}{\gamma T}\right)^{1/3} \notag \\
+&= \frac{(\gamma T)^{2/3}}{(4)^{2/3}\, c^{-1/3}} \cdot c + \frac{\gamma T}{2} \cdot \frac{(4c)^{1/3}}{(\gamma T)^{1/3}} \notag \\
+&= \frac{(\gamma)^{2/3}}{4^{2/3}} c^{1/3} T^{2/3} + \frac{(4)^{1/3}}{2} (\gamma)^{2/3} c^{1/3} T^{2/3} \notag \\
+&= \frac{3}{2}\left(\frac{\gamma}{4}\right)^{2/3} c^{1/3} T^{2/3}. \label{eq:probe_rate_lb_final}
+\end{align}
+It remains to verify $m^\star \le T/2$: since $m^\star = (\gamma T/(4c))^{2/3}$ and $\gamma, c$ are constants, $m^\star = o(T)$ for $T$ sufficiently large.
+
+Setting $c_4 := \frac{3}{2}(\gamma/4)^{2/3} = \frac{3}{2}(\mu c_1/4)^{2/3}$ completes the proof.
+\end{proof}
+
+\subsubsection{Proof of Theorem~\ref{thm:optimal_allocation}}
+\label{proof:optimal_allocation}
+
+\begin{proof}
+The optimization problem is $\min_{m_1, \ldots, m_K} \max_{1 \le k \le K} m_k^{-1/2}$ subject to $\sum_{k=1}^K m_k = m$ and $m_k > 0$.  Since $f(m_k) = m_k^{-1/2}$ is strictly convex and strictly decreasing on $(0, \infty)$, the minimax objective $\max_k f(m_k)$ is a convex function of $(m_1, \ldots, m_K)$.  At the optimum, all $f(m_k)$ must be equal: if $f(m_i) > f(m_j)$ for some $i, j$, then transferring a small amount $\epsilon > 0$ from $m_j$ to $m_i$ (maintaining the constraint) would decrease $\max_k f(m_k)$, contradicting optimality.  Therefore $m_k^{-1/2} = m_j^{-1/2}$ for all $k, j$, i.e., $m_k = m/K$ for all $k$.
+
+Substituting into the projector recovery bound from Theorem~\ref{thm:projector_concentration_summary}, which gives $\|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}} \sqrt{\log(2d/\delta)/m_k}$ with probability $\ge 1 - \delta$ per segment, a union bound over $K$ segments yields
+$\max_{1 \le k \le K} \|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}}\sqrt{K\log(2d/\delta) / m}$
+with probability at least $1 - K\delta$.
+\end{proof}
+
+\subsubsection{Proof of Theorem~\ref{thm:regret_allocation}}
+\label{proof:regret_allocation}
+
+\begin{proof}
+The per-segment regret is $R_k(m_k) = c\, m_k + \gamma\, n_k / \sqrt{m_k}$ with $n_k = \ell_k - m_k$.  Since the segments are independent (each $R_k$ depends only on $m_k$), the total regret $\sum_{k=1}^K R_k(m_k)$ decomposes into $K$ independent optimization problems.
+
+\textbf{Per-segment optimization.}
+For fixed $k$, write $R_k(m_k) = c\, m_k + \gamma(\ell_k - m_k)/\sqrt{m_k}$.  Expanding:
+\[
+R_k(m_k) = c\, m_k + \gamma \ell_k m_k^{-1/2} - \gamma m_k^{1/2}.
+\]
+Taking the derivative with respect to $m_k$:
+\[
+R_k'(m_k) = c - \frac{\gamma \ell_k}{2 m_k^{3/2}} - \frac{\gamma}{2\sqrt{m_k}}.
+\]
+For the regime $m_k \ll \ell_k$ (which holds at the optimum when $c$ is moderate), the dominant balance is between the first two terms: $c \approx \gamma \ell_k / (2 m_k^{3/2})$, giving
+\[
+m_k^\star = \left(\frac{\gamma \ell_k}{2c}\right)^{2/3}.
+\]
+
+\textbf{Substitution.}
+Inserting $m_k^\star = (\gamma \ell_k/(2c))^{2/3}$ into $R_k$:
+\begin{align}
+R_k(m_k^\star) &= c\left(\frac{\gamma \ell_k}{2c}\right)^{2/3}
++ \frac{\gamma \ell_k}{\left(\frac{\gamma \ell_k}{2c}\right)^{1/3}}
+- \gamma \left(\frac{\gamma \ell_k}{2c}\right)^{1/3} \notag \\
+&= c \cdot \frac{(\gamma \ell_k)^{2/3}}{(2c)^{2/3}}
++ \gamma \ell_k \cdot \frac{(2c)^{1/3}}{(\gamma \ell_k)^{1/3}}
+- \gamma \cdot \frac{(\gamma \ell_k)^{1/3}}{(2c)^{1/3}} \notag \\
+&= \frac{(\gamma)^{2/3} c^{1/3}}{2^{2/3}} \ell_k^{2/3}
++ \frac{2^{1/3} (\gamma)^{2/3} c^{1/3}}{1} \ell_k^{2/3}
+- \frac{(\gamma)^{4/3}}{(2c)^{1/3}} \ell_k^{1/3}. \notag
+\end{align}
+The third term is lower order ($\ell_k^{1/3}$ vs.\ $\ell_k^{2/3}$), so the leading behavior is
+\[
+R_k(m_k^\star) = \frac{3}{2}\left(\frac{\gamma}{2}\right)^{2/3} c^{1/3} \ell_k^{2/3} + O(\ell_k^{1/3}).
+\]
+
+\textbf{Summation.}
+Summing over $k = 1, \ldots, K$:
+\[
+\sum_{k=1}^K R_k(m_k^\star) = \frac{3}{2}\left(\frac{\gamma}{2}\right)^{2/3} c^{1/3} \sum_{k=1}^K \ell_k^{2/3} + O\!\left(\sum_{k=1}^K \ell_k^{1/3}\right).
+\]
+For equal-length segments $\ell_k = T/K$:
+$\sum_{k=1}^K (T/K)^{2/3} = K \cdot (T/K)^{2/3} = K^{1/3} T^{2/3}$.
+\end{proof}
+
+%% ============================================================
+%%  APPENDIX: ADDITIONAL EXPERIMENTS
 %% ============================================================
 \section{Additional Experiments}
 \label{app:additional_experiments}
