@@ -209,8 +209,7 @@ not~$r$.
   (Theorem~\ref{thm:probe_rate_lb}), under the condition that
   projected exploitation incurs $\Omega(\varepsilon)$ per-round
   regret from subspace error $\varepsilon$, matches the upper bound
-  for projected-exploitation policies satisfying this condition---a
-  class that includes SPSC and all known algorithms for this problem
+  for projected-exploitation policies satisfying this condition
   (Remark~\ref{rem:eps_gap_resolved}).
   An adaptive variant detects change points without oracle boundaries
   and achieves the same leading rate with $O(K)$ overhead.
@@ -941,7 +940,7 @@ The probe-side conditions in Assumption~\ref{assum:probe_noise} are stated in th
    the probe--subspace tradeoff via a Le~Cam two-point argument, applying to all explore-then-commit policies.
   Theorem~\ref{thm:minimax_subspace_recovery} (Appendix~\ref{app:minimax_subspace}) proves the $1/\sqrt{m}$ subspace recovery rate is minimax optimal via Fano's inequality over Grassmannian packings.
   Building on this, Theorem~\ref{thm:probe_rate_lb} (Appendix~\ref{app:matching_lower_bound}) establishes a matching $\Omega(c^{1/3}T^{2/3})$ lower bound for projected-exploitation policies under the condition that subspace error $\varepsilon$ incurs $\Omega(\varepsilon)$ per-round regret.
-  Hard projection onto a misaligned subspace provides the mechanism for this linear-in-$\varepsilon$ loss, and SPSC and all known algorithms for this problem satisfy the condition.
+  Hard projection onto a misaligned subspace provides the mechanism for this linear-in-$\varepsilon$ loss; in particular, SPSC's hard-projection exploitation satisfies this condition.
   Theorem~\ref{thm:probe_rate_lb} thus shows that the $\widetilde{O}(c^{1/3}T^{2/3})$ probe--subspace tradeoff term in Theorem~\ref{thm:closed_dynamic_regret} is tight for this policy class.
 
   The only remaining open question is whether an algorithm operating in the full $d$-dimensional ambient space (without projecting onto the estimated subspace) could achieve $O(\varepsilon^2)$ per-round overhead and thus $O(\sqrt{cT})$ total regret.
@@ -2347,7 +2346,7 @@ Proof in \S\ref{proof:probe_rate_lb}.
 \label{rem:eps_gap_resolved}
 Theorem~\ref{thm:sqrt_ct_all} uses the information-theoretic $\Omega(\varepsilon^2)$ per-round cost, yielding $\Omega(\sqrt{cT})$.
 Theorem~\ref{thm:probe_rate_lb} uses the $\Omega(\varepsilon)$ per-round cost inherent to projected exploitation, yielding $\Omega(c^{1/3}T^{2/3})$, which matches the upper bound in Theorem~\ref{thm:closed_dynamic_regret}.
-Hard projection onto a misaligned subspace creates an $O(\varepsilon)$ bias that provides the mechanism for the linear-in-$\varepsilon$ loss condition of Theorem~\ref{thm:probe_rate_lb}; SPSC and all known algorithms for this problem satisfy this condition.
+Hard projection onto a misaligned subspace creates an $O(\varepsilon)$ bias that provides the mechanism for the linear-in-$\varepsilon$ loss condition of Theorem~\ref{thm:probe_rate_lb}.
 Whether an algorithm operating in the full ambient space can achieve $O(\varepsilon^2)$ per-round overhead remains open.
 \end{remark}
 
