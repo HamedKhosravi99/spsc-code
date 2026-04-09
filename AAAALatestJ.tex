@@ -1,0 +1,2478 @@
+% JASA-formatted paper: Identification Theory for Low-Rank Subspace Recovery
+% from Noisy Quadratic Measurements
+\documentclass[12pt]{article}
+
+% Page layout
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+% Math
+\usepackage{amsmath,amssymb,amsfonts,amsthm,bm,mathtools}
+\usepackage{enumitem}
+\usepackage{microtype}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{natbib}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% Line spacing
+\usepackage{setspace}
+\onehalfspacing
+
+% Math shortcuts
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prob}{\mathbb{P}}
+\newcommand{\op}{\mathrm{op}}
+
+\newcommand{\cA}{\mathcal{A}}
+\newcommand{\cF}{\mathcal{F}}
+\newcommand{\cH}{\mathcal{H}}
+\newcommand{\cT}{\mathcal{T}}
+\newcommand{\cI}{\mathcal{I}}
+\newcommand{\cTprobe}{\mathcal{T}_{\mathrm{probe}}}
+\newcommand{\Rsy}{\mathbb{R}^{d\times d}_{\mathrm{sym}}}
+\newcommand{\norm}[1]{\left\lVert #1 \right\rVert}
+\newcommand{\ip}[2]{\left\langle #1,#2\right\rangle}
+
+\newcommand{\tilO}{\widetilde{\mathcal{O}}}
+\newcommand{\Reg}{\mathrm{Reg}}
+\newcommand{\DynReg}{\mathrm{DynReg}}
+
+\newcommand{\rank}{\mathrm{rank}}
+\newcommand{\range}{\mathrm{range}}
+\newcommand{\Span}{\mathrm{span}}
+\newcommand{\supp}{\mathrm{supp}}
+\newcommand{\tr}{\mathrm{tr}}
+\newcommand{\diag}{\mathrm{diag}}
+\newcommand{\Id}{\mathrm{I}}
+
+\newcommand{\lam}{\lambda}
+\newcommand{\wtilde}[1]{\widetilde{#1}}
+
+\newcommand{\bbm}{\begin{bmatrix}}
+\newcommand{\ebm}{\end{bmatrix}}
+
+\DeclareMathOperator{\Proj}{Proj}
+\DeclareMathOperator{\TopEig}{TopEig}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\DeclareMathOperator{\TV}{TV}
+\DeclareMathOperator{\KL}{KL}
+
+\newcommand{\PU}{P_U}
+\newcommand{\PUs}{P_{U^\star}}
+\newcommand{\Phat}{\widehat P}
+\newcommand{\Uhat}{\widehat U}
+\newcommand{\Us}{U^\star}
+\newcommand{\betas}{\beta^\star}
+\newcommand{\thetas}{\theta^\star}
+
+% Environments
+\newtheorem{assumption}{Assumption}
+\newtheorem{definition}{Definition}
+\newtheorem{lemma}{Lemma}
+\newtheorem{theorem}{Theorem}
+\newtheorem{corollary}{Corollary}
+\newtheorem{proposition}{Proposition}
+\newtheorem{remark}{Remark}
+
+%% Packages
+\RequirePackage{amsthm,amsmath,amsfonts,amssymb}
+\RequirePackage{fix-cm}
+\usepackage{textcomp}
+
+
+\pdfstringdefDisableCommands{\def\mathcal#1{#1}\def\widetilde#1{#1}}
+\RequirePackage{bm,mathtools}
+\RequirePackage{enumitem}
+\RequirePackage{booktabs}
+\RequirePackage{longtable}
+\RequirePackage{array}
+\RequirePackage{algorithm}
+\RequirePackage{algpseudocode}
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% Theorem environments                     %%
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\theoremstyle{plain}
+
+\theoremstyle{definition}
+
+\newtheorem{example}[theorem]{Example}
+
+
+\begin{document}
+
+
+\title{Identification and Minimax Lower Bounds for Low-Rank Subspace Recovery
+from Noisy Quadratic Measurements}
+
+
+
+\begin{abstract}
+We develop a statistical identification theory for recovering the column space of a low-rank matrix from noisy quadratic measurements in a piecewise-stationary latent model. A learner observes scalar rewards $y_t = x_t^\top \theta_t + \varepsilon_t$ where $\theta_t = B_k^\star w_t$ lies in a time-varying $r$-dimensional subspace and $w_t$ follows a stable linear dynamical system. Under three structural conditions---known conditional noise variance, state--noise orthogonality, and full-dimensional probe coverage---each probe yields an unbiased quadratic measurement of the predictable second moment, from which the active subspace is identifiable. When orthogonality is relaxed to bounded state--noise coupling ($\varepsilon_\times > 0$), each measurement acquires a controlled bias of order $O(\varepsilon_\times)$, and we characterize the resulting graceful degradation of recovery. Within the quadratic observation model, we prove all three conditions are individually necessary and no two are jointly sufficient. We establish $O(1/\sqrt{m})$ subspace recovery via matrix Freedman concentration, prove this rate is minimax optimal via Fano's inequality over Grassmannian packings, and show the lifted probe estimator achieves the Cram\'er--Rao lower bound within a stationary Gaussian sub-model. A quantitative robustness theory characterizes graceful degradation when each condition holds only approximately. We also establish several extensions: explicit minimax risk bounds for rank one, adaptation lower bounds for unknown rank, an $\Omega(c^{1/3}T^{2/3})$ probe-rate lower bound for projected-exploitation policies, optimal probe allocation, and change-point detection with near-matching delay bounds.
+\end{abstract}
+
+
+%% ============================================================
+%%  1. INTRODUCTION
+%% ============================================================
+\section{Introduction}
+\label{sec:introduction}
+
+\footnote{A companion paper develops the algorithmic and experimental aspects of this framework, presenting the Single-Play Subspace-Calibrated Optimism (SPSC) algorithm and validating the theoretical predictions on synthetic and real-data benchmarks. The present paper focuses exclusively on identification theory, concentration inequalities, and information-theoretic lower bounds.}
+
+A fundamental problem in high-dimensional statistics is recovering the column space of an unknown low-rank matrix from indirect, noisy measurements. This paper develops the identification theory for a specific instance of this problem that arises naturally in sequential decision-making: recovering the range of a $d \times r$ representation matrix $B_k^\star$ from noisy quadratic measurements of the predictable second moment $\widetilde{M}_t = \E[\theta_t \theta_t^\top \mid \cH_{t-1}]$, where $\theta_t = B_k^\star w_t$ and $w_t$ evolves via a stable linear dynamical system. The key insight is that each probe round yields a single noisy quadratic measurement of $\widetilde{M}_t$; subspace identification is achieved by aggregating these measurements into a \emph{segment-level average} $\bar{M}_k^{\mathrm{probe}} = \frac{1}{m_k}\sum_{t \in \cT_k} \widetilde{M}_t$, whose range equals $\range(B_k^\star)$ under sufficient excitation.
+
+The motivation comes from online learning with time-varying low-rank reward structure, where the learner repeatedly selects actions from a set $\cA_t \subset \R^d$ and receives scalar rewards $y_t = x_t^\top \theta_t + \varepsilon_t$. The latent parameter $\theta_t$ lies in a piecewise-constant $r$-dimensional subspace that may change at unknown times. To achieve regret that scales with the intrinsic rank $r$ rather than the ambient dimension $d$, the learner must identify the active subspace, which requires a carefully designed probing mechanism.
+
+We position this work as a contribution to statistical estimation theory. The setting differs from standard matrix sensing (where measurements are linear in $M$), from stationary low-rank bandits (where $B^\star$ is fixed), and from non-stationary bandit models (which operate in the full ambient dimension). The distinctive statistical challenge is that each scalar observation provides only a \emph{noisy quadratic} measurement of a \emph{changing} low-rank target, requiring both a carefully designed probing mechanism and a segment-level aggregation strategy. We establish the identifiability conditions, impossibility results, concentration inequalities, and information-theoretic lower bounds that form the theoretical foundation for any algorithmic approach to this problem. The algorithmic and experimental aspects are developed in a companion paper.
+
+\paragraph{Contributions.}
+The main contributions are:
+\begin{enumerate}[leftmargin=1.5em]
+\item \textbf{Identification theory.} We show that under three structural conditions---known conditional noise variance, exact state--noise orthogonality ($\varepsilon_\times = 0$), and full-dimensional probe coverage---each probe round yields an unbiased quadratic measurement of the predictable second moment, from which the active subspace is identifiable via a probe-time segment average (Section~\ref{sec:single_play_id}). Under bounded state--noise coupling ($\varepsilon_\times > 0$), each measurement acquires a controlled $O(\varepsilon_\times)$ bias, and recovery degrades gracefully (Section~\ref{sec:robustness}).
+
+\item \textbf{Paired-play protocol.} We develop an antisymmetric paired-play measurement protocol that eliminates the known-variance requirement through common-mode rejection, and analyze a family of bounded non-Gaussian probe distributions satisfying the exact fourth-moment identity needed for closed-form matrix inversion (Section~\ref{sec:paired_play_id}).
+
+\item \textbf{Non-identification results.} Within the quadratic observation model, we prove that dropping any one of the three structural conditions destroys identifiability, and that no two conditions are jointly sufficient (Section~\ref{sec:non_identification}).
+
+\item \textbf{Concentration and recovery.} We establish matrix Freedman concentration inequalities for the segment-level estimator under both correctly specified and misspecified variance, and derive Davis--Kahan projector recovery guarantees (Section~\ref{sec:concentration}).
+
+\item \textbf{Quantitative robustness.} We develop a degradation theory characterizing how subspace recovery degrades continuously when each structural condition holds only approximately: variance misspecification preserves eigenvector consistency, bounded cross-correlation produces $O(\varepsilon_\times)$ subspace error, and restricted probe coverage enables partial recovery (Section~\ref{sec:robustness}).
+
+\item \textbf{Coverage lower bounds.} We prove that any policy confined to a proper subspace incurs $\Omega(T)$ regret, and that this holds even when probe actions are also confined (Section~\ref{sec:coverage_lower_bounds}).
+
+\item \textbf{Lower bounds for explore-then-commit.} Via a multi-hypothesis Fano construction over sphere packings, we establish a minimax $\Omega(\sqrt{cT})$ lower bound for explore-then-commit policies and characterize the Le Cam barrier for adaptive policies (Section~\ref{sec:etc_lower_bounds}).
+
+\item \textbf{Minimax optimality and rank adaptation.} Via Fano's inequality over Grassmannian packings, we prove the $1/\sqrt{m}$ subspace recovery rate is minimax optimal (Section~\ref{sec:minimax_subspace}), and we establish adaptation lower bounds for the unknown-rank setting showing that the $1/\sqrt{m}$ rate is preserved but rank detection incurs a burn-in cost (Section~\ref{sec:rank_adaptation}).
+
+\item \textbf{Probe-rate lower bound and optimal allocation.} We establish an information-theoretic $\Omega(c^{1/3}T^{2/3})$ lower bound on costed dynamic regret for projected-exploitation policies (Section~\ref{sec:probe_rate_lb}), and characterize the optimal probe allocation across segments of varying length (Section~\ref{sec:probe_allocation}).
+
+\item \textbf{Asymptotic efficiency.} Within a stationary Gaussian sub-model (i.i.d.\ latent states, exact orthogonality, known conditional variance), we prove the lifted probe estimator achieves the Cram\'er--Rao lower bound asymptotically. The extension to the general sequential setting via the martingale CLT is discussed (Section~\ref{sec:efficiency}).
+
+\item \textbf{Minimax constants for rank one.} For the rank-one case, we derive explicit upper and lower bounds on the minimax risk constant that match up to factors depending on the truncation radius and $\sqrt{\log d}$ (Section~\ref{sec:sharp_constants}).
+
+\item \textbf{Change-point detection.} We develop a CUSUM-type detector for subspace changes from probe statistics and prove upper and lower bounds on detection delay that match up to logarithmic factors in the window size and false-alarm probability (Section~\ref{sec:changepoint}).
+\end{enumerate}
+
+\paragraph{Narrative hierarchy.}
+The contributions are organized around a core and extensions. The \emph{core results} are: identification of the active subspace from probe-time segment averages (contributions 1--3), necessity of all three structural conditions within the quadratic observation model (contribution 3), $O(1/\sqrt{m})$ subspace recovery with matrix Freedman concentration (contribution 4), and minimax optimality of the $1/\sqrt{m}$ rate via Fano's inequality over Grassmannian packings (contribution 8, first part). These form the central theorem stack and can be read independently. The \emph{extensions} build on this core: quantitative robustness under approximate conditions (contribution 5), coverage and explore-then-commit lower bounds (contributions 6--7), rank adaptation lower bounds (contribution 8, second part), probe-rate optimization (contributions 9--10), asymptotic efficiency in a Gaussian benchmark (contribution 11), minimax constants for rank one (contribution 12), and change-point detection (contribution 13).
+
+\paragraph{Paper organization.}
+Section~\ref{sec:related} reviews related work. Section~\ref{sec:model} presents the model and assumptions. Sections~\ref{sec:single_play_id}--\ref{sec:paired_play_id} establish identification. Section~\ref{sec:non_identification} proves non-identification. Section~\ref{sec:probing_justification} establishes necessity of probing. Section~\ref{sec:concentration} develops concentration and recovery. Section~\ref{sec:robustness} develops robustness theory. Sections~\ref{sec:coverage_lower_bounds}--\ref{sec:etc_lower_bounds} prove coverage and ETC lower bounds. Section~\ref{sec:minimax_subspace} establishes minimax optimality. Section~\ref{sec:rank_adaptation} proves rank adaptation bounds. Section~\ref{sec:probe_rate_lb} establishes the probe-rate lower bound. Section~\ref{sec:probe_allocation} characterizes optimal allocation. Section~\ref{sec:efficiency} proves asymptotic efficiency. Section~\ref{sec:sharp_constants} derives sharp constants. Section~\ref{sec:changepoint} develops change-point detection. Section~\ref{sec:separations} illustrates scope. Section~\ref{sec:ambient_reference} provides an ambient baseline. Section~\ref{sec:discussion} concludes.
+
+
+%% ============================================================
+%%  1.5. RELATED WORK
+%% ============================================================
+\section{Related work}
+\label{sec:related}
+
+This work draws on and contributes to several lines of research in high-dimensional statistics and sequential decision-making.
+
+\paragraph{Subspace recovery from quadratic measurements.}
+Recovering the column space of a low-rank matrix from indirect measurements is a classical problem in matrix estimation.
+When the measurements are linear (i.e., $\langle A_i, M \rangle$ for known sensing matrices $A_i$), the literature on matrix sensing and matrix completion provides sharp minimax rates \citep{candes2011tight, rohde2011estimation, kacham2023adaptive}.
+Our setting is fundamentally quadratic: each probe yields a noisy scalar $s_t = y_t^2 - \sigma_\varepsilon^2$ whose conditional expectation $\E[s_t \mid u_t, \cH_{t-1}] = u_t^\top \widetilde{M}_t u_t$ is a quadratic form of $\widetilde{M}_t$, which we lift to a linear measurement of the second-moment matrix via the $\mathcal{K}^{-1}$ operator.
+This lifting is related to bandit phase retrieval \citep{lattimore2021phase}, where scalar quadratic observations are used for optimization rather than subspace recovery, and to online matrix inference \citep{han2025matrixinference}, which studies matrix-context bandits but without piecewise-changing low-rank structure.
+
+\paragraph{Low-rank bandits and representation learning.}
+In the stationary setting where $\theta_t = \theta$ lies in a fixed low-rank subspace, \citet{jun2019bilinear} study bilinear bandits, \citet{kveton2017stochastic} analyze stochastic low-rank bandits, and \citet{pmlr-v235-jedra24a} achieve tighter rates via two-to-infinity singular subspace recovery.
+\citet{cesabianchi2023colt} study non-stationary linear bandits with low-rank structure but assume the representation is constant across tasks.
+All of these methods assume a \emph{fixed} representation matrix---they do not address the identification problem that arises when the representation changes across segments and must be re-identified online from scalar feedback.
+
+\paragraph{Nonstationary bandits.}
+Piecewise-stationary and drifting bandit models bound dynamic regret in terms of the variation budget $V_T$ or the number of switches $K$ \citep{russac2019weighted, cheung2019learning, auer2019adaptively}.
+These methods operate in the full ambient dimension $d$, so their regret scales with $d$ rather than the intrinsic rank $r$.
+\citet{qin2022nonstationary} study non-stationary representation learning in sequential linear bandits with a task-constant model; we show in Section~\ref{sec:separations} that our piecewise LDS model is not reducible to theirs.
+
+\paragraph{Costly probing and sequential experimental design.}
+In costly-observation bandits, the learner pays $c$ per observed reward: \citet{seldin2014paid} study label-efficient prediction, \citet{tucker2023costly} prove $\Omega(c^{1/3}T^{2/3})$ lower bounds for $K$-armed bandits, and \citet{elumar2025costly} analyze multi-armed bandits with costly probes confined to a finite arm set.
+Our setting differs structurally: probing must support identification of a \emph{changing low-rank subspace} from single-play scalar feedback, not merely estimation of a fixed parameter.
+We show in Section~\ref{sec:separations} that finite probe sets cannot identify a changing ambient subspace.
+
+\paragraph{Spectral methods for matrix estimation.}
+Spectral methods for low-rank matrix recovery have a long history \citep{johnstone2009consistency, vu2013minimax, cai2013sparse}. The Davis--Kahan $\sin\Theta$ theorem \citep{davis1970rotation, yu2015useful} provides the foundational perturbation theory for subspace estimators. Entry-wise spectral estimators for bandits \citep{stojanovic2023spectral} and singular subspace perturbation theory \citep{pmlr-v235-jedra24a} provide sharp recovery guarantees in the stationary case. Our matrix concentration analysis (Section~\ref{sec:concentration}) uses the matrix Freedman inequality \citep{tropp2012user} and Davis--Kahan perturbation theory, applying them to the lifted probe samples $G_t = \mathcal{K}^{-1}(s_t u_t u_t^\top)$, which form a martingale difference sequence adapted to the sequential probing filtration.
+
+\paragraph{Information-theoretic lower bounds.}
+Our lower bounds employ several classical techniques: Le Cam's two-point method for the ETC lower bound (Section~\ref{sec:etc_lower_bounds}), Fano's inequality over Grassmannian packings for the minimax subspace recovery rate (Section~\ref{sec:minimax_subspace}), and a probe-cost optimization argument for the $\Omega(c^{1/3}T^{2/3})$ rate (Section~\ref{sec:probe_rate_lb}).
+Standard references include \citet{tsybakov2009introduction} for the nonparametric estimation framework, \citet{yu1997assouad} for Assouad-type arguments, and \citet{lattimore2020bandit} for bandit-specific lower bound techniques. The Grassmannian packing arguments use metric entropy bounds from \citet{pajor1998metric} and \citet{edelman1998geometry}.
+
+
+%% ============================================================
+%%  2. MEASUREMENT MODEL AND ASSUMPTIONS
+%% ============================================================
+\section{Measurement model and assumptions}
+\label{sec:model}
+
+\subsection{Observation model}
+
+We consider a sequential estimation problem in which, at each round $t = 1, \dots, T$, the environment reveals an action set $\cA_t \subset \R^d$. After observing $\cA_t$, the learner selects a deployed action $x_t^{\mathrm{dep}} \in \cA_t$ and observes a scalar reward
+\begin{equation}
+y_t = (x_t^{\mathrm{dep}})^\top \theta_t + \varepsilon_t,
+\label{eq:reward_model}
+\end{equation}
+where $\theta_t \in \R^d$ is an unobserved parameter and $\varepsilon_t$ is observation noise. In the paired-play variant, the learner may instead select a pair $(x_t^{(1)}, x_t^{(2)}) \in \cA_t \times \cA_t$ and observe
+\[
+y_t^{(i)} = (x_t^{(i)})^\top \theta_t + \varepsilon_t^{(i)}, \qquad i = 1, 2,
+\]
+with deployed action $x_t^{\mathrm{dep}} := x_t^{(1)}$.
+
+\subsection{Probability space and filtration}
+
+Let $(\Omega, \cF, \Prob)$ support the sequences
+\[
+\begin{aligned}
+&\{\cA_t\}_{t \le T},\ \{\theta_t\}_{t \le T},\ \{B_t^\star\}_{t \le T},\ \{w_t\}_{t \le T},\ \{\eta_t\}_{t \le T},\\
+&\{\varepsilon_t\}_{t \le T},\ \{(\varepsilon_t^{(1)}, \varepsilon_t^{(2)})\}_{t \le T},\ \{U_t^{\mathrm{dec}}\}_{t \le T},\ \{U_t^{\mathrm{probe}}\}_{t \le T}.
+\end{aligned}
+\]
+
+Fix $\cH_0 := \{\emptyset, \Omega\}$. For each round $t \in \{1, \dots, T\}$, define the \emph{pre-decision history}
+\[
+\cH_{t-1}
+:=
+\sigma\!\Big(
+\{\cA_s\}_{s \le t-1},\
+\{\text{actions at } s,\ \text{observations at } s\}_{s \le t-1}
+\Big).
+\]
+At the start of round $t$, the environment reveals $\cA_t$, so $\cA_t$ is measurable with respect to $\sigma(\cH_{t-1}, \cA_t)$.
+
+The learner's decision at time $t$ (including the choice of single- vs.\ paired-play and the selected action(s)) is measurable with respect to $\sigma(\cH_{t-1}, \cA_t, U_t^{\mathrm{dec}})$. On probe rounds $t \in \cTprobe$, the probe draw $u_t = u(U_t^{\mathrm{probe}})$ is generated using fresh randomness $U_t^{\mathrm{probe}}$ that is independent of $\sigma(\cH_{t-1}, \cA_t, U_t^{\mathrm{dec}})$. Hence, conditional on $\{t \in \cTprobe\}$, we have $u_t \sim Q$ and $u_t \perp\!\!\!\perp \cH_{t-1}$.
+
+After the action(s) and observation(s) at time $t$ are realized, define the \emph{post-decision history}
+\[
+\cH_t
+:=
+\sigma\!\Big(
+\cH_{t-1},\ \cA_t,\ \text{actions at } t,\ \text{observations at } t
+\Big).
+\]
+
+Let $I_t := \mathbf{1}\{t \in \cTprobe\}$ denote the probe indicator. For each segment $k$, define $\cT_k := \cTprobe \cap \cI_k$ and write its increasing ordering as $\cT_k = \{t_{k,1} < \cdots < t_{k,m_k}\}$.
+
+For each segment $k$, define the (random) pre-probe sigma-field
+\[
+\cF_k^- := \sigma\!\big(\cH_{t_{k,1}-1}, \dots, \cH_{t_{k,m_k}-1}\big),
+\]
+so that for each $j \in \{1, \dots, m_k\}$, $\cH_{t_{k,j}-1} \subseteq \cF_k^-$ and $\widetilde{M}_{t_{k,j}}$ is $\cF_k^-$-measurable.
+
+\subsection{Piecewise low-rank model (assumptions A1--A4)}
+
+The reward parameter admits a low-rank latent representation
+\begin{equation}
+\theta_t = B_t^\star w_t.
+\label{eq:latent_factor_model}
+\end{equation}
+
+\begin{assumption}[A1: Piecewise-constant representation]
+\label{assum:piecewise}
+There exist change points $1 = \tau_0 < \tau_1 < \cdots < \tau_K \le T+1$ such that for each segment $\cI_k := \{\tau_{k-1}, \dots, \tau_k - 1\}$,
+\[
+B_t^\star = B_k^\star \in \R^{d \times r},
+\qquad
+(B_k^\star)^\top B_k^\star = I_r,
+\qquad
+t \in \cI_k.
+\]
+\end{assumption}
+
+\begin{assumption}[A2: State in subspace]
+\label{assum:state_subspace}
+For all $t$, $\theta_t = B_t^\star w_t$.
+\end{assumption}
+
+\begin{assumption}[A3: Stable latent dynamics with exogenous innovations]
+\label{assum:latent_dynamics}
+Fix a segment $k$ and let $\cI_k = \{\tau_{k-1}, \dots, \tau_k - 1\}$. For every $t \in \cI_k$ with $t \ge \tau_{k-1} + 1$, the latent state evolves as
+\[
+w_t = A_k w_{t-1} + \eta_{t-1},
+\qquad
+\rho(A_k) \le 1 - \alpha,
+\]
+for known $\alpha \in (0,1)$ and unknown $A_k \in \R^{r \times r}$. The innovations satisfy, for all such $t$,
+\[
+\begin{aligned}
+\eta_{t-1} &\perp\!\!\!\perp \cH_{t-1},\\
+\E[\eta_{t-1} \mid \cH_{t-1}] &= 0,\\
+\E[\eta_{t-1}\eta_{t-1}^\top \mid \cH_{t-1}] &= \Sigma_{\eta,k} \quad \text{a.s.},\\
+\lambda_r(\Sigma_{\eta,k}) &\ge \underline{\lambda} > 0.
+\end{aligned}
+\]
+and $\eta_{t-1}$ is conditionally sub-Gaussian given $\cH_{t-1}$ with parameter at most $\kappa_\eta < \infty$. Moreover, $\{\eta_s\}_{s:\, s, s+1 \in \cI_k}$ are independent across time.
+\end{assumption}
+
+\begin{remark}[On the stability margin]
+The algorithm only requires a known lower bound $\alpha_0 \le \alpha$ on the true stability margin rather than the exact value of $\alpha$. Any positive $\alpha_0$ certifying strict stability suffices.
+\end{remark}
+
+\begin{assumption}[A4: Uniform conditional sub-Gaussian tails for the latent state]
+\label{assum:subgaussian_state}
+There exists a known constant $\kappa_w < \infty$ such that for all $t$ and all unit vectors $v \in \mathbb{S}^{r-1}$,
+\[
+\|v^\top w_t\|_{\psi_2 \,|\, \cH_{t-1}} \le \kappa_w \qquad \text{a.s.}
+\]
+\end{assumption}
+
+\subsection{Action-set regularity (assumption A0)}
+
+\begin{assumption}[A0: Uniform action boundedness]
+\label{assum:action_boundedness}
+There exists a known constant $L_x < \infty$ such that for all $t$,
+\[
+\sup_{x \in \cA_t} \|x\|_2 \le L_x \qquad \text{a.s.}
+\]
+\end{assumption}
+
+
+
+\subsection{\texorpdfstring{Noise conditions (assumptions $A5$ and $A5^\dagger$)}{Noise conditions (assumptions A5 and A5 dagger)}}
+
+\begin{assumption}[Probe-round noise properties]
+\label{assum:probe_noise}
+On non-probe rounds,
+\[
+\E[\varepsilon_t \mid \sigma(\cH_{t-1}, x_t)] = 0,
+\]
+and $\varepsilon_t$ is conditionally $\sigma_\varepsilon$-sub-Gaussian.
+
+On probe rounds $t \in \cTprobe$, where $x_t = u_t$:
+
+
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{Conditional mean zero:}
+$\E[\varepsilon_t \mid \sigma(\cH_{t-1}, u_t)] = 0$.
+\item \textbf{Known conditional variance and sub-Gaussian tails:}
+$\E[\varepsilon_t^2 \mid \sigma(\cH_{t-1}, u_t)] = \sigma_\varepsilon^2$ a.s., and $\varepsilon_t$ is conditionally $\sigma_\varepsilon$-sub-Gaussian given $\sigma(\cH_{t-1}, u_t)$. The exact conditional variance condition is needed for unbiased centering of the probe statistic $s_t = y_t^2 - \sigma_\varepsilon^2$; the sub-Gaussian tail condition is needed for concentration.
+
+\emph{Role of $\sigma_\varepsilon^2$ in the analysis.} The theoretical identification and concentration results (Sections~\ref{sec:single_play_id}--\ref{sec:concentration}) are stated for the oracle-centered estimator $s_t = y_t^2 - \sigma_\varepsilon^2$, as if $\sigma_\varepsilon^2$ were available. In practice, $\sigma_\varepsilon^2$ is \emph{unknown} to the learner and is estimated online from probe-round residuals as $\hat\sigma_\varepsilon^2$. The resulting centering error $\delta_\sigma := \hat\sigma_\varepsilon^2 - \sigma_\varepsilon^2$ is handled by the variance-misspecification analysis (Proposition~\ref{prop:biased_measurement}, Theorem~\ref{thm:biased_concentration}).
+\item \textbf{Bounded state--noise coupling:}
+$\bigl\|\E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]\bigr\|_2 \le \varepsilon_\times$ almost surely, for a known bound $\varepsilon_\times \ge 0$.
+\end{enumerate}
+\end{assumption}
+
+\begin{assumption}[Bounded probe-round noise]
+\label{assum:bounded_probe_noise}
+On every probe round $t \in \cTprobe$,
+$|\varepsilon_t| \le L_\varepsilon$ almost surely
+for some known constant $L_\varepsilon < \infty$.
+\end{assumption}
+
+\begin{remark}[On the noise assumptions]
+\label{rem:weakened_noise}
+Assumption~\ref{assum:probe_noise}(ii) requires that $\sigma_\varepsilon^2$ is the \emph{exact} conditional second moment of $\varepsilon_t$, not merely a sub-Gaussian scale parameter. This is essential for the centering $s_t = y_t^2 - \sigma_\varepsilon^2$ to produce an unbiased quadratic measurement (Proposition~\ref{prop:quadratic_identity}): sub-Gaussianity alone gives only $\E[\varepsilon_t^2 \mid \cdot] \le \sigma_\varepsilon^2$, which would leave a residual negative bias. The condition $\E[\varepsilon_t^2 \mid \cdot] = \sigma_\varepsilon^2$ holds automatically for Gaussian noise and more generally for any noise distribution with constant conditional variance (e.g., bounded symmetric noise).
+
+The bounded-coupling condition (iii) generalizes exact state--noise orthogonality ($\varepsilon_\times = 0$). When $\varepsilon_\times > 0$, the probe statistic acquires a direction-dependent bias of order $O(\varepsilon_\times)$, which the robustness analysis of Section~\ref{sec:robustness} shows degrades subspace recovery gracefully.
+\end{remark}
+
+\subsection{Noise conditions for paired play}
+
+\begin{assumption}[A5: Noise and probe-variance centering for paired-play]
+\label{assum:paired_noise}
+For single-play, the noise satisfies
+\[
+\E[\varepsilon_t \mid \sigma(\cH_{t-1}, x_t)] = 0,
+\qquad
+\varepsilon_t \text{ is conditionally $\sigma$-sub-Gaussian given } \sigma(\cH_{t-1}, x_t).
+\]
+For paired-play, the noises satisfy for $i = 1, 2$,
+\[
+\E[\varepsilon_t^{(i)} \mid \sigma(\cH_{t-1}, x_t^{(1)}, x_t^{(2)})] = 0,
+\qquad
+\varepsilon_t^{(i)} \text{ is conditionally $\sigma$-sub-Gaussian},
+\]
+with conditional independence
+$\varepsilon_t^{(1)} \perp\!\!\!\perp \varepsilon_t^{(2)} \mid \sigma(\cH_{t-1}, x_t^{(1)}, x_t^{(2)})$.
+Define $\xi_t := (\varepsilon_t^{(1)} - \varepsilon_t^{(2)})/2$. There exists a known deterministic constant $\sigma_\xi^2 \ge 0$ such that on probe paired-play rounds,
+\[
+\E[\xi_t^2 \mid \sigma(\cH_{t-1}, u_t)] = \sigma_\xi^2.
+\]
+\end{assumption}
+
+\begin{assumption}[A5$^\dagger$: State--noise orthogonality on probe rounds]
+\label{assum:state_noise_orth}
+For every probe round $t \in \cTprobe$, the paired-difference noise $\xi_t := (\varepsilon_t^{(1)} - \varepsilon_t^{(2)})/2$ satisfies
+\[
+\E\!\left[\xi_t \,\middle|\, \sigma(\cH_{t-1}, u_t, \theta_t)\right] = 0 \qquad \text{a.s.}
+\]
+\end{assumption}
+
+\subsection{\texorpdfstring{Probe design (assumptions $A6$, $A6^\flat$, and $A7$)}{Probe design (assumptions A6, A6 flat, and A7)}}
+
+\begin{assumption}[A6: Probe realizability]
+\label{assum:probe_realizability}
+There exists a known distribution $Q$ on $\R^d$ such that
+\[
+\E[uu^\top] \succeq \rho I_d
+\quad \text{for some known constant } \rho > 0,
+\qquad
+u \text{ is sub-Gaussian},
+\qquad
+\|u\|_2 \le L \ \text{a.s.},
+\]
+and $\supp(Q) \subseteq \cA_t$ for all $t$ (for single-play), or $\supp(Q) \cup (-\supp(Q)) \subseteq \cA_t$ for all $t$ (for paired-play).
+\end{assumption}
+
+\begin{remark}[On the probe design condition]
+The condition $\E[uu^\top] \succeq \rho I_d$ requires the probe distribution to have positive second moment in every direction, ensuring that probe actions span the ambient space. This condition alone does not guarantee invertibility of the $\mathcal{K}$ operator (see Remark~\ref{rem:K_invertible_conditions}); the estimator constructions additionally require Assumption~\ref{assum:fourth_moment} (A6$^\flat$). The constant $\rho$ propagates into the operator norm $C_{\mathcal{K}} := \|\mathcal{K}^{-1}\|_{\op}$ via $C_{\mathcal{K}} \le C_0 / \rho$. The canonical instance is isotropic probing ($\E[uu^\top] = I_d$, so $\rho = 1$).
+\end{remark}
+
+\begin{assumption}[A6$^\flat$: Exact fourth-moment identity for probes]
+\label{assum:fourth_moment}
+For $u \sim Q$: $\E[u] = 0$, $\E[uu^\top] = I_d$, $\|u\|_2 \le L$ a.s., and for every symmetric $M \in \R^{d \times d}$,
+\begin{equation}
+\E\!\left[(u^\top M u)\, uu^\top\right] = 2M + \tr(M)\, I_d.
+\label{eq:A6flat}
+\end{equation}
+\end{assumption}
+
+\begin{assumption}[A7: Probe times and probe actions]
+\label{assum:probe_times}
+Let $\cTprobe \subset \{1, \dots, T\}$ denote the probe times. For each $t \in \cTprobe$, after the learner has chosen to probe using information in $\sigma(\cH_{t-1}, \cA_t, U_t^{\mathrm{dec}})$, the learner draws $u_t \sim Q$ using fresh randomness $U_t^{\mathrm{probe}}$ independent of $\sigma(\cH_{t-1}, \cA_t, U_t^{\mathrm{dec}})$. For single-play, the learner deploys $x_t^{\mathrm{dep}} = u_t$. For paired-play, the learner plays $(x_t^{(1)}, x_t^{(2)}) = (u_t, -u_t)$.
+\end{assumption}
+
+\subsection{Excitation and the inferential target (assumption A8)}
+
+The central inferential object is the predictable conditional second moment
+\begin{equation}
+\widetilde{M}_t := \E[\theta_t \theta_t^\top \mid \cH_{t-1}].
+\label{eq:predictable_second_moment}
+\end{equation}
+Using~\eqref{eq:latent_factor_model} and Assumption~\ref{assum:piecewise}, for $t \in \cI_k$,
+\begin{equation}
+\widetilde{M}_t = B_k^\star \E[w_t w_t^\top \mid \cH_{t-1}] (B_k^\star)^\top.
+\label{eq:Mtilde_factorized}
+\end{equation}
+
+For a fixed segment $k$, define the probe times $\cT_k := \cTprobe \cap \cI_k$ with $m_k := |\cT_k|$, and the segment-level probe-time average
+\begin{equation}
+\bar{M}_k^{\mathrm{probe}} := \frac{1}{m_k} \sum_{t \in \cT_k} \widetilde{M}_t
+= B_k^\star \bar{S}_k^{\mathrm{probe}} (B_k^\star)^\top,
+\label{eq:segment_target}
+\end{equation}
+where
+\begin{equation}
+\bar{S}_k^{\mathrm{probe}} := \frac{1}{m_k} \sum_{t \in \cT_k} \E[w_t w_t^\top \mid \cH_{t-1}].
+\label{eq:Sbar}
+\end{equation}
+
+\begin{assumption}[A8: Predictable probe-time excitation]
+\label{assum:excitation}
+For each segment $k$,
+\[
+\lambda_r(\bar{S}_k^{\mathrm{probe}}) \ge \lambda_{\min} > 0 \quad \text{a.s.}
+\]
+\end{assumption}
+
+\begin{remark}[Summary of assumptions]
+\label{rem:assumption_summary}
+The assumptions fall into four groups:
+\begin{enumerate}[nosep,leftmargin=1.5em]
+\item \emph{Latent structure} (A0--A4): the reward parameter $\theta_t = B_k^\star w_t$ lies in a piecewise-constant $r$-dimensional subspace driven by a stable LDS with sub-Gaussian tails.
+\item \emph{Noise conditions} (Assumptions~\ref{assum:probe_noise}--\ref{assum:bounded_probe_noise}): zero mean, exact conditional variance $\sigma_\varepsilon^2$ (unknown to the learner; estimated online), sub-Gaussian tails for concentration, and bounded state--noise coupling $\varepsilon_\times$.
+Paired-play additionally eliminates the variance requirement via common-mode rejection.
+\item \emph{Probe design} (A6, A6$^\flat$, A7): the probe distribution has full-rank second moment ($\E[uu^\top] \succeq \rho I_d$), bounded support, and is drawn with fresh randomness. The operative condition for estimator construction is A6$^\flat$, which provides the explicit fourth-moment identity needed for closed-form inversion of the $\mathcal{K}$ operator.
+\item \emph{Excitation} (A8): the probe-time average of the predictable latent covariance has a positive eigenvalue floor, ensuring the subspace is identifiable.
+\end{enumerate}
+\end{remark}
+
+\subsection{Probe mechanism and lifted samples}
+
+\paragraph{Single-play probe statistic.} On a single-play probe round $t \in \cTprobe$, the learner draws $u_t \sim Q$, deploys $x_t^{\mathrm{dep}} = u_t$, observes $y_t = u_t^\top \theta_t + \varepsilon_t$, and forms the centered probe statistic
+\begin{equation}
+s_t := y_t^2 - \sigma_\varepsilon^2.
+\label{eq:single_play_statistic}
+\end{equation}
+
+\paragraph{Paired-play probe statistic.} On a paired-play probe round, the learner plays $(u_t, -u_t)$, observes two rewards, and forms the paired contrast
+\[
+\Delta y_t := \frac{y_t^{(1)} - y_t^{(2)}}{2} = u_t^\top \theta_t + \xi_t,
+\qquad
+\xi_t := \frac{\varepsilon_t^{(1)} - \varepsilon_t^{(2)}}{2},
+\]
+and the centered statistic
+\begin{equation}
+s_t := (\Delta y_t)^2 - \sigma_\xi^2.
+\label{eq:paired_play_statistic}
+\end{equation}
+
+\paragraph{The $\mathcal{K}$ operator and its inverse.}
+
+\begin{lemma}[Invertibility of the probe operator]
+\label{lem:K_invertible}
+The operator
+\[
+\mathcal{K} : \Rsy \to \Rsy,
+\qquad
+\mathcal{K}(M) := \E\!\left[(u^\top M u)\, uu^\top\right],
+\qquad u \sim Q,
+\]
+is invertible on $\Rsy$ under either of the following conditions:
+\begin{enumerate}[label=(\alph*),nosep]
+\item Assumption~\ref{assum:fourth_moment} (A6$^\flat$) holds; or
+\item Assumption~\ref{assum:probe_realizability} (A6) holds and $Q$ has a density with respect to Lebesgue measure on some open subset of $\R^d$.
+\end{enumerate}
+In both cases, $\|\mathcal{K}^{-1}\|_{\op} \le C_{\mathcal{K}}(\rho, L, d)$.
+\end{lemma}
+
+\begin{proof}
+\emph{Case (a).}
+Under Assumption~\ref{assum:fourth_moment}, $\mathcal{K}(M) = 2M + \tr(M)\, I_d$. For any $M \in \Rsy$ with $\mathcal{K}(M) = 0$: $2M = -\tr(M) I_d$, so $M = -\frac{\tr(M)}{2} I_d$. Taking traces: $\tr(M) = -\frac{d\, \tr(M)}{2}$, giving $\tr(M)(1 + d/2) = 0$, hence $\tr(M) = 0$ and $M = 0$. The explicit inverse $\mathcal{K}^{-1}(N) = \frac{1}{2}N - \frac{1}{2(d+2)}\tr(N)\, I_d$ gives $\|\mathcal{K}^{-1}\|_{\op} \le 1$.
+
+\emph{Case (b).}
+Suppose $\mathcal{K}(M) = 0$ for some $M \in \Rsy$. Then $\E[(u^\top M u)^2] = \tr(M\, \mathcal{K}(M)) = 0$, so $u^\top M u = 0$ $Q$-a.s. If $M \neq 0$, the zero set $\mathcal{Z} := \{u \in \R^d : u^\top M u = 0\}$ is a quadric hypersurface, which has $d$-dimensional Lebesgue measure zero. Since $Q$ has a density on some open set $\mathcal{O} \subseteq \R^d$, we have $Q(\mathcal{O} \setminus \mathcal{Z}) > 0$, contradicting $u^\top M u = 0$ $Q$-a.s. Hence $M = 0$, proving injectivity on the finite-dimensional space $\Rsy$, which implies invertibility.
+\end{proof}
+
+\begin{remark}[On the invertibility conditions]
+\label{rem:K_invertible_conditions}
+The condition $\E[uu^\top] \succeq \rho I_d$ alone does not suffice for invertibility of $\mathcal{K}$: a discrete distribution can have full-rank second moment while concentrating on a quadric hypersurface. Condition (a) bypasses this issue by providing the explicit fourth-moment structure that yields a closed-form inverse. Condition (b) requires that $Q$ not concentrate on any algebraic variety of degree two, which is guaranteed by having a density on any open set. Truncated Gaussian probes $u \sim \mathcal{N}(0, I_d)$ conditioned on $\|u\| \le L$ satisfy condition (b), while the discrete bounded non-Gaussian distribution of Lemma~\ref{lem:bounded_Q} satisfies condition (a) by construction. Throughout this paper, all estimator constructions use condition (a) via Assumption~\ref{assum:fourth_moment}.
+\end{remark}
+
+\begin{remark}[Dimension dependence of $C_{\mathcal{K}}$]
+\label{rem:CK_dimension}
+For isotropic Gaussian probes $u \sim \mathcal{N}(0, I_d)$, the operator $\mathcal{K}$ can be computed explicitly via the Isserlis--Wick identity:
+\[
+\mathcal{K}(M) = \tr(M) I_d + 2M,
+\qquad
+\mathcal{K}^{-1}(N) = \tfrac{1}{2}N - \tfrac{1}{2(d+2)}\tr(N) I_d.
+\]
+A direct computation yields $\|\mathcal{K}^{-1}\|_{\op} \le 1$, so $C_{\mathcal{K}}$ is dimension-independent in this case.
+\end{remark}
+
+Under Lemma~\ref{lem:K_invertible} (applied via Assumption~\ref{assum:fourth_moment}, which provides the closed-form inverse $\mathcal{K}^{-1}$), define the \emph{lifted probe sample} at each probe round $t$ by
+\begin{equation}
+G_t := \mathcal{K}^{-1}(s_t\, u_t u_t^\top).
+\label{eq:lifted_probe}
+\end{equation}
+
+\subsection{Costed dynamic regret (performance measure)}
+
+Because probing incurs explicit opportunity cost, performance is evaluated using the \emph{costed dynamic regret}
+\begin{equation}
+\DynReg_T^{(c)}
+:=
+\sum_{t=1}^T \Big( \max_{x \in \cA_t} x^\top \theta_t - (x_t^{\mathrm{dep}})^\top \theta_t \Big)
++ c \sum_{t=1}^T \mathbf{1}\{t \in \cTprobe\},
+\label{eq:costed_regret}
+\end{equation}
+where $c > 0$ is a known per-probe sensing cost.
+
+
+%% ============================================================
+%%  3. SINGLE-PLAY IDENTIFICATION
+%% ============================================================
+\section{Single-play identification}
+\label{sec:single_play_id}
+
+This section formalizes the identification results for the single-play protocol. Under exact state--noise orthogonality ($\varepsilon_\times = 0$), probe rounds yield unbiased quadratic measurements of $\widetilde{M}_t$; under the weakened bounded-coupling condition ($\varepsilon_\times > 0$), the measurements acquire a controlled bias of order $O(\varepsilon_\times)$. The segment-level average factorizes through the active representation (Proposition~\ref{prop:segment_factorization}), the active subspace is identified under the excitation condition (Theorem~\ref{prop:subspace_identification}), and under exact orthogonality the lifted probe sample is unbiased (Proposition~\ref{prop:lifted_probe_unbiased}). The biased case is treated quantitatively in Section~\ref{sec:robustness}.
+
+\paragraph{Assumption regime for this section.}
+The quadratic measurement identity (Proposition~\ref{prop:quadratic_identity}) holds under Assumption~\ref{assum:probe_noise} with general bounded coupling $\varepsilon_\times \ge 0$. The unbiased lifted probe result (Proposition~\ref{prop:lifted_probe_unbiased}) requires exact orthogonality $\varepsilon_\times = 0$. The combined bias decomposition (Proposition~\ref{prop:biased_measurement}) applies under both variance misspecification ($\delta_\sigma \neq 0$) and bounded coupling ($\varepsilon_\times > 0$), with each bias source bounded separately. The single-play identification results use the oracle-centered statistic $s_t = y_t^2 - \sigma_\varepsilon^2$; the effect of replacing $\sigma_\varepsilon^2$ with a learner estimate $\hat\sigma_\varepsilon^2$ is analyzed in Proposition~\ref{prop:biased_measurement}. The paired-play protocol (Section~\ref{sec:paired_play_id}) eliminates the variance requirement entirely.
+
+\subsection{Probe-round quadratic measurements}
+
+\begin{proposition}[Single-play quadratic measurement identity under bounded coupling]
+\label{prop:quadratic_identity}
+Under Assumption~\ref{assum:probe_noise}, for every probe round $t \in \cTprobe$,
+\begin{equation}
+\E[s_t \mid \sigma(\cH_{t-1}, u_t)] = u_t^\top \widetilde{M}_t u_t + 2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)],
+\label{eq:quadratic_id}
+\end{equation}
+where $s_t = y_t^2 - \sigma_\varepsilon^2$ and $\widetilde{M}_t = \E[\theta_t \theta_t^\top \mid \cH_{t-1}]$. In particular, the bias term satisfies $|2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]| \le 2L\varepsilon_\times$. When $\varepsilon_\times = 0$ (exact orthogonality), the measurement is unbiased: $\E[s_t \mid \sigma(\cH_{t-1}, u_t)] = u_t^\top \widetilde{M}_t u_t$.
+\end{proposition}
+
+\begin{proof}
+Define the observation operator $\Phi_u : \Rsy \to \R$ by $\Phi_u(M) := u^\top M u$ and the noise functional $N_t := 2\varepsilon_t (u_t^\top \theta_t) + (\varepsilon_t^2 - \sigma_\varepsilon^2)$. Then $s_t = \Phi_{u_t}(\theta_t \theta_t^\top) + N_t$.
+
+Conditioning on $\sigma(\cH_{t-1}, u_t)$:
+\begin{enumerate}[nosep,label=(\roman*)]
+\item By Assumption~\ref{assum:probe_noise}(ii), $\E[\varepsilon_t^2 \mid \sigma(\cH_{t-1}, u_t)] = \sigma_\varepsilon^2$ a.s., so $\E[\varepsilon_t^2 - \sigma_\varepsilon^2 \mid \sigma(\cH_{t-1}, u_t)] = 0$. When $\sigma_\varepsilon^2$ is estimated as $\hat\sigma_\varepsilon^2$, the centering error $\delta_\sigma := |\hat\sigma_\varepsilon^2 - \sigma_\varepsilon^2|$ contributes an additional bias handled by the misspecification analysis (Proposition~\ref{prop:biased_measurement}).
+\item By Assumption~\ref{assum:probe_noise}(iii), the cross term satisfies $\|\E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]\|_2 \le \varepsilon_\times$, yielding $|\E[2\varepsilon_t(u_t^\top \theta_t) \mid \sigma(\cH_{t-1}, u_t)]| \le 2\|u_t\|_2\varepsilon_\times \le 2L\varepsilon_\times$.
+\end{enumerate}
+Combining (i) and (ii), and using $u_t \perp\!\!\!\perp \cH_{t-1}$ (Assumption~\ref{assum:probe_times}) to identify $\E[\theta_t\theta_t^\top \mid \sigma(\cH_{t-1}, u_t)] = \widetilde{M}_t$:
+\[
+\E[s_t \mid \sigma(\cH_{t-1}, u_t)]
+= \Phi_{u_t}(\widetilde{M}_t) + 2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)] + \underbrace{\E[\varepsilon_t^2 - \sigma_\varepsilon^2 \mid \sigma(\cH_{t-1}, u_t)]}_{=\,0\text{ by (i)}}.
+\]
+\qed
+\end{proof}
+
+\subsection{Segment-level target and subspace identification}
+
+\begin{proposition}[Segment-level factorization]
+\label{prop:segment_factorization}
+For each segment $k$,
+\begin{equation}
+\bar{M}_k^{\mathrm{probe}} = B_k^\star \bar{S}_k^{\mathrm{probe}} (B_k^\star)^\top,
+\label{eq:segment_factorization}
+\end{equation}
+where $\bar{S}_k^{\mathrm{probe}} = \frac{1}{m_k}\sum_{t \in \cT_k} \E[w_t w_t^\top \mid \cH_{t-1}]$. In particular, $\range(\bar{M}_k^{\mathrm{probe}}) \subseteq \range(B_k^\star)$.
+\end{proposition}
+
+\begin{proof}
+For $t \in \cI_k$, by~\eqref{eq:latent_factor_model} and Assumption~\ref{assum:piecewise}, $\theta_t = B_k^\star w_t$. Therefore,
+\[
+\widetilde{M}_t = \E[\theta_t \theta_t^\top \mid \cH_{t-1}] = B_k^\star \E[w_t w_t^\top \mid \cH_{t-1}] (B_k^\star)^\top.
+\]
+Averaging over $t \in \cT_k$:
+\[
+\bar{M}_k^{\mathrm{probe}}
+= B_k^\star \!\left(\frac{1}{m_k}\sum_{t \in \cT_k} \E[w_t w_t^\top \mid \cH_{t-1}]\right)(B_k^\star)^\top
+= B_k^\star \bar{S}_k^{\mathrm{probe}} (B_k^\star)^\top.
+\]
+The range inclusion follows since $\bar{M}_k^{\mathrm{probe}}$ maps any vector through $B_k^\star$.
+\end{proof}
+
+\begin{theorem}[Identification of the active segment subspace]
+\label{prop:subspace_identification}
+Suppose Assumption~\ref{assum:excitation} holds. Then for every segment $k$,
+\begin{equation}
+\range(\bar{M}_k^{\mathrm{probe}}) = \range(B_k^\star).
+\label{eq:subspace_id}
+\end{equation}
+Equivalently, the segment projector $P_k^\star := B_k^\star (B_k^\star)^\top$ is identified by $\bar{M}_k^{\mathrm{probe}}$.
+\end{theorem}
+
+\begin{proof}
+By Proposition~\ref{prop:segment_factorization},
+\[
+\bar{M}_k^{\mathrm{probe}}
+=
+B_k^\star \bar{S}_k^{\mathrm{probe}} (B_k^\star)^\top.
+\]
+Also, by Assumption~\ref{assum:excitation},
+\[
+\lambda_r(\bar{S}_k^{\mathrm{probe}}) \ge \lambda_{\min} > 0.
+\]
+Hence $\bar{S}_k^{\mathrm{probe}}$ has rank $r$, and therefore
+\[
+\rank(\bar{M}_k^{\mathrm{probe}})=r.
+\]
+From Proposition~\ref{prop:segment_factorization},
+\[
+\range(\bar{M}_k^{\mathrm{probe}})
+\subseteq
+\range(B_k^\star).
+\]
+Since both spaces have dimension $r$, equality follows.
+\end{proof}
+
+\subsection{Lifted samples and empirical estimation}
+
+\begin{proposition}[Unbiased lifted probe sample under exact orthogonality]
+\label{prop:lifted_probe_unbiased}
+Suppose Lemma~\ref{lem:K_invertible} holds and $\varepsilon_\times = 0$ (i.e., exact state--noise orthogonality: $\E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)] = 0$ a.s.). Then for every probe round $t \in \cTprobe$,
+\begin{equation}
+\E[G_t \mid \cH_{t-1}] = \widetilde{M}_t.
+\label{eq:Gt_unbiased}
+\end{equation}
+When only the bounded-coupling condition holds ($\varepsilon_\times > 0$), the lifted probe sample acquires a bias: $\|\E[G_t \mid \cH_{t-1}] - \widetilde{M}_t\|_{\op} \le 2\varepsilon_\times C_{\mathcal{K}} L^3$ (see Theorem~\ref{thm:robustness_coupling}).
+\end{proposition}
+
+\begin{proof}
+Since $G_t = \mathcal{K}^{-1}(s_t u_t u_t^\top)$ and $\mathcal{K}^{-1}$ is a deterministic linear operator on $\Rsy$, the tower property yields
+\[
+\E[G_t \mid \cH_{t-1}]
+= \mathcal{K}^{-1}\!\left(\E\!\left[\E[s_t \mid \sigma(\cH_{t-1}, u_t)]\, u_t u_t^\top \mid \cH_{t-1}\right]\right).
+\]
+By Proposition~\ref{prop:quadratic_identity}, $\E[s_t \mid \sigma(\cH_{t-1}, u_t)] = u_t^\top \widetilde{M}_t u_t + 2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]$. Under the exact orthogonality assumption $\varepsilon_\times = 0$, the cross term vanishes, giving $\E[s_t \mid \sigma(\cH_{t-1}, u_t)] = u_t^\top \widetilde{M}_t u_t = \Phi_{u_t}(\widetilde{M}_t)$. Substituting:
+\[
+\E[G_t \mid \cH_{t-1}]
+= \mathcal{K}^{-1}\!\left(\E\!\left[\Phi_{u_t}(\widetilde{M}_t)\, u_t u_t^\top \mid \cH_{t-1}\right]\right)
+= \mathcal{K}^{-1}(\mathcal{K}(\widetilde{M}_t))
+= \widetilde{M}_t,
+\]
+where the second equality uses $\widetilde{M}_t \in \sigma(\cH_{t-1})$ and $u_t \perp\!\!\!\perp \cH_{t-1}$ to identify the inner expectation as $\mathcal{K}(\widetilde{M}_t)$ by definition.
+\end{proof}
+
+For each segment $k$, define the empirical segment-level estimator
+\begin{equation}
+\widehat{M}_k := \frac{1}{m_k} \sum_{t \in \cT_k} G_t.
+\label{eq:Mhat_k}
+\end{equation}
+Under exact orthogonality ($\varepsilon_\times = 0$), Proposition~\ref{prop:lifted_probe_unbiased} and the tower property give $\E[\widehat{M}_k \mid \cH_{\tau_{k-1}-1}] = \bar{M}_k^{\mathrm{probe}}$, so $\widehat{M}_k$ is an unbiased estimator of $\bar{M}_k^{\mathrm{probe}}$. The martingale difference sequence $\{G_t - \widetilde{M}_t\}_{t \in \cT_k}$ enables rigorous matrix concentration analysis (Section~\ref{sec:concentration}). Under bounded coupling ($\varepsilon_\times > 0$), the estimator acquires a bias of order $O(\varepsilon_\times)$; the robustness analysis of Section~\ref{sec:robustness} shows that subspace recovery degrades gracefully.
+
+Let $\widehat{U}_k \in \R^{d \times r}$ contain the top $r$ eigenvectors of $\widehat{M}_k$. Define the estimated segment projector
+\begin{equation}
+\widehat{P}_k := \widehat{U}_k \widehat{U}_k^\top.
+\label{eq:Phat_k}
+\end{equation}
+
+\subsection{Biased estimation under variance misspecification}
+
+We now formalize the effect of replacing the true noise variance $\sigma_\varepsilon^2$ with an estimate $\hat\sigma_\varepsilon^2$. Let $\delta_\sigma := \hat\sigma_\varepsilon^2 - \sigma_\varepsilon^2$ be the signed estimation error. Define the misspecified probe statistic and lifted sample
+\begin{equation}
+\hat{s}_t := y_t^2 - \hat\sigma_\varepsilon^2 = s_t - \delta_\sigma,
+\qquad
+\hat{G}_t := \mathcal{K}^{-1}(\hat{s}_t\, u_t u_t^\top).
+\label{eq:misspec_statistic}
+\end{equation}
+
+\begin{proposition}[Combined bias decomposition under variance misspecification and bounded coupling]
+\label{prop:biased_measurement}
+Suppose Assumptions~\ref{assum:probe_noise}(i)--(iii) and Lemma~\ref{lem:K_invertible} hold. Let $\Sigma_Q := \E[uu^\top]$. Define the variance-misspecification bias
+\[
+B_\sigma := \delta_\sigma\, \mathcal{K}^{-1}(\Sigma_Q),
+\]
+and the cross-correlation bias at probe time $t$:
+\[
+B_{\times,t} := \mathcal{K}^{-1}\!\left(\E\!\left[2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]\, u_t u_t^\top \;\middle|\; \cH_{t-1}\right]\right).
+\]
+Then for every probe round $t \in \cTprobe$,
+\begin{equation}
+\E[\hat{G}_t \mid \cH_{t-1}] = \widetilde{M}_t - B_\sigma + B_{\times,t},
+\label{eq:biased_Gt}
+\end{equation}
+with the bounds
+\begin{equation}
+\|B_\sigma\|_2 \le |\delta_\sigma|\, C_{\mathcal{K}}\, L^2,
+\qquad
+\|B_{\times,t}\|_2 \le 2\varepsilon_\times\, C_{\mathcal{K}}\, L^3.
+\label{eq:bias_bound}
+\end{equation}
+In particular:
+\begin{enumerate}[nosep,label=(\alph*)]
+\item Under exact orthogonality ($\varepsilon_\times = 0$): $B_{\times,t} = 0$, and $\E[\hat{G}_t \mid \cH_{t-1}] = \widetilde{M}_t - B_\sigma$.
+\item Under known variance ($\delta_\sigma = 0$) and exact orthogonality ($\varepsilon_\times = 0$): both biases vanish, recovering Proposition~\ref{prop:lifted_probe_unbiased}.
+\end{enumerate}
+\end{proposition}
+
+\begin{proof}
+Since $\hat{s}_t = s_t - \delta_\sigma$, the conditional expectation given $\sigma(\cH_{t-1}, u_t)$ is
+\[
+\E[\hat{s}_t \mid \sigma(\cH_{t-1}, u_t)]
+= \E[s_t \mid \sigma(\cH_{t-1}, u_t)] - \delta_\sigma.
+\]
+By Proposition~\ref{prop:quadratic_identity},
+\[
+\E[s_t \mid \sigma(\cH_{t-1}, u_t)]
+= u_t^\top \widetilde{M}_t u_t + 2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)].
+\]
+Combining:
+\[
+\E[\hat{s}_t \mid \sigma(\cH_{t-1}, u_t)]
+= u_t^\top \widetilde{M}_t u_t
++ 2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]
+- \delta_\sigma.
+\]
+Applying $\mathcal{K}^{-1}$ and the tower property with $u_t \perp\!\!\!\perp \cH_{t-1}$:
+\begin{align*}
+\E[\hat{G}_t \mid \cH_{t-1}]
+&= \mathcal{K}^{-1}\!\left(
+\E\!\left[
+\E[\hat{s}_t \mid \sigma(\cH_{t-1}, u_t)]\, u_t u_t^\top
+\mid \cH_{t-1}
+\right]
+\right) \\
+&= \mathcal{K}^{-1}\!\big(
+\mathcal{K}(\widetilde{M}_t)
++ \E[2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]\, u_t u_t^\top \mid \cH_{t-1}]
+- \delta_\sigma\, \Sigma_Q
+\big) \\
+&= \widetilde{M}_t + B_{\times,t} - B_\sigma.
+\end{align*}
+For the variance-misspecification bound: $\|B_\sigma\|_2 \le |\delta_\sigma| \|\mathcal{K}^{-1}\|_{\op} \|\Sigma_Q\|_2 \le |\delta_\sigma| C_{\mathcal{K}} L^2$, since $\|\Sigma_Q\|_2 \le L^2$.
+For the cross-correlation bound: $|2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]| \le 2L\varepsilon_\times$, so
+$\|2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]\, u_t u_t^\top\|_{\op} \le 2L\varepsilon_\times \cdot L^2 = 2\varepsilon_\times L^3$.
+Applying $\mathcal{K}^{-1}$: $\|B_{\times,t}\|_2 \le 2\varepsilon_\times C_{\mathcal{K}} L^3$.
+\end{proof}
+
+\begin{remark}[Structure of the two biases]
+\label{rem:bias_structure}
+The two biases in Proposition~\ref{prop:biased_measurement} are structurally different:
+\begin{itemize}[nosep]
+\item The variance-misspecification bias $B_\sigma = \delta_\sigma\, \mathcal{K}^{-1}(\Sigma_Q)$ is \emph{deterministic} and \emph{time-invariant}: it does not depend on $t$ or the segment. For isotropic probes, $B_\sigma = \frac{(d+1)\delta_\sigma}{2(d+2)} I_d$ is a scalar multiple of the identity, so eigenvectors of $\bar{M}_k^{\mathrm{probe}}$ are not corrupted---only eigenvalues shift. Recovery succeeds whenever $\lambda_{\min} > \|B_\sigma\|_2$.
+\item The cross-correlation bias $B_{\times,t}$ is \emph{time-varying} and \emph{direction-dependent}: it depends on the conditional cross-correlation $\E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]$ through the probe direction $u_t$. Unlike $B_\sigma$, it can corrupt eigenvector directions, creating an irreducible $O(\varepsilon_\times)$ floor on subspace error (Section~\ref{sec:robustness}).
+\end{itemize}
+\end{remark}
+
+
+%% ============================================================
+%%  4. PAIRED-PLAY IDENTIFICATION
+%% ============================================================
+\section{Paired-play identification}
+\label{sec:paired_play_id}
+
+\subsection{Paired-play protocol}
+
+On a paired-play probe round $t \in \cTprobe$, the learner draws $u_t \sim Q$ and plays the antisymmetric pair $(x_t^{(1)}, x_t^{(2)}) = (u_t, -u_t)$. The paired contrast is
+\[
+\Delta y_t := \frac{y_t^{(1)} - y_t^{(2)}}{2} = u_t^\top \theta_t + \xi_t,
+\qquad
+\xi_t := \frac{\varepsilon_t^{(1)} - \varepsilon_t^{(2)}}{2}.
+\]
+Under Assumption~\ref{assum:paired_noise}, $\E[\xi_t^2 \mid \sigma(\cH_{t-1}, u_t)] = \sigma_\xi^2$, and under Assumption~\ref{assum:state_noise_orth}, $\E[\xi_t \mid \sigma(\cH_{t-1}, u_t, \theta_t)] = 0$. Hence, defining $s_t := (\Delta y_t)^2 - \sigma_\xi^2$, we obtain
+\begin{equation}
+\E[s_t \mid \sigma(\cH_{t-1}, u_t)] = u_t^\top \widetilde{M}_t u_t.
+\label{eq:paired_quadratic}
+\end{equation}
+
+\subsection{How paired play eliminates the variance requirement}
+
+In single-play, the quadratic measurement identity (Proposition~\ref{prop:quadratic_identity}) requires known noise variance $\sigma_\varepsilon^2$ to center the statistic $s_t = y_t^2 - \sigma_\varepsilon^2$. Paired-play provides an alternative: the paired contrast $\Delta y_t = u_t^\top \theta_t + \xi_t$ isolates the directional signal, and the centering constant $\sigma_\xi^2$ depends only on the paired-difference noise, not on the signal variance.
+
+\subsection{Common-mode rejection}
+
+If the reward model contains a common additive nuisance,
+\[
+y_t(x) = \mu_t + x^\top \theta_t + \varepsilon_t(x),
+\]
+then the antisymmetric contrast gives
+\[
+\frac{y_t^{(1)} - y_t^{(2)}}{2} = u_t^\top \theta_t + \frac{\varepsilon_t^{(1)} - \varepsilon_t^{(2)}}{2},
+\]
+so the nuisance term $\mu_t$ cancels automatically. This common-mode rejection is a key advantage of paired-play.
+
+\subsection{Sufficiency of the quadratic measurement property}
+
+\begin{remark}[Paired-play as a sufficient but not necessary mechanism]
+\label{rem:paired_play_sufficient}
+The identification results of Sections~\ref{sec:single_play_id}--\ref{sec:paired_play_id} require only that each probe round produce a statistic $Z_t$ satisfying $\E[Z_t \mid \cH_{t-1}, u_t] = u_t^\top \widetilde{M}_t u_t$ for probe directions $u_t$ drawn from a distribution with $\E[u_t u_t^\top] \succeq \rho I_d$. The antisymmetric paired-play construction $(u_t, -u_t)$ is one concrete mechanism achieving this property: the linearity of the reward model ensures that $(y_t^{(1)} - y_t^{(2)})/2 = u_t^\top \theta_t + \xi_t$ isolates the directional signal, and the common-mode rejection eliminates the need for known noise variance. However, any alternative mechanism producing an unbiased quadratic measurement of $\widetilde{M}_t$ would suffice for the downstream concentration and recovery results. Paired-play is thus a \emph{sufficient} implementation of the abstract identification requirement, distinguished by its simplicity and its elimination of the known-variance condition.
+\end{remark}
+
+\subsection{\texorpdfstring{Bounded non-Gaussian probes satisfying $A6^\flat$}{Bounded non-Gaussian probes satisfying A6 flat}}
+
+
+\begin{lemma}[Bounded non-Gaussian probes satisfying A6$^\flat$]
+\label{lem:bounded_Q}
+Let $u = (u_1, \dots, u_d)$ have independent coordinates with
+\[
+\Prob(u_i = 0) = \frac{2}{3}, \qquad
+\Prob(u_i = \sqrt{3}) = \Prob(u_i = -\sqrt{3}) = \frac{1}{6},
+\quad i = 1, \dots, d.
+\]
+Then $\E[u] = 0$, $\E[uu^\top] = I_d$, and $\|u\|_2 \le \sqrt{3d}$ a.s. Moreover, for every symmetric $M \in \R^{d \times d}$, \eqref{eq:A6flat} holds.
+\end{lemma}
+
+\begin{proof}
+By symmetry, $\E[u_i] = 0$. Also $\E[u_i^2] = (1/3) \cdot 3 = 1$, and independence gives $\E[u_i u_j] = 0$ for $i \neq j$, hence $\E[uu^\top] = I_d$. The bound $\|u\|_2 \le \sqrt{3d}$ follows from $|u_i| \le \sqrt{3}$ a.s.
+
+For fourth moments: $\E[u_i^4] = (1/3) \cdot 9 = 3$ and for $i \neq j$, $\E[u_i^2 u_j^2] = \E[u_i^2]\E[u_j^2] = 1$ by independence. All mixed odd moments vanish by symmetry. Therefore the joint fourth moments match those of $\mathcal{N}(0, I_d)$: for all indices $a, b, c, d$,
+\[
+\E[u_a u_b u_c u_d] = \delta_{ab}\delta_{cd} + \delta_{ac}\delta_{bd} + \delta_{ad}\delta_{bc}.
+\]
+Expanding $(u^\top M u) uu^\top$ entrywise as $\sum_{p,q} M_{pq}\, u_p u_q\, uu^\top$ and applying the above identity yields $\E[(u^\top M u)\, uu^\top] = 2M + \tr(M) I_d$.
+\end{proof}
+
+\subsection{Identifiability from predictable moments}
+
+The following lemma restates the identification result of Theorem~\ref{prop:subspace_identification} in the paired-play framework, for self-containedness.
+
+\begin{lemma}[Identifiability of the representation subspace]
+\label{lem:identifiability}
+Fix a segment $k$. Suppose Assumption~\ref{assum:excitation} holds. Then
+\[
+\range(\bar{M}_k^{\mathrm{probe}}) = \range(B_k^\star),
+\qquad \text{and hence } P_k^\star := B_k^\star (B_k^\star)^\top \text{ is uniquely identified.}
+\]
+\end{lemma}
+
+\begin{proof}
+Since
+\[
+\bar{M}_k^{\mathrm{probe}} = B_k^\star \bar{S}_k^{\mathrm{probe}} (B_k^\star)^\top,
+\]
+we always have
+\[
+\range(\bar{M}_k^{\mathrm{probe}}) \subseteq \range(B_k^\star).
+\]
+Conversely, let $v \in \range(B_k^\star)$, so
+\[
+v = B_k^\star a
+\qquad
+\text{for some } a \in \R^r.
+\]
+Assumption~\ref{assum:excitation} implies
+$\bar{S}_k^{\mathrm{probe}}$ is invertible on $\R^r$.
+Define
+\[
+b := (\bar{S}_k^{\mathrm{probe}})^{-1} a
+\qquad
+\text{and}
+\qquad
+x := B_k^\star b \in \R^d.
+\]
+Then
+\[
+\bar{M}_k^{\mathrm{probe}} x
+= B_k^\star \bar{S}_k^{\mathrm{probe}} (B_k^\star)^\top B_k^\star b
+= B_k^\star \bar{S}_k^{\mathrm{probe}} b
+= B_k^\star a
+= v,
+\]
+using $(B_k^\star)^\top B_k^\star = I_r$
+(Assumption~\ref{assum:piecewise}).
+Thus
+\[
+\range(B_k^\star) \subseteq \range(\bar{M}_k^{\mathrm{probe}}).
+\]
+Therefore,
+\[
+\range(\bar{M}_k^{\mathrm{probe}})=\range(B_k^\star).
+\]
+The orthogonal projector onto this subspace is unique, hence $P_k^\star$ is identified.
+\end{proof}
+
+\subsection{Non-vacuity of assumption A8}
+
+\begin{lemma}[Predictable covariance floor and second-moment floor]
+\label{lem:cov_floor}
+For any $k$ and any $t \in \cI_k$ with $t \ge \tau_{k-1} + 1$,
+\[
+\mathrm{Cov}(w_t \mid \cH_{t-1}) \succeq \Sigma_{\eta,k} \qquad \text{a.s.}
+\]
+Consequently, $\E[w_t w_t^\top \mid \cH_{t-1}] \succeq \Sigma_{\eta,k}$ a.s.
+\end{lemma}
+
+\begin{proof}
+Fix $t \in \cI_k$ with $t \ge \tau_{k-1} + 1$. Then $w_t = A_k w_{t-1} + \eta_{t-1}$ where $\E[\eta_{t-1} \mid \cH_{t-1}] = 0$ and $\E[\eta_{t-1}\eta_{t-1}^\top \mid \cH_{t-1}] = \Sigma_{\eta,k}$ a.s. Conditioning on $\cH_{t-1}$,
+\[
+\mathrm{Cov}(w_t \mid \cH_{t-1}) = A_k\, \mathrm{Cov}(w_{t-1} \mid \cH_{t-1}) A_k^\top + \mathrm{Cov}(\eta_{t-1} \mid \cH_{t-1}),
+\]
+and since $\mathrm{Cov}(\eta_{t-1} \mid \cH_{t-1}) = \Sigma_{\eta,k}$ a.s.\ and covariance matrices are PSD,
+$\mathrm{Cov}(w_t \mid \cH_{t-1}) \succeq \Sigma_{\eta,k}$.
+Finally,
+\[
+\begin{aligned}
+\E[w_t w_t^\top \mid \cH_{t-1}]
+&= \mathrm{Cov}(w_t \mid \cH_{t-1})
+ + \E[w_t \mid \cH_{t-1}]\, \E[w_t \mid \cH_{t-1}]^\top \\
+&\succeq \mathrm{Cov}(w_t \mid \cH_{t-1}) \\
+&\succeq \Sigma_{\eta,k}.
+\end{aligned}
+\]
+\qedhere
+\end{proof}
+
+\begin{corollary}[Sufficient condition implying Assumption A8]
+\label{cor:A8_sufficient}
+Let $\cT_k := \cTprobe \cap \cI_k$ with $m_k := |\cT_k|$. If $\cT_k \subseteq \{\tau_{k-1}+1, \dots, \tau_k - 1\}$, then
+\[
+\bar{S}_k^{\mathrm{probe}} := \frac{1}{m_k}\sum_{t \in \cT_k} \E[w_t w_t^\top \mid \cH_{t-1}] \succeq \Sigma_{\eta,k} \qquad \text{a.s.}
+\]
+and therefore $\lambda_r(\bar{S}_k^{\mathrm{probe}}) \ge \underline{\lambda}$ a.s.
+\end{corollary}
+
+\begin{remark}
+Lemma~\ref{lem:cov_floor} and Corollary~\ref{cor:A8_sufficient} show that under Assumption~\ref{assum:latent_dynamics} (exogenous, nondegenerate innovations) and a mild probe-placement condition (excluding $t = \tau_{k-1}$), Assumption~\ref{assum:excitation} is non-vacuous and can be guaranteed with $\lambda_{\min}$ chosen no larger than $\underline{\lambda}$.
+\end{remark}
+
+
+%% ============================================================
+%%  5. NON-IDENTIFICATION RESULTS
+%% ============================================================
+\section{Non-identification results}
+\label{sec:non_identification}
+
+The identification results of Sections~\ref{sec:single_play_id}--\ref{sec:paired_play_id} rely on all three conditions: known conditional noise variance, state--noise orthogonality, and full-dimensional probe coverage. We now show that within the quadratic observation model, dropping any one of these conditions destroys identifiability.
+
+\begin{theorem}[Non-identification: necessity of all three conditions]
+\label{thm:non_identification}
+Within the quadratic observation model $s_t = y_t^2 - \sigma_\varepsilon^2$, the three structural conditions of Assumption~\ref{assum:probe_noise}---known conditional noise variance, state--noise orthogonality, and full-dimensional probe coverage---are each individually necessary for identifiability of $\widetilde{M}_t$, and no two are jointly sufficient. Specifically:
+\begin{enumerate}[label=(\roman*)]
+\item \label{prop:no_id_unknown_var} \textbf{Without known variance:} Even with orthogonality and full coverage, if the variance function $v_t(u) := \E[\varepsilon_t^2 \mid \cH_{t-1}, u]$ is unknown, then $\widetilde{M}_t$ is not identifiable from $g_t(u) := \E[y_t^2 \mid \cH_{t-1}, u]$.
+\item \label{prop:no_id_no_orth} \textbf{Without state--noise orthogonality:} Even with known $\sigma_\varepsilon^2$ and full coverage, if $\E[\varepsilon_t \theta_t \mid \cH_{t-1}, u] \neq 0$, then $\widetilde{M}_t$ is not identifiable from $h_t(u) := \E[y_t^2 - \sigma_\varepsilon^2 \mid \cH_{t-1}, u]$.
+\item \label{prop:restricted_span} \textbf{Without full coverage:} Even with known variance and orthogonality, if all observed actions lie in a proper subspace $S \subsetneq \R^d$, then $\widetilde{M}_t$ is not identifiable from either linear or quadratic observations.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{Part~\ref{prop:no_id_unknown_var}.}
+With $g_t(u) = u^\top \widetilde{M}_t u + \sigma_\varepsilon^2$, let $H = \delta I_d$ for $0 < \delta \le \sigma_\varepsilon^2 / L^2$. Define $\widetilde{M}_t' := \widetilde{M}_t + H$ and $v_t'(u) := \sigma_\varepsilon^2 - u^\top H u \ge 0$. Then $u^\top \widetilde{M}_t' u + v_t'(u) = g_t(u)$ for all $u \in \supp(Q)$, so $\widetilde{M}_t$ is not identifiable.
+
+\emph{Part~\ref{prop:no_id_no_orth}.}
+Write $m_t(u) := \E[\theta_t \varepsilon_t \mid \cH_{t-1}, u]$. Then $h_t(u) = u^\top \widetilde{M}_t u + 2u^\top m_t(u)$. For any nonzero symmetric $H$, define $\widetilde{M}_t' := \widetilde{M}_t + H$ and $m_t'(u) := m_t(u) - \frac{1}{2}Hu$. Then $u^\top \widetilde{M}_t' u + 2u^\top m_t'(u) = h_t(u)$, so $\widetilde{M}_t$ is not identifiable.
+
+\emph{Part~\ref{prop:restricted_span}.}
+Choose any nonzero symmetric $H = P_{S^\perp} H P_{S^\perp}$ supported on $S^\perp$. Then $x^\top H x = 0$ for all $x \in S$, so neither linear nor quadratic data can identify any signal outside $S$.
+\end{proof}
+
+\begin{remark}[Quantitative necessity of coverage]
+\label{rem:coverage_quantitative}
+Part~\ref{prop:restricted_span} of Theorem~\ref{thm:non_identification} is quantified at the regret level in Section~\ref{sec:coverage_lower_bounds}: any policy whose deployed actions are confined to a proper subspace $S \subsetneq \R^d$ incurs at least $\mu T$ costed dynamic regret (Theorem~\ref{thm:coverage_lb}).
+\end{remark}
+
+
+%% ============================================================
+%%  6. NECESSITY OF ACTIVE PROBING
+%% ============================================================
+\section{Necessity of active probing}
+\label{sec:probing_justification}
+
+The non-identification results of Section~\ref{sec:non_identification} show that restricting probe directions to a proper subspace destroys identifiability. This section establishes a stronger structural consequence: in the piecewise non-stationary setting, \emph{passive learning from exploitation data alone cannot recover the subspace}, because greedy exploitation collapses the observation directions into a restricted proper subspace.
+
+\begin{proposition}[Passive-learning failure under non-stationarity]
+\label{prop:passive_failure}
+Suppose at each round $t$, the deployed action is chosen as $x_t^{\mathrm{dep}} \in \argmax_{x \in \cA_t} x^\top \widehat{\theta}_t$ for some estimate $\widehat{\theta}_t \in \R^d$ that is $\cH_{t-1}$-measurable. If $\widehat{\theta}_t \in S$ for some proper subspace $S \subsetneq \R^d$ for all $t \in \cI_k$, then the deployed actions satisfy $x_t^{\mathrm{dep}} \in S$ whenever $\cA_t \subseteq S \cup S^\perp$. Consequently, by Theorem~\ref{thm:non_identification}\ref{prop:restricted_span}, the new subspace $\range(B_k^\star)$ is unidentifiable from exploitation data whenever $\range(B_k^\star) \not\subseteq S$.
+\end{proposition}
+
+\begin{proof}
+If $\widehat{\theta}_t \in S$ and $\cA_t \subseteq S \cup S^\perp$, then for any $x \in S^\perp$, $x^\top \widehat{\theta}_t = 0$, whereas for $x \in S \cap \cA_t$, the inner product may be positive. Hence the greedy action lies in $S$. Since all deployed actions lie in $S$, only quadratic forms $x^\top \widetilde{M}_t x$ with $x \in S$ are observed, and any signal in $S^\perp$ is invisible.
+\end{proof}
+
+This failure is structural, not algorithmic: after a change point $\tau_k$, the learner's estimate $\widehat{\theta}_t$ is based on the previous segment's subspace and therefore lies in $\range(B_{k-1}^\star)$. If $\range(B_k^\star) \neq \range(B_{k-1}^\star)$, passive exploitation cannot recover the new subspace. Assumption~\ref{assum:probe_realizability} resolves this by guaranteeing access to probe directions with $\E[uu^\top] \succeq \rho I_d$, forcibly injecting controlled sensing in every direction of $\R^d$ independently of the historical decision filtration. The quantitative necessity of full-dimensional coverage is formalized in Section~\ref{sec:coverage_lower_bounds}.
+
+
+%% ============================================================
+%%  7. CONCENTRATION INEQUALITIES AND SUBSPACE RECOVERY
+%% ============================================================
+\section{Concentration inequalities and subspace recovery}
+\label{sec:concentration}
+
+During segment $k$, the learner computes $\widehat{M}_k = \frac{1}{m_k}\sum_{t \in \cT_k} G_t$.
+
+\paragraph{Assumption regime for this section.}
+This section operates under the \emph{exact orthogonality + correctly centered} regime: we assume $\varepsilon_\times = 0$ (exact state--noise orthogonality) and $\delta_\sigma = 0$ (known noise variance), so that by Proposition~\ref{prop:lifted_probe_unbiased}, $X_t := G_t - \widetilde{M}_t$ is a martingale difference sequence with $\E[X_t \mid \cH_{t-1}] = 0$. Theorem~\ref{thm:biased_concentration} extends the concentration results to variance misspecification ($\delta_\sigma \neq 0$, still with $\varepsilon_\times = 0$). The fully general biased case ($\varepsilon_\times > 0$) is treated in Section~\ref{sec:robustness}. Throughout, Assumptions~\ref{assum:latent_dynamics}--\ref{assum:bounded_probe_noise} hold, and $\|w_t\|_2 \le S_w$ for all $t$ (implying $\|\theta_t\|_2 \le S_w$).
+
+\subsection{Auxiliary bounds}
+
+\begin{lemma}[Uniform bound on the probe statistic]
+\label{lem:st_bound}
+On every probe round $t \in \cTprobe$,
+\[
+|s_t| \le R_s := (L S_w + L_\varepsilon)^2 + \sigma_\varepsilon^2.
+\]
+\end{lemma}
+
+\begin{proof}
+On a probe round, $y_t = u_t^\top \theta_t + \varepsilon_t$. By Cauchy--Schwarz: $|u_t^\top \theta_t| \le \|u_t\|_2 \|\theta_t\|_2 \le L S_w$. By Assumption~\ref{assum:bounded_probe_noise}, $|\varepsilon_t| \le L_\varepsilon$. Hence $|y_t| \le L S_w + L_\varepsilon$ and $|s_t| = |y_t^2 - \sigma_\varepsilon^2| \le |y_t|^2 + \sigma_\varepsilon^2 \le (L S_w + L_\varepsilon)^2 + \sigma_\varepsilon^2 = R_s$.
+\end{proof}
+
+\begin{lemma}[Lifted probe martingale difference sequence]
+\label{lem:lifted_mds}
+For every probe round $t \in \cTprobe$, $\E[X_t \mid \cH_{t-1}] = 0$, and
+\[
+\widehat{M}_k - \bar{M}_k^{\mathrm{probe}} = \frac{1}{m_k}\sum_{t \in \cT_k} X_t.
+\]
+\end{lemma}
+
+\begin{proof}
+By Proposition~\ref{prop:lifted_probe_unbiased}, $\E[G_t \mid \cH_{t-1}] = \widetilde{M}_t$, so $\E[X_t \mid \cH_{t-1}] = 0$. The second claim follows by linearity.
+\end{proof}
+
+\begin{lemma}[Uniform operator norm bound]
+\label{lem:operator_bound}
+On every probe round $t \in \cTprobe$,
+\[
+\|X_t\|_2 \le R_X := C_{\mathcal{K}} L^2 R_s + S_w^2.
+\]
+\end{lemma}
+
+\begin{proof}
+$\|G_t\|_2 \le \|\mathcal{K}^{-1}\|_{\op} |s_t| \|u_t u_t^\top\|_2 \le C_{\mathcal{K}} R_s L^2$. By Jensen's inequality, $\|\widetilde{M}_t\|_2 \le \E[\|\theta_t\|_2^2 \mid \cH_{t-1}] \le S_w^2$. Hence $\|X_t\|_2 \le \|G_t\|_2 + \|\widetilde{M}_t\|_2 \le C_{\mathcal{K}} L^2 R_s + S_w^2 = R_X$.
+\end{proof}
+
+\begin{lemma}[Predictable quadratic variation bound]
+\label{lem:pqv_bound}
+For each segment $k$,
+\[
+\left\|\sum_{t \in \cT_k} \E[X_t^2 \mid \cH_{t-1}]\right\|_2 \le m_k R_X^2.
+\]
+\end{lemma}
+
+\begin{proof}
+Since $\|X_t\|_2 \le R_X$ almost surely, $X_t^2 \preceq R_X^2 I_d$ in the Loewner order. Taking conditional expectations and summing over $t \in \cT_k$ yields the bound.
+\end{proof}
+
+\subsection{Segment-level concentration}
+
+The main concentration result bounds
+\[
+\|\widehat{M}_k - \bar{M}_k^{\mathrm{probe}}\|_{\op}
+\]
+via the matrix Freedman inequality for self-adjoint matrix martingales.
+
+\begin{theorem}[Segment-level matrix concentration via Freedman]
+\label{thm:matrix_concentration}
+For every segment $k$ and $\delta \in (0,1)$, with probability at least $1 - \delta$:
+\[
+\|\widehat{M}_k - \bar{M}_k^{\mathrm{probe}}\|_{\op} \le \sqrt{\frac{2\sigma_X^2 \log(2d/\delta)}{m_k}} + \frac{2R_X \log(2d/\delta)}{3m_k},
+\]
+where $\sigma_X^2 := \sup_{t \in \cT_k} \|\E[X_t^2 \mid \cH_{t-1}]\|_{\op}$ is the per-sample variance proxy.
+\end{theorem}
+
+\begin{proof}
+By Lemma~\ref{lem:lifted_mds}, $\widehat{M}_k - \bar{M}_k^{\mathrm{probe}} = \frac{1}{m_k}\sum_{t \in \cT_k} X_t$ where $X_t := G_t - \widetilde{M}_t$. We verify the hypotheses of the matrix Freedman inequality:
+\begin{itemize}[nosep]
+\item \emph{Filtration:} The sequence $\{X_t\}_{t \in \cT_k}$ is adapted to the post-decision filtration $\{\cH_t\}_{t \ge 0}$, since $G_t$ and $\widetilde{M}_t$ are both $\cH_t$-measurable.
+\item \emph{Self-adjointness:} Each $X_t = \mathcal{K}^{-1}(s_t u_t u_t^\top) - \widetilde{M}_t$ is symmetric since $\mathcal{K}^{-1}$ maps $\Rsy$ to $\Rsy$ and $\widetilde{M}_t \in \Rsy$.
+\item \emph{Mean zero:} $\E[X_t \mid \cH_{t-1}] = 0$ by Proposition~\ref{prop:lifted_probe_unbiased} (under exact orthogonality $\varepsilon_\times = 0$).
+\item \emph{Uniform bound:} $\|X_t\|_{\op} \le R_X$ a.s.\ by Lemma~\ref{lem:operator_bound}.
+\end{itemize}
+
+\emph{Predictable quadratic variation.}
+Define the cumulative predictable quadratic variation
+\[
+W_k := \sum_{t \in \cT_k} \E[X_t^2 \mid \cH_{t-1}].
+\]
+Since $\|\E[X_t^2 \mid \cH_{t-1}]\|_{\op} \le \sigma_X^2$ for each $t \in \cT_k$, we have $\|W_k\|_{\op} \le m_k \sigma_X^2$.
+
+\emph{Matrix Freedman inequality.}
+By the matrix Freedman inequality \citep[Theorem~1.6]{tropp2012user}, for any self-adjoint matrix martingale $\sum_{t} X_t$ with $\|X_t\|_{\op} \le R_X$ a.s.\ and predictable quadratic variation $W_k$: for all $u > 0$ and $\sigma^2 > 0$,
+\[
+\Prob\!\left(\left\|\sum_{t \in \cT_k} X_t\right\|_{\op} \ge u \text{ and } \|W_k\|_{\op} \le \sigma^2\right)
+\le 2d \exp\!\left(-\frac{u^2/2}{\sigma^2 + R_X u/3}\right).
+\]
+
+\emph{Tail bound.}
+Setting $\sigma^2 = m_k \sigma_X^2$ and $u = \sqrt{2m_k \sigma_X^2 \log(2d/\delta)} + \frac{2R_X \log(2d/\delta)}{3}$, the Freedman bound gives
+\[
+\Prob\!\left(\left\|\sum_{t \in \cT_k} X_t\right\|_{\op} \ge u\right) \le \delta,
+\]
+since $\|W_k\|_{\op} \le m_k \sigma_X^2 = \sigma^2$ deterministically by Lemma~\ref{lem:pqv_bound}. Dividing by $m_k$ gives the result. When $m_k \gg \log d$ (the typical regime), the leading term $\sqrt{\sigma_X^2 \log(2d/\delta)/m_k}$ dominates, and the bound simplifies to $O(\sigma_X / \sqrt{m_k})$.
+\end{proof}
+
+\begin{remark}[On the concentration argument]
+The matrix Freedman inequality applies directly to martingale difference sequences, avoiding the need for symmetrization (which is valid only for independent summands) or desymmetrization. The bound depends on the predictable quadratic variation $W_k$ and the uniform bound $R_X$, both of which are established in Lemmas~\ref{lem:operator_bound}--\ref{lem:pqv_bound}. The per-sample variance proxy $\sigma_X^2$ yields a tighter bound than the worst-case $R_X^2$ when probe samples have low intrinsic variance relative to their norm bound.
+\end{remark}
+
+\begin{theorem}[Biased matrix concentration under variance misspecification]
+\label{thm:biased_concentration}
+Assume exact state--noise orthogonality ($\varepsilon_\times = 0$). Let $\hat{R}_X := R_X + 2C_{\mathcal{K}} |\delta_\sigma| L^2$ and $B_\sigma := \delta_\sigma\, \mathcal{K}^{-1}(\Sigma_Q)$. Under Assumptions~\ref{assum:action_boundedness}--\ref{assum:bounded_probe_noise}, with probability at least $1 - \delta$:
+\begin{equation}
+\left\|\widehat{M}_k^{\hat\sigma} - \bigl(\bar{M}_k^{\mathrm{probe}} - B_\sigma\bigr)\right\|_{\op}
+\le \sqrt{\frac{2\hat\sigma_X^2 \log(2d/\delta)}{m_k}} + \frac{2\hat{R}_X \log(2d/\delta)}{3m_k},
+\label{eq:biased_conc}
+\end{equation}
+Consequently, by the triangle inequality,
+\begin{equation}
+\left\|\widehat{M}_k^{\hat\sigma} - \bar{M}_k^{\mathrm{probe}}\right\|_2
+\le 2\hat{R}_X \sqrt{\frac{\log(2d/\delta)}{m_k}} + C_{\mathcal{K}} |\delta_\sigma| L^2.
+\label{eq:biased_conc_coarse}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Under $\varepsilon_\times = 0$, Proposition~\ref{prop:biased_measurement}(a) gives $\E[\hat{G}_t \mid \cH_{t-1}] = \widetilde{M}_t - B_\sigma$. Define the centered residuals
+\[
+\hat{X}_t := \hat{G}_t - \E[\hat{G}_t \mid \cH_{t-1}]
+= \underbrace{(G_t - \widetilde{M}_t)}_{X_t}
+- \delta_\sigma\!\left(\mathcal{K}^{-1}(u_t u_t^\top) - \mathcal{K}^{-1}(\Sigma_Q)\right),
+\]
+where $X_t = G_t - \widetilde{M}_t$ is the unbiased martingale difference from Proposition~\ref{prop:lifted_probe_unbiased} (valid since $\varepsilon_\times = 0$). By construction, $\E[\hat{X}_t \mid \cH_{t-1}] = 0$, so $\{\hat{X}_t\}_{t \in \cT_k}$ is a self-adjoint matrix martingale difference sequence.
+
+\textbf{Uniform norm bound.} By the triangle inequality and Lemma~\ref{lem:operator_bound}:
+\begin{align*}
+\|\hat{X}_t\|_2
+&\le \|X_t\|_2 + |\delta_\sigma|\!\left(\|\mathcal{K}^{-1}(u_t u_t^\top)\|_2 + \|\mathcal{K}^{-1}(\Sigma_Q)\|_2\right)
+\le R_X + 2C_{\mathcal{K}} |\delta_\sigma| L^2 =: \hat{R}_X.
+\end{align*}
+
+\textbf{Predictable quadratic variation.} Since $\|\hat{X}_t\|_2 \le \hat{R}_X$ a.s., $\|\sum_{t \in \cT_k} \E[\hat{X}_t^2 \mid \cH_{t-1}]\|_2 \le m_k \hat{R}_X^2$.
+
+\textbf{Matrix Freedman.} Applying the Matrix Freedman inequality \citep[Theorem~1.6]{tropp2012user} with uniform bound $\hat{R}_X$ and predictable quadratic variation $\|W_k\|_{\op} \le m_k \hat\sigma_X^2$ (where $\hat\sigma_X^2 := \sup_t \|\E[\hat{X}_t^2 \mid \cH_{t-1}]\|_{\op} \le \hat{R}_X^2$), then setting $u = \sqrt{2m_k \hat\sigma_X^2 \log(2d/\delta)} + \frac{2\hat{R}_X\log(2d/\delta)}{3}$, yields~\eqref{eq:biased_conc}. The coarser bound~\eqref{eq:biased_conc_coarse} follows by $\|B_\sigma\|_2 \le C_{\mathcal{K}} |\delta_\sigma| L^2$ and the triangle inequality.
+\end{proof}
+
+\subsection{Davis--Kahan projector recovery}
+
+\begin{theorem}[Segment projector recovery via Davis--Kahan]
+\label{thm:davis_kahan}
+Suppose Assumption~\ref{assum:excitation} holds. For every segment $k$ and $\delta \in (0,1)$, if $\|\widehat{M}_k - \bar{M}_k^{\mathrm{probe}}\|_2 \le \lambda_{\min}/2$, then with probability at least $1 - \delta$:
+\[
+\|\widehat{P}_k - P_k^\star\|_2 \le \frac{8R_X}{\lambda_{\min}} \sqrt{\frac{\log(2d/\delta)}{m_k}}.
+\]
+\end{theorem}
+
+\begin{proof}
+Write $M := \bar{M}_k^{\mathrm{probe}}$, $E := \widehat{M}_k - M$. By Proposition~\ref{prop:subspace_identification}, $\lambda_r(M) \ge \lambda_{\min}$ and $\lambda_{r+1}(M) = 0$. By Weyl's inequality, $\lambda_r(\widehat{M}_k) \ge \lambda_{\min} - \|E\|_2 \ge \lambda_{\min}/2$ and $\lambda_{r+1}(\widehat{M}_k) \le \|E\|_2 \le \lambda_{\min}/2$. Since $P_k^\star$ reduces $M$, the cross term satisfies $\|(I - P_k^\star)\widehat{M}_k P_k^\star\|_2 \le \|E\|_2$. The standard $\sin\Theta$ perturbation argument \citep{davis1970rotation, yu2015useful} gives $\|(I - P_k^\star)\widehat{U}_k\|_2 \le 2\|E\|_2 / \lambda_{\min}$, and for equal-rank orthogonal projectors, $\|\widehat{P}_k - P_k^\star\|_2 \le 4\|E\|_2 / \lambda_{\min}$. Substituting $\|E\|_2 \le 2R_X\sqrt{\log(2d/\delta)/m_k}$ from Theorem~\ref{thm:matrix_concentration} yields the result.
+\end{proof}
+
+\begin{corollary}[Projector recovery under variance misspecification]
+\label{cor:projector_misspec}
+Suppose Assumption~\ref{assum:excitation} holds. Assume $C_{\mathcal{K}} |\delta_\sigma| L^2 \le \lambda_{\min}/4$ and $m_k \ge 64\hat{R}_X^2 \log(2d/\delta) / \lambda_{\min}^2$. Then, with probability at least $1 - \delta$,
+\begin{equation}
+\|\widehat{P}_k - P_k^\star\|_2
+\le
+\underbrace{\frac{8\hat{R}_X}{\lambda_{\min}}}_{=:\, \hat{C}_{\mathrm{sub}}}
+\sqrt{\frac{\log(2d/\delta)}{m_k}}
++
+\underbrace{\frac{4C_{\mathcal{K}} |\delta_\sigma| L^2}{\lambda_{\min}}}_{=:\, \Delta_\sigma}.
+\label{eq:projector_misspec}
+\end{equation}
+\end{corollary}
+
+\begin{proof}
+By Theorem~\ref{thm:biased_concentration} and the two hypotheses,
+\[
+\|\widehat{M}_k^{\hat\sigma} - \bar{M}_k^{\mathrm{probe}}\|_2
+\le 2\hat{R}_X\sqrt{\frac{\log(2d/\delta)}{m_k}} + C_{\mathcal{K}} |\delta_\sigma| L^2
+\le \frac{\lambda_{\min}}{4} + \frac{\lambda_{\min}}{4} = \frac{\lambda_{\min}}{2}.
+\]
+The eigenvalue separation condition of Theorem~\ref{thm:davis_kahan} is therefore satisfied. We decompose $\widehat{M}_k^{\hat\sigma} - \bar{M}_k^{\mathrm{probe}} = (\widehat{M}_k^{\hat\sigma} - (\bar{M}_k^{\mathrm{probe}} - B_\sigma)) - B_\sigma$. Let $E := \widehat{M}_k^{\hat\sigma} - \bar{M}_k^{\mathrm{probe}}$. Since $P_k^\star$ reduces $\bar{M}_k^{\mathrm{probe}}$, the cross-block term satisfies
+\[
+\|(I - P_k^\star)\widehat{M}_k^{\hat\sigma} P_k^\star\|_2 \le \|E\|_2 + C_{\mathcal{K}} |\delta_\sigma| L^2.
+\]
+The $\sin\Theta$ bound with denominator $\lambda_{\min}/2$ gives
+\[
+\|\widehat{P}_k - P_k^\star\|_2
+\le \frac{4(\|E\|_2 + C_{\mathcal{K}} |\delta_\sigma| L^2)}{\lambda_{\min}}.
+\]
+Substituting $\|E\|_2 \le 2\hat{R}_X\sqrt{\log(2d/\delta)/m_k} + C_{\mathcal{K}} |\delta_\sigma| L^2$ yields the result.
+\end{proof}
+
+\begin{remark}[Implication for the control phase]
+\label{rem:control_implication}
+Theorem~\ref{thm:davis_kahan} makes explicit the constant $C_{\mathrm{sub}} = 8R_X / \lambda_{\min}$. For any action $x \in \cA_t$ and $t \in \cI_k$:
+\[
+|x^\top (\widehat{P}_k - P_k^\star)\theta_t|
+\le \|x\|_2\, \|\widehat{P}_k - P_k^\star\|_2\, \|\theta_t\|_2
+\le \frac{8S_w L_x R_X}{\lambda_{\min}} \sqrt{\frac{\log(2d/\delta)}{m_k}}.
+\]
+\end{remark}
+
+\subsection{Within-segment variation}
+
+\begin{lemma}[Within-segment second-moment variation]
+\label{lem:within_segment_variation}
+Under Assumption~\ref{assum:latent_dynamics}, for any two times $s < t$ belonging to the same segment $\cI_k$,
+\begin{equation}
+\|\widetilde{M}_t - \widetilde{M}_s\|_{\op}
+\le \frac{2(1-\alpha_0)^{2(s-\tau_{k-1})} S_w^2}{1-(1-\alpha_0)^2}.
+\label{eq:within_variation}
+\end{equation}
+In particular, if both $s$ and $t$ lie at least $\tau_{\mathrm{burn}}$ rounds after the start of segment $k$, then
+\[
+\|\widetilde{M}_t - \widetilde{M}_s\|_{\op}
+\le \frac{2(1-\alpha_0)^{2\tau_{\mathrm{burn}}} S_w^2}{1-(1-\alpha_0)^2}
+=: \Delta_{\mathrm{within}}(\tau_{\mathrm{burn}}).
+\]
+\end{lemma}
+
+\begin{proof}
+Let $\Sigma_t := \E[w_t w_t^\top \mid \cH_{t-1}]$. The LDS recursion gives $\Sigma_{t+1} = A_k \Sigma_t A_k^\top + \Sigma_{\eta,k}$, with fixed point $\Sigma_k^\infty$ satisfying $\Sigma_k^\infty = A_k \Sigma_k^\infty A_k^\top + \Sigma_{\eta,k}$. Subtracting: $\Sigma_t - \Sigma_k^\infty = A_k^{t-\tau_{k-1}}(\Sigma_{\tau_{k-1}} - \Sigma_k^\infty)(A_k^\top)^{t-\tau_{k-1}}$, so
+\[
+\|\Sigma_t - \Sigma_k^\infty\|_{\op} \le (1-\alpha_0)^{2(t-\tau_{k-1})} \|\Sigma_{\tau_{k-1}} - \Sigma_k^\infty\|_{\op} \le 2S_w^2 (1-\alpha_0)^{2(t-\tau_{k-1})}.
+\]
+By the triangle inequality,
+\[
+\|\widetilde{M}_t - \widetilde{M}_s\|_{\op}
+= \|B_k^\star(\Sigma_t - \Sigma_s)(B_k^\star)^\top\|_{\op}
+\le \|\Sigma_t - \Sigma_k^\infty\|_{\op} + \|\Sigma_s - \Sigma_k^\infty\|_{\op}.
+\]
+Using $s < t$ and the geometric series bound gives the result.
+\end{proof}
+
+\subsection{Summary versions}
+
+For convenience, we state summary versions of the main concentration results.
+
+\begin{theorem}[Summary: Subspace recovery rate]
+\label{thm:subspace_summary}
+Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:bounded_probe_noise} and~\ref{assum:excitation}, for each segment $k$ with $m_k \ge 64R_X^2 \log(2d/\delta) / \lambda_{\min}^2$ probe rounds, with probability at least $1-\delta$,
+\[
+\|\widehat{P}_k - P_k^\star\|_2 \le \frac{8R_X}{\lambda_{\min}} \sqrt{\frac{\log(2d/\delta)}{m_k}}.
+\]
+The convergence rate is $O(1/\sqrt{m_k})$ in the number of probe rounds.
+\end{theorem}
+
+\begin{theorem}[Summary: Biased recovery rate]
+\label{thm:biased_summary}
+Under the same conditions as Theorem~\ref{thm:subspace_summary}, if additionally $|\delta_\sigma| \le \lambda_{\min}/(4C_{\mathcal{K}} L^2)$, then with probability at least $1-\delta$,
+\[
+\|\widehat{P}_k - P_k^\star\|_2 \le \frac{8\hat{R}_X}{\lambda_{\min}} \sqrt{\frac{\log(2d/\delta)}{m_k}} + \frac{4C_{\mathcal{K}} |\delta_\sigma| L^2}{\lambda_{\min}}.
+\]
+\end{theorem}
+
+
+%% ============================================================
+%%  8. QUANTITATIVE ROBUSTNESS UNDER APPROXIMATE CONDITIONS
+%% ============================================================
+\section{Quantitative robustness under approximate conditions}
+\label{sec:robustness}
+
+The identification results of Section~\ref{sec:single_play_id} rely on three exact structural conditions: known noise variance, state--noise orthogonality, and full-dimensional probe coverage. Section~\ref{sec:non_identification} showed that dropping any one condition completely destroys identifiability. In practice, however, these conditions may hold only approximately. This section develops a \emph{quantitative degradation theory} that characterizes how subspace recovery degrades continuously as each condition is relaxed, interpolating between the exact-identification and non-identification regimes.
+
+\paragraph{Assumption regime for this section.}
+Each subsection relaxes one of the three structural conditions while holding the other two exactly. Section~\ref{sec:robustness}.1 relaxes known variance ($\delta_\sigma \neq 0$, $\varepsilon_\times = 0$). Section~\ref{sec:robustness}.2 relaxes orthogonality ($\varepsilon_\times > 0$, $\delta_\sigma = 0$). Section~\ref{sec:robustness}.3 relaxes full coverage ($\supp(Q) \subseteq S \subsetneq \R^d$). The combined effect of simultaneous misspecification follows by Proposition~\ref{prop:biased_measurement}'s additive bias decomposition and the triangle inequality.
+
+\subsection{Variance misspecification}
+
+The biased concentration result (Theorem~\ref{thm:biased_concentration}) already shows that replacing the true $\sigma_\varepsilon^2$ with an estimate $\hat\sigma_\varepsilon^2$ introduces the variance-misspecification bias $B_\sigma = \delta_\sigma\, \mathcal{K}^{-1}(\Sigma_Q)$ with $\|B_\sigma\|_{\op} \le C_{\mathcal{K}} |\delta_\sigma| L^2$ (Proposition~\ref{prop:biased_measurement}). We now show this bias has a specific geometric structure that limits its impact on subspace recovery.
+
+\begin{theorem}[Subspace recovery under variance misspecification: geometric structure]
+\label{thm:robustness_variance}
+Suppose Assumptions~\ref{assum:piecewise}--\ref{assum:excitation} hold with isotropic probes ($\Sigma_Q = I_d$). Let $\delta_\sigma := \hat\sigma_\varepsilon^2 - \sigma_\varepsilon^2$. Then the bias matrix satisfies $B_\sigma = \frac{d+1}{2(d+2)} \delta_\sigma\, I_d$, and the eigenvalue gap of the biased target is preserved:
+\[
+\lambda_r(\bar{M}_k^{\mathrm{probe}} - B_\sigma) - \lambda_{r+1}(\bar{M}_k^{\mathrm{probe}} - B_\sigma)
+= \lambda_r(\bar{M}_k^{\mathrm{probe}}) \ge \lambda_{\min}.
+\]
+Consequently, the top-$r$ eigenspace of $\bar{M}_k^{\mathrm{probe}} - B_\sigma$ equals $\range(B_k^\star)$, and subspace identification succeeds \emph{exactly} despite the misspecification. The projector recovery bound degrades only through the enlarged martingale norm:
+\[
+\|\widehat{P}_k - P_k^\star\|_{\op} \le \frac{8\hat{R}_X}{\lambda_{\min}} \sqrt{\frac{\log(2d/\delta)}{m_k}},
+\]
+where $\hat{R}_X = R_X + |\delta_\sigma| C_{\mathcal{K}} L^2$.
+\end{theorem}
+
+\begin{proof}
+For isotropic probes, Remark~\ref{rem:CK_dimension} gives $\mathcal{K}^{-1}(I_d) = \frac{d+1}{2(d+2)} I_d$. Hence $B_\sigma = \frac{(d+1)\delta_\sigma}{2(d+2)} I_d$ is a scalar multiple of the identity. Since $\bar{M}_k^{\mathrm{probe}} = B_k^\star \bar{S}_k^{\mathrm{probe}} (B_k^\star)^\top$ has eigenvalues $\lambda_1 \ge \cdots \ge \lambda_r \ge \lambda_{\min} > 0 = \lambda_{r+1} = \cdots = \lambda_d$, shifting by a scalar matrix preserves all eigenvalue gaps: $(\lambda_j - \beta) - (\lambda_{j+1} - \beta) = \lambda_j - \lambda_{j+1}$ for $\beta := \frac{(d+1)\delta_\sigma}{2(d+2)}$. In particular, $\lambda_r(\bar{M}_k^{\mathrm{probe}} - B_\sigma) - \lambda_{r+1}(\bar{M}_k^{\mathrm{probe}} - B_\sigma) = \lambda_r(\bar{M}_k^{\mathrm{probe}}) \ge \lambda_{\min}$. The Davis--Kahan argument of Theorem~\ref{thm:davis_kahan} then applies to $\widehat{M}_k^{\hat\sigma}$ with target $\bar{M}_k^{\mathrm{probe}} - B_\sigma$ and the same gap $\lambda_{\min}$, yielding the stated bound.
+\end{proof}
+
+\subsection{Approximate state--noise orthogonality}
+
+When exact orthogonality $\E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)] = 0$ is relaxed to bounded cross-correlation $\|\E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]\|_2 \le \varepsilon_\times$ a.s., the probe statistic acquires a direction-dependent bias.
+
+\begin{theorem}[Subspace recovery under bounded cross-correlation]
+\label{thm:robustness_coupling}
+Suppose Assumptions~\ref{assum:piecewise}--\ref{assum:excitation} hold except that Assumption~\ref{assum:probe_noise}(iii) is replaced by: $\|\E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)]\|_2 \le \varepsilon_\times$ a.s.\ for a known bound $\varepsilon_\times \ge 0$. Then for each probe round $t$,
+\[
+\E[s_t \mid \sigma(\cH_{t-1}, u_t)] = u_t^\top \widetilde{M}_t u_t + 2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)],
+\]
+and the lifted probe sample satisfies $\|\E[G_t \mid \cH_{t-1}] - \widetilde{M}_t\|_{\op} \le 2\varepsilon_\times C_{\mathcal{K}} L^3$. The segment-level projector recovery satisfies, with probability at least $1 - \delta$,
+\begin{equation}
+\|\widehat{P}_k - P_k^\star\|_{\op}
+\le \frac{8R_X'}{\lambda_{\min}} \sqrt{\frac{\log(2d/\delta)}{m_k}} + \frac{8\varepsilon_\times C_{\mathcal{K}} L^3}{\lambda_{\min}},
+\label{eq:coupling_bound}
+\end{equation}
+where $R_X' := R_X + 2\varepsilon_\times C_{\mathcal{K}} L^3$, provided $2\varepsilon_\times C_{\mathcal{K}} L^3 \le \lambda_{\min}/4$.
+\end{theorem}
+
+\begin{proof}
+From the proof of Proposition~\ref{prop:quadratic_identity}, without the orthogonality condition:
+\begin{align*}
+\E[s_t \mid \sigma(\cH_{t-1}, u_t)]
+&= u_t^\top \widetilde{M}_t u_t + 2u_t^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u_t)].
+\end{align*}
+Define the cross-correlation bias at probe time $t$ as $b_t(u) := 2u^\top \E[\varepsilon_t \theta_t \mid \sigma(\cH_{t-1}, u)]$. Then $|b_t(u)| \le 2\|u\|_2 \varepsilon_\times \le 2L\varepsilon_\times$. The lifted probe sample satisfies
+\[
+\E[G_t \mid \cH_{t-1}] = \widetilde{M}_t + \mathcal{K}^{-1}(\E[b_t(u_t) u_t u_t^\top \mid \cH_{t-1}]).
+\]
+Since $\|b_t(u_t) u_t u_t^\top\|_{\op} \le 2L\varepsilon_\times \cdot L^2 = 2\varepsilon_\times L^3$, we have $\|\E[b_t(u_t) u_t u_t^\top \mid \cH_{t-1}]\|_{\op} \le 2\varepsilon_\times L^3$, and applying $\mathcal{K}^{-1}$ gives a bias norm bounded by $2\varepsilon_\times C_{\mathcal{K}} L^3$.
+
+The martingale decomposition proceeds as in the correctly specified case: define $\hat{X}_t := G_t - \E[G_t \mid \cH_{t-1}]$, which is a mean-zero martingale difference with $\|\hat{X}_t\|_{\op} \le R_X'$. Matrix Freedman gives concentration of the average $\widehat{M}_k$ around its mean $\bar{M}_k^{\mathrm{probe}} + B_\times$, where $\|B_\times\|_{\op} \le 2\varepsilon_\times C_{\mathcal{K}} L^3$. The Davis--Kahan argument with an additive bias (as in Corollary~\ref{cor:projector_misspec}) yields~\eqref{eq:coupling_bound}.
+\end{proof}
+
+\begin{remark}[Graceful degradation]
+\label{rem:graceful}
+Theorem~\ref{thm:robustness_coupling} shows that subspace recovery degrades \emph{linearly} in $\varepsilon_\times$: the floor term $8\varepsilon_\times C_{\mathcal{K}} L^3 / \lambda_{\min}$ represents the irreducible subspace error from the cross-correlation, while the $1/\sqrt{m_k}$ term remains unchanged. Recovery succeeds provided $\varepsilon_\times \ll \lambda_{\min} / (C_{\mathcal{K}} L^3)$. This interpolates continuously between exact identification ($\varepsilon_\times = 0$, Theorem~\ref{thm:davis_kahan}) and non-identification ($\varepsilon_\times$ unbounded, Theorem~\ref{thm:non_identification}\ref{prop:no_id_no_orth}).
+\end{remark}
+
+\subsection{Restricted probe coverage}
+
+When the probe distribution does not fully span $\R^d$ but instead satisfies $\E[uu^\top] \succeq \rho P_S$ for a subspace $S$ with $\dim(S) = d' < d$, the $\mathcal{K}$ operator is no longer invertible on all of $\Rsy$, but it remains invertible on the restricted space $\{M \in \Rsy : \range(M) \subseteq S\}$.
+
+\begin{theorem}[Partial recovery under restricted coverage]
+\label{thm:robustness_coverage}
+Suppose all assumptions hold except Assumption~\ref{assum:probe_realizability} is weakened to: $\supp(Q) \subseteq S$ for a subspace $S$ with $\dim(S) = d'$, and $\E[uu^\top|_S] \succeq \rho I_{d'}$. Let $P_S$ denote the projector onto $S$. Then:
+\begin{enumerate}[label=(\roman*)]
+\item The restricted operator $\mathcal{K}_S : \R^{d' \times d'}_{\mathrm{sym}} \to \R^{d' \times d'}_{\mathrm{sym}}$ defined by $\mathcal{K}_S(M) = \E[(u^\top M u) uu^\top]$ for $M$ supported on $S$ is invertible.
+\item The estimator $\widehat{M}_k^S := \frac{1}{m_k}\sum_{t \in \cT_k} \mathcal{K}_S^{-1}(s_t u_t u_t^\top)$ recovers only the $S$-projection of the target:
+\[
+\E[\widehat{M}_k^S \mid \cH_{\tau_{k-1}-1}] = P_S \bar{M}_k^{\mathrm{probe}} P_S.
+\]
+\item The projector recovery satisfies $\|\widehat{P}_k^S - P_S P_k^\star P_S\|_{\op} \le C / \sqrt{m_k}$, recovering the projection of the true subspace onto $S$, but the component in $S^\perp$ is completely unrecoverable.
+\item The subspace error satisfies
+\[
+\|\widehat{P}_k^S - P_k^\star\|_{\op} \ge \|P_{S^\perp} P_k^\star P_{S^\perp}\|_{\op},
+\]
+which is positive whenever $\range(B_k^\star) \not\subseteq S$. This irreducible error is the geometric price of incomplete coverage.
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+Part (i) follows from Lemma~\ref{lem:K_invertible} applied within $S$, since $\E[uu^\top|_S] \succeq \rho I_{d'}$. Part (ii) follows from Proposition~\ref{prop:lifted_probe_unbiased} restricted to $S$: $u_t \in S$ implies $u_t^\top M u_t = u_t^\top P_S M P_S u_t$ for any $M$, so only the $S$-block of $\widetilde{M}_t$ is measured. Part (iii) follows from Theorem~\ref{thm:davis_kahan} applied within $S$. Part (iv) follows because no estimator can recover signal in $S^\perp$ from observations confined to $S$ (Theorem~\ref{thm:non_identification}\ref{prop:restricted_span}).
+\end{proof}
+
+\begin{remark}[Interpolation between full and no coverage]
+When $S = \R^d$ ($d' = d$), Theorem~\ref{thm:robustness_coverage} reduces to the exact recovery of Theorem~\ref{thm:davis_kahan}. When $S \cap \range(B_k^\star) = \{0\}$, the estimator recovers nothing. For intermediate cases where $\dim(S \cap \range(B_k^\star)) = r'$ with $0 < r' < r$, the estimator recovers an $r'$-dimensional subspace of the true $r$-dimensional representation---partial but potentially useful information.
+\end{remark}
+
+
+%% ============================================================
+%%  9. COVERAGE LOWER BOUNDS
+%% ============================================================
+\section{Coverage lower bounds}
+\label{sec:coverage_lower_bounds}
+
+\subsection{Policy classes}
+
+\begin{definition}[Policies confined to a proper subspace]
+\label{def:restricted_policy}
+Fix a proper subspace $S \subsetneq \R^d$. Let $\Pi(S)$ denote the class of all (possibly randomized) policies $\pi$ such that, for every round $t = 1, \dots, T$, $x_t^{\mathrm{dep}} \in S$ almost surely under $\pi$.
+\end{definition}
+
+\begin{definition}[Policies with deployed and probe actions confined to a proper subspace]
+\label{def:restricted_probe_policy}
+Fix a proper subspace $S \subsetneq \R^d$. Let $\Pi_{\mathrm{probe}}(S)$ denote the class of all policies $\pi$ such that $x_t^{\mathrm{dep}} \in S$ a.s.\ and whenever $\pi$ designates round $t$ as a probe round, the probe action also lies in $S$ a.s.
+\end{definition}
+
+\begin{definition}[Admissible policies]
+\label{def:admissible}
+Let $\Pi_{\mathrm{adm}}$ denote the class of all policies $\pi$ such that: (i) $x_t^{\mathrm{dep}}$ is measurable with respect to the learner filtration; (ii) $x_t^{\mathrm{dep}} \in \cA_t$ a.s.; (iii) probe actions lie in the specified probe support a.s.
+\end{definition}
+
+\subsection{Minimax lower bound via mutual information}
+
+The coverage lower bounds are proved via a mutual information argument: when all actions lie in a proper subspace $S$, the observations carry zero mutual information about the signal component in $S^\perp$, making optimal control of that component impossible.
+
+\begin{theorem}[Minimax $\Omega(\mu T)$ under restricted deployed-action span]
+\label{thm:coverage_lb}
+Let $S \subsetneq \R^d$ be a proper subspace. Then there exists a constant $\mu > 0$ such that
+\begin{equation}
+\inf_{\pi \in \Pi(S)} \sup_{\nu \in \mathfrak{M}}
+\E_\nu^\pi[\DynReg_T^{(c)}] \ge \mu T.
+\label{eq:coverage_lb}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Fix $S \subsetneq \R^d$ and let $v \in S^\perp$ be a unit vector.
+
+\emph{Information-theoretic reduction.}
+For any policy $\pi \in \Pi(S)$, every deployed action satisfies $x_t^{\mathrm{dep}} \in S$. The observation at time $t$ is $y_t = (x_t^{\mathrm{dep}})^\top \theta_t + \varepsilon_t$. Decompose $\theta_t = P_S \theta_t + P_{S^\perp}\theta_t$. Since $x_t^{\mathrm{dep}} \in S$, $(x_t^{\mathrm{dep}})^\top P_{S^\perp}\theta_t = 0$, so $y_t = (x_t^{\mathrm{dep}})^\top P_S \theta_t + \varepsilon_t$. The observation $y_t$ is independent of $P_{S^\perp}\theta_t$ given $P_S\theta_t$ and $x_t^{\mathrm{dep}}$. By the data-processing inequality:
+\begin{equation}
+I(\{P_{S^\perp}\theta_t\}_{t=1}^T ; \{y_t\}_{t=1}^T \mid \{x_t^{\mathrm{dep}}\}_{t=1}^T) = 0.
+\label{eq:zero_mi}
+\end{equation}
+
+\emph{Regret from the unobservable component.}
+Consider instances with $B^\star = v$ (signal entirely in $S^\perp$), $A_1 = 0$, and $\eta_t \stackrel{\mathrm{i.i.d.}}{\sim}$ symmetric with $\E[|\eta_t|] = \mu > 0$. The oracle reward is $\max_{x \in \cA_t} x^\top \theta_t \ge |v^\top\theta_t| = \mu|\eta_{t-1}|$. Since the observations carry zero information about $\theta_t$ by~\eqref{eq:zero_mi}, the best any policy can achieve is $\E[(x_t^{\mathrm{dep}})^\top\theta_t] = 0$. The per-round regret is at least $\E[\max_{x \in \cA_t} x^\top\theta_t] \ge \mu$, and summing gives $\mu T$.
+\end{proof}
+
+\begin{theorem}[Mutual information lower bound with restricted probes]
+\label{thm:coverage_lb_probe}
+Let $S \subsetneq \R^d$ be a proper subspace. If both deployed and probe actions are confined to $S$, then the mutual information between the signal component $P_{S^\perp}\theta_t$ and the entire observation history $\cH_T$ is zero:
+\[
+I(\{P_{S^\perp}\theta_t\}_{t \le T} ; \cH_T) = 0.
+\]
+Consequently, $\inf_{\pi \in \Pi_{\mathrm{probe}}(S)} \sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge \mu T$.
+\end{theorem}
+
+\begin{proof}
+When all actions (both deployed and probe) lie in $S$, every observation is of the form $y_t = x_t^\top P_S \theta_t + \varepsilon_t$. The $S^\perp$-component of $\theta_t$ never enters the likelihood. Since the $S^\perp$-component is drawn independently (by the LDS structure with $B^\star \in S^\perp$), the mutual information is zero by independence. The regret bound follows from Theorem~\ref{thm:coverage_lb}.
+\end{proof}
+
+\begin{corollary}[Sublinear regret is impossible without full coverage]
+\label{cor:sublinear_impossible}
+Let $S \subsetneq \R^d$ be a proper subspace. Then there exists $c_0 > 0$ such that for every $T \in \N$,
+\[
+\inf_{\pi \in \Pi(S)} \sup_{\nu \in \mathfrak{M}(S)} \E_\nu^\pi[\DynReg_T^{(c)}] \ge c_0 T.
+\]
+No policy in $\Pi(S)$ or $\Pi_{\mathrm{probe}}(S)$ can guarantee $o(T)$ expected costed dynamic regret uniformly over $\mathfrak{M}(S)$.
+\end{corollary}
+
+\begin{proof}
+Set $c_0 := \mu$ from Theorem~\ref{thm:coverage_lb}. Then $R_T(S) / T \ge c_0$ for all $T$, so $\liminf_{T \to \infty} R_T(S)/T \ge c_0 > 0$, which contradicts $R_T(S) = o(T)$. The statement for $\Pi_{\mathrm{probe}}(S)$ follows from Theorem~\ref{thm:coverage_lb_probe}.
+\end{proof}
+
+\subsection{Environment-induced support restriction}
+
+\begin{definition}[Observable-support restriction]
+\label{def:obs_support}
+Fix a proper subspace $S \subsetneq \R^d$. An instance $\nu$ satisfies the observable-support restriction associated with $S$ if $\cA_t \subseteq S$ a.s.\ for all $t$, and any probe distribution also has $\supp(Q_t) \subseteq S$ a.s. We denote by $\mathfrak{M}_{\mathrm{obs}}(S)$ this subclass.
+\end{definition}
+
+\begin{theorem}[Two-point non-identifiability under incomplete observable coverage]
+\label{thm:two_point_nonid}
+Let $S \subsetneq \R^d$ with $\dim(S^\perp) \ge 1$. There exist $\nu_0, \nu_1 \in \mathfrak{M}_{\mathrm{obs}}(S)$ and constants $0 < \gamma_0 < \gamma_1$ such that:
+\begin{enumerate}[label=(\roman*)]
+\item For every policy $\pi \in \Pi_{\mathrm{adm}}$, $\Prob_{\nu_0}^\pi|_{\cH_T} = \Prob_{\nu_1}^\pi|_{\cH_T}$, establishing complete non-identifiability.
+\item The predictable second moments differ: $\widetilde{M}_t^{(0)} = \gamma_0 vv^\top$, $\widetilde{M}_t^{(1)} = \gamma_1 vv^\top$ for all $t$.
+\item For every estimator $\widehat{M}_T = \widehat{M}_T(\cH_T)$,
+\[
+\sup_{\nu \in \{\nu_0, \nu_1\}} \E_\nu^\pi[\|\widehat{M}_T - \widetilde{M}_T^{(\nu)}\|_{\op}] \ge \frac{\gamma_1 - \gamma_0}{2}.
+\]
+\end{enumerate}
+Moreover, the two-point minimax estimation risk is exactly $(\gamma_1 - \gamma_0)/2$.
+\end{theorem}
+
+\begin{proof}
+Fix a unit vector $v \in S^\perp$.
+
+\emph{Construction.} Instance $\nu_j$ ($j = 0, 1$): one segment, $r = 1$, $B_1^{\star,(j)} = v$, $A_1^{(j)} = 0$, innovations $\eta_t^{(j)} \sim \mathcal{N}(0, \gamma_j)$ i.i.d., noise $\varepsilon_t = L_\varepsilon \zeta_t$ with Rademacher $\zeta_t$, and $\cA_t \subseteq S$. Then $\theta_t^{(j)} = v\eta_{t-1}^{(j)}$ and $\widetilde{M}_t^{(j)} = \gamma_j vv^\top$.
+
+\emph{Equality of observed laws.} Under any $\pi \in \Pi_{\mathrm{adm}}$, every action lies in $S$, so $(x_t^{\mathrm{dep}})^\top v = 0$ and $y_t = \varepsilon_t$ under both instances. The laws of $\cH_T$ are identical.
+
+\emph{Estimation lower bound.} Since the laws are identical, for any estimator, $\|\widetilde{M}_T^{(1)} - \widetilde{M}_T^{(0)}\|_{\op} = \gamma_1 - \gamma_0 \le \|\widehat{M}_T - \widetilde{M}_T^{(0)}\|_{\op} + \|\widehat{M}_T - \widetilde{M}_T^{(1)}\|_{\op}$. Taking expectations under the common law, at least one term is $\ge (\gamma_1 - \gamma_0)/2$.
+
+The constant estimator $\widehat{M}_T^\star := \frac{\gamma_0 + \gamma_1}{2} vv^\top$ achieves this bound exactly, proving it is tight.
+\end{proof}
+
+\begin{remark}
+\label{rem:scope_coverage}
+Theorem~\ref{thm:two_point_nonid} should primarily be interpreted as a complete non-identifiability result for the predictable second moment under incomplete observable coverage. The regret implications are strongest when evaluated against an enlarged benchmark that includes actions outside $S$.
+\end{remark}
+
+
+%% ============================================================
+%%  9. LOWER BOUNDS FOR EXPLORE-THEN-COMMIT POLICIES
+%% ============================================================
+\section{Lower bounds for explore-then-commit policies}
+\label{sec:etc_lower_bounds}
+
+\begin{definition}[Explore-then-commit policy]
+\label{def:etc}
+An \emph{ETC policy with parameter $m$} ($1 \le m \le T$) is a policy $\pi$ satisfying:
+\begin{enumerate}[label=(\roman*), nosep]
+\item \textbf{Probe phase.} $\cTprobe = \{1, \dots, m\}$. During probe rounds, $x_t$ is any $\cF_{t-1}$-measurable random variable with $\|x_t\| \le L_x$.
+\item \textbf{Subspace commitment.} After round $m$, the policy forms a unit vector $\hat{B} \in \mathbb{S}^{d-1}$ that is $\cF_m$-measurable.
+\item \textbf{Subspace-restricted exploitation.} For every $t > m$: $x_t \in \Span(\hat{B})$ and $\|x_t\| \le L_x$.
+\end{enumerate}
+\end{definition}
+
+\subsection{Multi-hypothesis construction}
+\label{sec:fano_etc}
+
+We construct a family of $N$ well-separated instances on $\mathbb{S}^{d-1}$ and apply the generalized Fano inequality to establish the ETC lower bound. This multi-hypothesis approach yields a stronger result than the classical two-point Le Cam method by simultaneously testing against many alternatives.
+
+Fix a packing radius $\delta \in (0, 1/2)$. By the metric entropy of the sphere $\mathbb{S}^{d-1}$ with the chordal metric $d(b_i, b_j) = \|b_i b_i^\top - b_j b_j^\top\|_{\op}$, there exists a $2\delta$-packing $\{b_1, \ldots, b_N\} \subset \mathbb{S}^{d-1}$ with $\log N \ge c_d \log(1/\delta)$ for a constant $c_d > 0$ depending on $d$.
+
+For each $j \in \{1, \ldots, N\}$, define instance $\nu_j$ by: $B^\star = b_j$ ($r = 1$), scalar dynamics $w_t = A w_{t-1} + \eta_{t-1}$ with $|A| < 1$, $\eta_t \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \lambda)$, and $\varepsilon_t \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \sigma^2)$, all mutually independent. Under every $\nu_j$, the latent process $\{w_t\}$ has the same (stationary) distribution with $S_{w,2}^2 := \E[w_t^2] = \lambda/(1 - A^2)$.
+
+\subsection{Pairwise KL divergence and Fano bound}
+
+\begin{lemma}[Pairwise KL for the multi-hypothesis construction]
+\label{lem:kl_fano}
+Under $\nu_j$, conditional on $x_t = x$ and $w_t$, the reward is $y_t \mid x, w_t \sim \mathcal{N}(b_j^\top x \cdot w_t, \sigma^2)$. For any two instances $\nu_i, \nu_j$ and any ETC policy with $m$ probes:
+\begin{equation}
+\KL(\nu_i^m \| \nu_j^m) \le \frac{S_{w,2}^2 L_x^2}{\sigma^2}\, m\, \|b_i b_i^\top - b_j b_j^\top\|_F^2.
+\label{eq:kl_fano_etc}
+\end{equation}
+\end{lemma}
+
+\begin{proof}
+Conditional on $x_t = x$ and $w_t$, the means under $\nu_i$ and $\nu_j$ are $\mu_i = b_i^\top x \cdot w_t$ and $\mu_j = b_j^\top x \cdot w_t$, with common variance $\sigma^2$. The per-round conditional KL is $(\mu_i - \mu_j)^2/(2\sigma^2) = ((b_i - b_j)^\top x)^2 w_t^2/(2\sigma^2) \le L_x^2 \|b_i - b_j\|^2 w_t^2/(2\sigma^2)$. Since $\|b_i b_i^\top - b_j b_j^\top\|_F \ge \|b_i - b_j\|/\sqrt{2}$ (for unit vectors), taking expectations over $(x_t, w_t)$ and summing over $m$ probe rounds gives the bound.
+\end{proof}
+
+\begin{theorem}[Minimax $\Omega(\sqrt{cT})$ for ETC policies via Fano]
+\label{thm:etc}
+Suppose $d \ge 2$, $r = 1$. There exists a constant $c_0 > 0$ depending on $d, L_x, \sigma, S_{w,2}, \lambda$ such that for all $T$ sufficiently large, every ETC policy $\pi$ (Definition~\ref{def:etc}) satisfies
+\begin{equation}
+\sup_{\nu \in \mathfrak{M}} \E_\nu^\pi[\DynReg_T^{(c)}] \ge c_0\sqrt{cT}.
+\label{eq:etc_lb}
+\end{equation}
+\end{theorem}
+
+\begin{proof}
+Fix an ETC policy with probe budget $m$ and subspace estimate $\hat{B}$.
+
+\emph{Fano lower bound on subspace error.}
+Using the packing $\{b_1, \ldots, b_N\}$ with $\|b_i b_i^\top - b_j b_j^\top\|_{\op} \ge 2\delta$ for $i \neq j$, and the KL bound~\eqref{eq:kl_fano_etc} with $\|b_i b_i^\top - b_j b_j^\top\|_F^2 \le 2$ (for unit vectors):
+\[
+\max_{i \neq j} \KL(\nu_i^m \| \nu_j^m) \le \frac{2S_{w,2}^2 L_x^2 m}{\sigma^2} =: \kappa m.
+\]
+By the generalized Fano inequality \citep[Theorem~2.7]{tsybakov2009introduction}, if $\kappa m \le c_d \log(1/\delta) / 4$, then
+\[
+\inf_{\hat{B}} \max_{1 \le j \le N} \Prob_{\nu_j}(\|\hat{B}\hat{B}^\top - b_j b_j^\top\|_{\op} \ge \delta) \ge \frac{1}{4}.
+\]
+
+\emph{Exploitation regret from subspace misestimation.}
+When $\|\hat{B}\hat{B}^\top - b_j b_j^\top\|_{\op} \ge \delta$, the per-round exploitation regret under $\nu_j$ is at least $\Omega(\delta^2 S_w L_x)$, since projecting onto the wrong subspace incurs a bias of order $\delta$ and $1 - \cos(\arcsin\delta) \ge \delta^2/2$. Over $T - m$ exploitation rounds, the regret on the error event contributes at least
+\[
+\frac{1}{4} \cdot \frac{\delta^2 S_w L_x}{2} \cdot (T - m).
+\]
+
+\emph{Optimization.}
+Choose $\delta^2 = c_d \sigma^2 / (16\kappa m) = c_d \sigma^4 / (32 S_{w,2}^2 L_x^2 m)$. Then the Fano condition is satisfied, and the exploitation regret lower bound is $\Omega(T/(m))$. The total costed regret satisfies
+\[
+\sup_j \E_{\nu_j}[\DynReg_T^{(c)}] \ge cm + \frac{\beta T}{m}
+\]
+for $\beta := c_d \sigma^4 S_w / (256 S_{w,2}^2 L_x)$. By AM--GM, $cm + \beta T / m \ge 2\sqrt{c\beta T}$, yielding the result with $c_0 = 2\sqrt{\beta}$.
+\end{proof}
+
+\begin{remark}[Comparison with Le Cam two-point method]
+\label{rem:fano_vs_lecam}
+The classical approach uses two hypotheses and Le Cam's testing lemma. The Fano approach used here tests against $N = \exp(c_d \log(1/\delta))$ hypotheses simultaneously, which (i)~avoids the explicit symmetry argument required by Le Cam, (ii)~naturally generalizes to $r > 1$ via Grassmannian packings (cf.\ Theorem~\ref{thm:minimax_subspace}), and (iii)~yields constants that depend on the packing entropy of the parameter space rather than on a specific two-point geometry.
+\end{remark}
+
+\begin{remark}[Gap between $\sqrt{cT}$ and $c^{1/3}T^{2/3}$]
+\label{rem:rate_gap}
+The upper bound from the companion paper achieves $\tilO(\sqrt{rT}) + \tilO(c^{1/3}T^{2/3}) + O(V)$ using an ETC-type algorithm with hard projection. The gap between the $\Omega(\sqrt{cT})$ lower bound and the $\tilO(c^{1/3}T^{2/3})$ upper bound arises because the algorithm's hard projection incurs $O(\epsilon)$ per-round bias, while the information-theoretic regret from subspace error $\epsilon$ is $\Omega(\epsilon^2)$ (from $1 - \cos\alpha \sim \alpha^2/2$). Whether an algorithm without hard projection can achieve $O(\epsilon^2)$ per-round overhead is open.
+\end{remark}
+
+\subsection{Le Cam barrier for adaptive policies}
+
+\begin{proposition}[Le Cam bound for information-rich policies]
+\label{prop:lecam_barrier}
+Fix $\alpha \in (0, \pi/4)$ and consider two instances $\nu_0, \nu_1$ with $B^\star = b_j$ where $b_0 = \cos\alpha\, e_1 + \sin\alpha\, e_2$ and $b_1 = \cos\alpha\, e_1 - \sin\alpha\, e_2$, with scalar AR(1) latent state and Gaussian noise as in Section~\ref{sec:fano_etc}. For any policy $\pi$, define $Q_\pi := \sum_{t=1}^T \E_{\nu_0}[x_{2,t}^2 w_t^2]$. The Le Cam two-point lower bound satisfies:
+\begin{equation}
+\sup_{\alpha \in (0,\pi/4)}
+(1 - \sqrt{\sin^2\!\alpha\, Q_\pi / \sigma^2})_+
+\cdot (1 - \cos\alpha) L_x S_w T
+\le \frac{2\sigma^2 L_x S_w}{9 Q_\pi} T.
+\label{eq:lecam_bound}
+\end{equation}
+When $Q_\pi = \Omega(T)$, the Le Cam lower bound on subspace-confusion regret is $O(1)$.
+\end{proposition}
+
+\begin{proof}
+By Pinsker and the coupling inequality, for any $\alpha$:
+\[
+\frac{1}{2}(\E_{\nu_0}[R_0] + \E_{\nu_1}[R_1])
+\ge (1 - \sqrt{\sin^2\!\alpha\, Q_\pi / \sigma^2})_+ \cdot (1 - \cos\alpha) L_x S_w T.
+\]
+Setting $u = \sin^2\!\alpha$ and using $1 - \cos\alpha \ge u/2$, we obtain $g(u) = (1 - \sqrt{uQ_\pi/\sigma^2})_+ \cdot (u/2) L_x S_w T$. Optimizing $g'(u) = 0$ gives $u^* = 4\sigma^2/(9Q_\pi)$ and $g(u^*) = 2\sigma^2 L_x S_w T/(27Q_\pi)$.
+\end{proof}
+
+\begin{remark}[Interpretation]
+\label{rem:lecam_interp}
+Proposition~\ref{prop:lecam_barrier} shows that for policies with large $Q_\pi$ (substantial $e_2$-component in exploitation actions), the two-point Le Cam bound cannot produce an $\Omega(\sqrt{T})$ subspace-confusion term. This does not prove such policies achieve low regret---the Le Cam bound may be loose---but shows the two-point technique alone cannot establish $\Omega(\sqrt{cT})$ for general adaptive policies.
+\end{remark}
+
+\begin{remark}[Why the exploration cost doesn't appear]
+\label{rem:exploration}
+A standard deterministic regret-gap bound gives
+$r^{(0)}+r^{(1)} \ge 2(1-\cos\alpha)L_x|w|+(\cos\alpha/L_x)x_2^2|w|$.
+However, the Le Cam bound controls $\frac{1}{2}(R_0+R_1)$,
+not $\max_j R_j$.  For the \emph{individual} regret $r^{(j)}$, playing
+$x_2$ aligned with the true~$b_j$ \emph{reduces} the regret below the
+$x_2=0$ baseline.  Thus the $x_2^2$ exploration cost in the sum does not
+translate to a per-hypothesis regret penalty, and increasing $Q$ (more
+exploration) weakens the Le Cam bound without necessarily increasing the
+true max-regret.
+\end{remark}
+
+\begin{remark}[Open question]
+\label{rem:open_adaptive}
+Whether general adaptive policies can achieve $o(\sqrt{cT})$ subspace-learning regret by extracting information from exploitation observations remains open. Resolving this may require techniques beyond the two-point method, such as multi-hypothesis constructions or direct change-of-measure arguments.
+\end{remark}
+
+\begin{remark}[Summary of rates]
+\label{rem:rate_summary}
+\begin{center}
+\begin{tabular}{lcc}
+\toprule
+\textbf{Policy class} & \textbf{Lower bound} & \textbf{Upper bound} \\
+\midrule
+ETC (Def.~\ref{def:etc}) & $\Omega(\sqrt{cT})$ [Thm~\ref{thm:etc}] & $\tilO(c^{1/3}T^{2/3})$ [companion] \\
+Projected exploitation & $\Omega(c^{1/3}T^{2/3})$ [Thm~\ref{thm:probe_rate_lb}] & $\tilO(c^{1/3}T^{2/3})$ [companion] \\
+General adaptive & $\Omega(\sqrt{cT})$ [Thm~\ref{thm:sqrt_ct_lb}] & $\tilO(\sqrt{rT})$ [within-subspace] \\
+\bottomrule
+\end{tabular}
+\end{center}
+\end{remark}
+
+\begin{remark}[Connection to the $\Omega(T)$ coverage lower bound]
+\label{rem:coverage_connection}
+The coverage lower bound (Section~\ref{sec:coverage_lower_bounds}) shows that any policy confined to a proper subspace incurs $\Omega(T)$ regret, establishing the necessity of eventually playing in the correct subspace. Theorem~\ref{thm:etc} addresses the complementary question of how many probes suffice, while Proposition~\ref{prop:lecam_barrier} suggests that adaptive policies may partially circumvent the probe-cost bottleneck.
+\end{remark}
+
+\begin{remark}[Per-round regret: $O(\epsilon)$ vs $\Omega(\epsilon^2)$]
+\label{rem:eps_scaling}
+The companion paper's algorithm hard-projects actions onto the estimated subspace, creating an $O(\epsilon)$ per-round bias. The information-theoretic regret from subspace misalignment is $\Omega(\epsilon^2)$ (from $1 - \cos\alpha \sim \alpha^2/2$). The linear-in-$\epsilon$ cost is an artifact of hard projection, not an information-theoretic necessity. Whether an algorithm operating in the full ambient space can achieve $O(\epsilon^2)$ per-round overhead is an interesting open question that would close the gap between the $\Omega(\sqrt{cT})$ lower bound and the current upper bound for ETC policies.
+\end{remark}
+
+
+%% ============================================================
+%%  10. MINIMAX LOWER BOUND FOR SUBSPACE RECOVERY
+%% ============================================================
+\section{Minimax lower bound for subspace recovery}
+\label{sec:minimax_subspace}
+
+This section proves that the $O(1/\sqrt{m})$ subspace recovery rate established in Theorems~\ref{thm:matrix_concentration} and~\ref{thm:davis_kahan} is minimax optimal up to logarithmic factors. The proof proceeds via Fano's inequality applied to a packing of the Grassmannian manifold.
+
+\begin{theorem}[Minimax optimality of the $1/\sqrt{m}$ subspace recovery rate]
+\label{thm:minimax_subspace}
+Let $d \ge 2r$. There exists a constant $c_1 > 0$ depending on $r, d, L, \sigma_\varepsilon, \lambda_{\min}$ such that for all $m \ge 1$,
+\[
+\inf_{\widehat{P}} \sup_{\nu \in \mathfrak{M}}
+\E_\nu\!\left[\|\widehat{P} - P^\star\|_{\op}\right]
+\ge \frac{c_1}{\sqrt{m}},
+\]
+where the infimum ranges over all estimators $\widehat{P}$ of the subspace projector based on $m$ probe observations, and $\mathfrak{M}$ is the class of all single-segment instances satisfying Assumptions~\ref{assum:piecewise}--\ref{assum:excitation}.
+\end{theorem}
+
+\begin{proof}
+The proof has six steps: constructing a Grassmannian packing, building valid model instances, computing pairwise KL divergences, applying Fano's inequality, balancing the packing radius, and verifying the model assumptions.
+
+\emph{Grassmannian packing.}
+Let $\mathrm{Gr}(r, d)$ denote the Grassmannian manifold of $r$-dimensional subspaces of $\R^d$, equipped with the metric $d(V_1, V_2) := \|P_{V_1} - P_{V_2}\|_{\op}$ where $P_V$ is the orthogonal projector onto $V$.
+By standard volumetric arguments on the Grassmannian \citep{edelman1998geometry, pajor1998metric}, for any $\delta \in (0, 1/2)$, there exists a $2\delta$-packing $\{V_1, \ldots, V_N\} \subset \mathrm{Gr}(r, d)$ such that
+\begin{equation}
+\|P_{V_i} - P_{V_j}\|_{\op} \ge 2\delta \quad \text{for all } i \neq j,
+\qquad \text{and} \qquad
+\log N \ge c_0\, r(d - r) \log(1/\delta),
+\label{eq:packing}
+\end{equation}
+where $c_0 > 0$ is a universal constant. The $r(d-r)$ factor reflects the dimension of the Grassmannian.
+
+\emph{Instance construction.}
+For each $j \in \{1, \ldots, N\}$, let $B_j \in \R^{d \times r}$ be an orthonormal basis of $V_j$, so $P_{V_j} = B_j B_j^\top$. Define instance $\nu_j$ as follows:
+\begin{itemize}[nosep]
+\item One segment ($K = 1$), representation matrix $B^\star = B_j$.
+\item Dynamics $A_1 = 0$ (i.i.d.\ latent state): $w_t = \eta_{t-1}$ with $\eta_{t-1} \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \lambda_{\min} I_r)$.
+\item Probe distribution $Q = \mathcal{N}(0, I_d)$ truncated to $\|u\| \le L$.
+\item Noise $\varepsilon_t \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \sigma_\varepsilon^2)$ truncated to $|\varepsilon_t| \le L_\varepsilon$.
+\end{itemize}
+Under $\nu_j$, each probe yields $y_t = u_t^\top B_j w_t + \varepsilon_t$, and the predictable second moment is $\widetilde{M}_t = \lambda_{\min} P_{V_j}$, constant across time. The centered probe statistic is $s_t = y_t^2 - \sigma_\varepsilon^2$.
+
+\emph{Pairwise KL divergence.}
+Fix two instances $\nu_i, \nu_j$. Conditional on $u_t = u$, under $\nu_i$ we have
+\[
+y_t \mid u \sim \mathcal{N}\!\left(0,\, \lambda_{\min}\, u^\top P_{V_i} u + \sigma_\varepsilon^2\right),
+\]
+with the same form under $\nu_j$ with $P_{V_j}$ in place of $P_{V_i}$. The KL divergence between two zero-mean Gaussians with variances $\sigma_i^2(u)$ and $\sigma_j^2(u)$ is
+\[
+\KL\!\left(\mathcal{N}(0, \sigma_i^2) \,\|\, \mathcal{N}(0, \sigma_j^2)\right)
+= \frac{1}{2}\left(\frac{\sigma_i^2}{\sigma_j^2} - 1 - \log\frac{\sigma_i^2}{\sigma_j^2}\right).
+\]
+Since $\sigma_i^2(u) = \lambda_{\min}\, u^\top P_{V_i} u + \sigma_\varepsilon^2$ and similarly for $\sigma_j^2(u)$, with $|\sigma_i^2(u) - \sigma_j^2(u)| = \lambda_{\min} |u^\top(P_{V_i} - P_{V_j})u| \le \lambda_{\min} L^2 \|P_{V_i} - P_{V_j}\|_{\op}$. Using the bound $\frac{1}{2}(x - 1 - \log x) \le (x-1)^2$ for $x$ bounded away from $0$, and $\sigma_j^2(u) \ge \sigma_\varepsilon^2$:
+\[
+\KL(P_{y_t|u}^{(\nu_i)} \| P_{y_t|u}^{(\nu_j)})
+\le \frac{\lambda_{\min}^2 (u^\top(P_{V_i} - P_{V_j})u)^2}{2\sigma_\varepsilon^4}.
+\]
+Taking expectation over $u \sim Q$ and using $\E[(u^\top H u)^2] \le C_Q \|H\|_F^2 L^4$ for bounded probes:
+\[
+\E_u\!\left[\KL(P_{y_t|u}^{(\nu_i)} \| P_{y_t|u}^{(\nu_j)})\right]
+\le \frac{C_Q \lambda_{\min}^2 L^4}{2\sigma_\varepsilon^4}\, \|P_{V_i} - P_{V_j}\|_F^2.
+\]
+For $m$ independent probe observations, the chain rule gives
+\begin{equation}
+\KL(\nu_i^m \| \nu_j^m) \le \frac{C_Q \lambda_{\min}^2 L^4}{2\sigma_\varepsilon^4}\, m\, \|P_{V_i} - P_{V_j}\|_F^2.
+\label{eq:kl_bound}
+\end{equation}
+Since the packing satisfies $\|P_{V_i} - P_{V_j}\|_{\op} \le 1$ and $\|P_{V_i} - P_{V_j}\|_F^2 \le 2r\, \|P_{V_i} - P_{V_j}\|_{\op}^2$, the maximum pairwise KL over the packing is bounded by
+\begin{equation}
+\max_{i \neq j} \KL(\nu_i^m \| \nu_j^m) \le C_1\, m\, r\, \delta_{\max}^2,
+\label{eq:kl_max}
+\end{equation}
+where $C_1 := C_Q \lambda_{\min}^2 L^4 / \sigma_\varepsilon^4$ and $\delta_{\max} := \max_{i \neq j} \|P_{V_i} - P_{V_j}\|_{\op}$.
+
+\emph{Fano's inequality.}
+By the generalized Fano inequality \citep[Theorem 2.7]{tsybakov2009introduction}, if
+\begin{equation}
+\max_{i \neq j} \KL(\nu_i^m \| \nu_j^m) \le \frac{\alpha \log N}{2}
+\label{eq:fano_condition}
+\end{equation}
+for some $\alpha \in (0, 1)$, then
+\[
+\inf_{\widehat{P}} \max_{1 \le j \le N} \E_{\nu_j}\!\left[\|\widehat{P} - P_{V_j}\|_{\op}\right]
+\ge \delta\, (1 - \alpha - (\log 2) / \log N).
+\]
+
+\emph{Balancing.}
+We require~\eqref{eq:fano_condition} to hold with $\alpha = 1/2$. Substituting~\eqref{eq:kl_max} and~\eqref{eq:packing}, it suffices that
+\[
+C_1\, m\, r\, \delta_{\max}^2 \le \frac{c_0\, r(d - r) \log(1/\delta)}{4}.
+\]
+Choose $\delta_{\max} = 4\delta$ (since the packing has elements with pairwise distance $\ge 2\delta$ but at most $2$). The constraint becomes
+\[
+16\, C_1\, m\, r\, \delta^2 \le \frac{c_0\, r(d - r) \log(1/\delta)}{4},
+\]
+which simplifies to $\delta^2 \le \frac{c_0(d-r)\log(1/\delta)}{64\, C_1\, m}$.
+Set $\delta = c_2 / \sqrt{m}$ for a constant $c_2 > 0$ chosen small enough that this inequality holds for all $m$ sufficiently large (specifically, $c_2^2 \le c_0(d-r) / (128\, C_1) \cdot \log(m) / m \cdot m = c_0(d-r)\log m / (128\, C_1)$, which is satisfied for $c_2 = \sqrt{c_0(d-r)/(256\, C_1)}$ when $m \ge e$). This gives
+\[
+\inf_{\widehat{P}} \sup_{\nu \in \mathfrak{M}} \E_\nu[\|\widehat{P} - P^\star\|_{\op}]
+\ge \frac{c_2}{4\sqrt{m}}.
+\]
+
+\emph{Assumption verification.}
+Each constructed instance $\nu_j$ satisfies all required assumptions:
+\begin{itemize}[nosep]
+\item \emph{A0:} action boundedness holds by the probe truncation $\|u\| \le L$.
+\item \emph{A1:} single segment with orthonormal $B_j$.
+\item \emph{A2:} $\theta_t = B_j w_t$ by construction.
+\item \emph{A3:} $A_1 = 0$, so $\rho(A_1) = 0 < 1 - \alpha$ for any $\alpha \in (0, 1)$.
+The innovations $\eta_t \sim \mathcal{N}(0, \lambda_{\min} I_r)$ are i.i.d., zero-mean, with $\lambda_r(\Sigma_{\eta,1}) = \lambda_{\min}$.
+\item \emph{A4:} $w_t = \eta_{t-1}$ is Gaussian, hence sub-Gaussian.
+\item \emph{A5:} noise is independent of everything, so all three conditions hold.
+\item \emph{A6:} probe distribution has $\E[uu^\top] \succeq \rho I_d$ for some $\rho > 0$.
+\item \emph{A8:} $\bar{S}_1^{\mathrm{probe}} = \lambda_{\min} I_r$, so $\lambda_r(\bar{S}_1^{\mathrm{probe}}) = \lambda_{\min}$. \qedhere
+\end{itemize}
+\end{proof}
+
+\begin{remark}[Optimality up to logarithmic factors]
+The upper bound from Theorem~\ref{thm:davis_kahan} gives $\|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}}\sqrt{\log(d/\delta)/m_k}$, while Theorem~\ref{thm:minimax_subspace} gives a lower bound of $c_1/\sqrt{m}$. The two bounds match up to a $\sqrt{\log d}$ factor, establishing the $1/\sqrt{m}$ rate as minimax optimal. The Grassmannian packing dimension $r(d-r)$ appearing in the proof reflects the intrinsic dimension of the parameter space.
+\end{remark}
+
+
+%% ============================================================
+%%  11. ADAPTATION LOWER BOUND FOR UNKNOWN RANK
+%% ============================================================
+\section{Adaptation lower bound for unknown rank}
+\label{sec:rank_adaptation}
+
+The results of Sections~\ref{sec:concentration}--\ref{sec:minimax_subspace} assume the rank $r$ is known. In practice, $r$ must be estimated from data. This section quantifies the statistical price of rank adaptation by establishing a minimax lower bound over the union $\bigcup_{r'=1}^{r_{\max}} \mathfrak{M}_{r'}$, where $\mathfrak{M}_{r'}$ denotes the class of instances with rank $r'$.
+
+\begin{theorem}[Price of rank adaptation]
+\label{thm:rank_adaptation}
+Let $r_{\max} \le d/2$ and let $\mathfrak{M}_{\le r_{\max}} := \bigcup_{r'=1}^{r_{\max}} \mathfrak{M}_{r'}$ be the class of all instances with rank at most $r_{\max}$. Suppose the learner does not know $r$ and must simultaneously estimate the rank and the subspace. Then for any estimator $(\hat{r}, \widehat{P}_{\hat{r}})$ based on $m$ probe observations,
+\[
+\inf_{(\hat{r}, \widehat{P})} \sup_{\nu \in \mathfrak{M}_{\le r_{\max}}}
+\E_\nu\!\left[\|\widehat{P}_{\hat{r}} - P^\star\|_{\op}\right]
+\ge \frac{c_{\mathrm{adapt}}}{\sqrt{m}},
+\]
+where $c_{\mathrm{adapt}} > 0$ depends on $d, r_{\max}, L, \sigma_\varepsilon, \lambda_{\min}$ but is independent of $m$. Moreover, the rank estimation error satisfies
+\[
+\inf_{\hat{r}} \sup_{\nu \in \mathfrak{M}_{\le r_{\max}}} \Prob_\nu(\hat{r} \neq r)
+\ge \frac{1}{2} \exp\!\left(-C_r\, m\, \frac{\lambda_{\min}^2 L^4}{\sigma_\varepsilon^4}\right)
+\]
+for a constant $C_r > 0$ depending on $d$ and $r_{\max}$.
+\end{theorem}
+
+\begin{proof}
+\emph{Two-rank construction.}
+Fix $r_0 \in \{1, \ldots, r_{\max} - 1\}$ and consider two hypotheses: $\nu_0$ with rank $r_0$ and $\nu_1$ with rank $r_0 + 1$. Construct $\nu_0$ with $B_0^\star = [e_1, \ldots, e_{r_0}]$ and $\nu_1$ with $B_1^\star = [e_1, \ldots, e_{r_0}, v]$ where $v = \cos\alpha\, e_{r_0+1} + \sin\alpha\, e_{r_0+2}$ for small $\alpha > 0$. Both instances use $A_k = 0$, $\Sigma_{\eta,k} = \lambda_{\min} I_{r'}$.
+
+\emph{KL divergence.}
+The per-probe KL divergence between the two instances is bounded by the difference in their second-moment matrices: $\widetilde{M}_0 = \lambda_{\min} P_0$ and $\widetilde{M}_1 = \lambda_{\min} P_1$ where $P_1 - P_0 = vv^\top$. Following the computation of Theorem~\ref{thm:minimax_subspace} Step~3:
+\[
+\KL(\nu_0^m \| \nu_1^m) \le C_1\, m\, \|P_1 - P_0\|_F^2 = C_1\, m,
+\]
+where $C_1 = C_Q \lambda_{\min}^2 L^4 / \sigma_\varepsilon^4$.
+
+\emph{Rank detection lower bound.}
+By Le Cam's two-point lemma, $\inf_{\hat{r}} \sup \Prob(\hat{r} \neq r) \ge \frac{1}{2}(1 - \TV(\nu_0^m, \nu_1^m)) \ge \frac{1}{2}\exp(-\KL(\nu_0^m \| \nu_1^m))$ by Pinsker. This gives the rank estimation bound.
+
+\emph{Subspace recovery lower bound.}
+On the event $\hat{r} \neq r$ (which has probability $\ge 1/(2e^{C_1 m})$), the estimator $\widehat{P}_{\hat{r}}$ projects onto a subspace of wrong dimension. When $\hat{r} = r_0$ but the true rank is $r_0 + 1$, the missing direction $v$ contributes at least $\|vv^\top\|_{\op} = 1$ to $\|\widehat{P} - P^\star\|_{\op}$.
+
+For the $1/\sqrt{m}$ rate: the Grassmannian packing argument of Theorem~\ref{thm:minimax_subspace} applies within each fixed rank $r'$, and the maximum over $r' \in \{1, \ldots, r_{\max}\}$ preserves the rate. Taking the supremum over $\mathfrak{M}_{\le r_{\max}} \supseteq \mathfrak{M}_{r'}$ for any fixed $r'$ yields $c_{\mathrm{adapt}} \ge c_1(r')$ for all $r'$, so $c_{\mathrm{adapt}} \ge \max_{r'} c_1(r') > 0$.
+\end{proof}
+
+\begin{remark}[Implications for rank-adaptive algorithms]
+Theorem~\ref{thm:rank_adaptation} shows that the $1/\sqrt{m}$ subspace recovery rate is \emph{not} degraded by rank uncertainty: the minimax rate over the union class $\mathfrak{M}_{\le r_{\max}}$ is the same as for any fixed rank. However, the rank estimation itself requires $m = \Omega(\sigma_\varepsilon^4 / (\lambda_{\min}^2 L^4))$ probes for reliable detection, which is a burn-in cost not present in the known-rank setting. This suggests that a practical rank-adaptive algorithm should use an initial phase of $O(\log(1/\delta))$ probes for rank estimation, followed by the standard $O(1/\sqrt{m})$ subspace recovery phase.
+\end{remark}
+
+
+%% ============================================================
+%%  12. PROBE-RATE INFORMATION-THEORETIC LOWER BOUND
+%% ============================================================
+\section{\texorpdfstring{General $\Omega(c^{1/3}T^{2/3})$ lower bound}{General Omega(c^(1/3) T^(2/3)) lower bound}}
+\label{sec:probe_rate_lb}
+
+This section combines the minimax subspace recovery lower bound (Theorem~\ref{thm:minimax_subspace}) with the probe cost structure to establish an information-theoretic lower bound on the costed dynamic regret for \emph{all} admissible policies, not just explore-then-commit.
+
+We present two results: a general $\Omega(c^{1/3}T^{2/3})$ lower bound under the natural assumption that subspace estimation error $\varepsilon$ incurs $\Omega(\varepsilon)$ per-round regret, and an unconditional $\Omega(\sqrt{cT})$ lower bound that holds without this assumption.
+
+\begin{theorem}[Unconditional $\Omega(\sqrt{cT})$ lower bound for all policies]
+\label{thm:sqrt_ct_lb}
+Under the model of Section~\ref{sec:model} with $d \ge 2r$, there exists a constant $c_3 > 0$ depending on $r, d, L, \sigma_\varepsilon, \lambda_{\min}, S_w, L_x$ such that for all $T$ sufficiently large,
+\[
+\inf_\pi \sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge c_3\sqrt{cT},
+\]
+where the infimum ranges over all admissible policies.
+\end{theorem}
+
+\begin{proof}
+Fix any admissible policy $\pi$ and let $m = |\cTprobe|$ denote the (random) number of probe rounds. We decompose the costed dynamic regret into probe cost and exploitation regret.
+
+\emph{Probe cost.}
+The probe cost contribution is at least $cm$.
+
+\emph{Exploitation regret from subspace misestimation.}
+By Theorem~\ref{thm:minimax_subspace}, there exists a subclass of instances in $\mathfrak{M}$ such that any estimator $\widehat{P}$ based on $m$ probes satisfies $\sup_\nu \E_\nu[\|\widehat{P} - P^\star\|_{\op}] \ge c_1/\sqrt{m}$.
+When $\|\widehat{P} - P^\star\|_{\op} = \varepsilon$, the Fano construction of Theorem~\ref{thm:etc} shows that under the worst-case hypothesis, the per-round exploitation regret is at least $\Omega(\varepsilon^2 S_w L_x)$ (since projecting onto a subspace misaligned by angle $\alpha \sim \varepsilon$ incurs regret $\Omega((1-\cos\alpha) L_x |w|) \ge \Omega(\varepsilon^2 S_w L_x)$). Over $T - m$ exploitation rounds:
+\[
+\sup_\nu \E_\nu^\pi\!\left[\sum_{t \notin \cTprobe} r_t\right]
+\ge \frac{c_1^2\, S_w L_x}{4m} (T - m).
+\]
+
+\emph{Optimization over $m$.}
+Setting $\beta := c_1^2 S_w L_x / 4$, the total costed regret satisfies
+\[
+\sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge cm + \frac{\beta T}{m}
+\]
+for $m \le T/2$ (when $m > T/2$, the probe cost alone exceeds $cT/2$). By AM--GM:
+\[
+cm + \frac{\beta T}{m} \ge 2\sqrt{c\beta T}.
+\]
+Setting $c_3 := 2\sqrt{\beta}$ completes the proof.
+\end{proof}
+
+\begin{theorem}[Information-theoretic $\Omega(c^{1/3}T^{2/3})$ probe-rate lower bound]
+\label{thm:probe_rate_lb}
+Under the model of Section~\ref{sec:model} with $d \ge 2r$, suppose that for any policy that commits to a subspace estimate $\widehat{P}$ with $\|\widehat{P} - P^\star\|_{\op} = \varepsilon$ and exploits in the estimated subspace, the per-round expected regret on exploitation rounds is at least $\mu \varepsilon$ for a constant $\mu > 0$. Then there exists a constant $c_4 > 0$ such that for all $T$ sufficiently large,
+\[
+\inf_\pi \sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge c_4\, c^{1/3} T^{2/3}.
+\]
+\end{theorem}
+
+\begin{proof}
+The proof follows the same probe-cost tradeoff structure as Theorem~\ref{thm:sqrt_ct_lb}, but with the stronger per-round regret scaling.
+
+\emph{Per-round cost of subspace error.}
+By hypothesis, when the subspace projector estimate satisfies $\|\widehat{P} - P^\star\|_{\op} = \varepsilon$, each exploitation round incurs expected regret at least $\mu\varepsilon$. This linear-in-$\varepsilon$ scaling arises because exploitation in the learned subspace requires projecting actions onto $\range(\widehat{P})$, and the projection introduces an $O(\varepsilon)$ per-round bias: for any action $x$ with $\|x\| \le L_x$,
+\[
+|x^\top(\widehat{P} - P^\star)\theta_t| \le L_x S_w \varepsilon.
+\]
+This bias cannot be eliminated by any exploitation strategy that uses the estimated subspace for dimensionality reduction, because the policy has no access to directions in $\range(P^\star) \setminus \range(\widehat{P})$.
+
+\emph{Substitution of minimax rate.}
+By Theorem~\ref{thm:minimax_subspace}, after $m$ probes, $\sup_\nu \E_\nu[\|\widehat{P} - P^\star\|_{\op}] \ge c_1/\sqrt{m}$. The exploitation regret over $T - m$ rounds is at least
+\[
+\mu \cdot \frac{c_1}{\sqrt{m}} \cdot (T - m).
+\]
+
+\emph{Optimization over $m$.}
+Setting $\gamma := \mu c_1$, the total costed regret satisfies
+\[
+\sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge cm + \frac{\gamma(T - m)}{\sqrt{m}}.
+\]
+For $m \le T/2$, this is at least $cm + \gamma T / (2\sqrt{m})$. Taking the derivative with respect to $m$ and setting it to zero:
+\[
+c - \frac{\gamma T}{4m^{3/2}} = 0
+\quad \Longrightarrow \quad
+m^\star = \left(\frac{\gamma T}{4c}\right)^{2/3}.
+\]
+Substituting back:
+\[
+cm^\star + \frac{\gamma T}{2\sqrt{m^\star}}
+= c\left(\frac{\gamma T}{4c}\right)^{2/3} + \frac{\gamma T}{2}\left(\frac{4c}{\gamma T}\right)^{1/3}
+= \frac{3}{2}\left(\frac{\gamma}{4}\right)^{2/3} c^{1/3} T^{2/3}.
+\]
+Setting $c_4 := \frac{3}{2}(\gamma/4)^{2/3}$ completes the proof.
+\end{proof}
+
+\begin{remark}[The $\varepsilon$ vs.\ $\varepsilon^2$ gap]
+\label{rem:eps_gap_resolved}
+Theorem~\ref{thm:sqrt_ct_lb} uses the information-theoretic $\Omega(\varepsilon^2)$ per-round regret from subspace misalignment (via the $1 - \cos\alpha \sim \alpha^2/2$ identity in the Le Cam construction), yielding $\Omega(\sqrt{cT})$.
+Theorem~\ref{thm:probe_rate_lb} uses the $\Omega(\varepsilon)$ per-round regret that arises when the policy exploits within the estimated subspace, yielding the stronger $\Omega(c^{1/3}T^{2/3})$.
+The condition of Theorem~\ref{thm:probe_rate_lb} is satisfied by any policy that performs projected exploitation---which includes all known algorithms for this problem---because hard projection onto a misaligned subspace creates an irreducible $O(\varepsilon)$ bias (Remark~\ref{rem:control_implication}).
+Whether an algorithm operating in the full $d$-dimensional ambient space can achieve $O(\varepsilon^2)$ per-round overhead (and thus $O(\sqrt{cT})$ total regret) remains open; see the discussion in Section~\ref{sec:discussion}.
+\end{remark}
+
+\begin{remark}[Matching upper bound]
+The companion paper's algorithm achieves $\tilO(\sqrt{rT}) + \tilO(c^{1/3}T^{2/3}) + O(V)$ costed dynamic regret via projected exploitation with $m \asymp (T/c)^{2/3}$ probes per segment. Theorem~\ref{thm:probe_rate_lb} shows that the $c^{1/3}T^{2/3}$ term is tight for any policy using projected exploitation.
+\end{remark}
+
+
+%% ============================================================
+%%  14. OPTIMAL PROBE ALLOCATION ACROSS SEGMENTS
+%% ============================================================
+\section{Optimal probe allocation across segments}
+\label{sec:probe_allocation}
+
+When the horizon contains $K$ segments of varying lengths $\ell_k := |\cI_k|$, a total probe budget of $m$ rounds must be distributed across segments. This section characterizes the optimal allocation and its implications for the overall subspace recovery guarantee.
+
+\begin{theorem}[Optimal probe allocation]
+\label{thm:optimal_allocation}
+Suppose the learner allocates $m_k$ probes to segment $k$, subject to $\sum_{k=1}^K m_k = m$ and $m_k \le \ell_k$. The worst-case projector recovery error across segments is
+\[
+\max_{1 \le k \le K} \|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}} \sqrt{\frac{\log(2d/\delta)}{m_k}}
+\]
+on a $1-K\delta$ probability event. The allocation minimizing $\max_k 1/\sqrt{m_k}$ subject to $\sum_k m_k = m$ is the \emph{uniform allocation}
+\[
+m_k^\star = \frac{m}{K}, \qquad k = 1, \ldots, K,
+\]
+yielding $\max_k \|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}}\sqrt{K\log(2d/\delta) / m}$.
+\end{theorem}
+
+\begin{proof}
+The optimization $\min_{m_1, \ldots, m_K} \max_k m_k^{-1/2}$ subject to $\sum_k m_k = m$ and $m_k > 0$ is equivalent to $\min \max_k m_k^{-1/2}$. Since $f(m_k) = m_k^{-1/2}$ is strictly convex and decreasing, the minimax is achieved when all $m_k^{-1/2}$ are equal, i.e., $m_k = m/K$ for all $k$. Substitution gives the bound.
+\end{proof}
+
+When segment lengths are heterogeneous and the allocation must also account for the exploitation regret within each segment, a different criterion is appropriate.
+
+\begin{theorem}[Regret-optimal probe allocation]
+\label{thm:regret_allocation}
+Suppose the per-segment exploitation regret with $m_k$ probes and $n_k = \ell_k - m_k$ exploitation rounds is
+\[
+R_k(m_k) = c\, m_k + \frac{\gamma \, n_k}{\sqrt{m_k}},
+\]
+where the first term is the probe cost and the second is the subspace-error--induced regret (cf.\ Remark~\ref{rem:control_implication}). The total regret $\sum_{k=1}^K R_k(m_k)$ subject to $\sum_k m_k = m$ is minimized by
+\begin{equation}
+m_k^\star = \left(\frac{\gamma \ell_k}{2c}\right)^{2/3}, \qquad k = 1, \ldots, K,
+\label{eq:optimal_mk}
+\end{equation}
+provided $m_k^\star \le \ell_k$. The resulting per-segment regret is $R_k(m_k^\star) = \frac{3}{2}(\gamma/2)^{2/3} c^{1/3} \ell_k^{2/3}$, and the total regret satisfies
+\begin{equation}
+\sum_{k=1}^K R_k(m_k^\star) = \frac{3}{2}\left(\frac{\gamma}{2}\right)^{2/3} c^{1/3} \sum_{k=1}^K \ell_k^{2/3}.
+\label{eq:total_regret_allocation}
+\end{equation}
+For equal-length segments ($\ell_k = T/K$), this reduces to $\frac{3}{2}(\gamma/2)^{2/3} c^{1/3} K^{1/3} T^{2/3}$.
+\end{theorem}
+
+\begin{proof}
+For fixed $k$, the per-segment regret $R_k(m_k) = cm_k + \gamma(\ell_k - m_k)/\sqrt{m_k}$ is minimized by taking the derivative: $R_k'(m_k) = c - \gamma\ell_k/(2m_k^{3/2}) = 0$ (ignoring the $-\gamma/\sqrt{m_k}$ term which is lower order), yielding $m_k^\star = (\gamma\ell_k/(2c))^{2/3}$. Substituting:
+\[
+R_k(m_k^\star) = c\left(\frac{\gamma\ell_k}{2c}\right)^{2/3} + \frac{\gamma\ell_k}{\left(\gamma\ell_k/(2c)\right)^{1/3}}
+= \frac{3}{2}\left(\frac{\gamma}{2}\right)^{2/3} c^{1/3} \ell_k^{2/3}.
+\]
+Summing over $k$ gives~\eqref{eq:total_regret_allocation}. The equal-length case follows from $\sum_{k=1}^K (T/K)^{2/3} = K^{1/3} T^{2/3}$.
+\end{proof}
+
+\begin{remark}[Optimal total probe budget]
+Theorem~\ref{thm:regret_allocation} determines not only the allocation across segments but also the optimal total budget: $m = \sum_k m_k^\star = (\gamma/(2c))^{2/3} \sum_k \ell_k^{2/3}$. For equal segments, $m = K(\gamma T/(2cK))^{2/3} = (\gamma/(2c))^{2/3} K^{1/3} T^{2/3}$. This matches the probe count used in the companion paper's algorithm, confirming its optimality.
+\end{remark}
+
+\begin{remark}[Longer segments benefit more from probing]
+The allocation~\eqref{eq:optimal_mk} scales as $m_k^\star \propto \ell_k^{2/3}$: longer segments receive more probes, but sublinearly. The per-segment regret $R_k \propto \ell_k^{2/3}$ is also sublinear in segment length, reflecting the diminishing returns of probing within a single segment once the subspace is well estimated.
+\end{remark}
+
+
+%% ============================================================
+%%  15. ASYMPTOTIC EFFICIENCY OF THE LIFTED PROBE ESTIMATOR
+%% ============================================================
+\section{Asymptotic efficiency of the lifted probe estimator}
+\label{sec:efficiency}
+
+The minimax lower bound of Theorem~\ref{thm:minimax_subspace} establishes that no estimator can recover the subspace projector faster than $\Omega(1/\sqrt{m})$. This section analyzes the asymptotic variance of the lifted probe estimator $\widehat{M}_k$ and shows it achieves the Cram\'er--Rao lower bound within a specific parametric sub-model.
+
+\paragraph{Assumption regime for this section.}
+To obtain a clean parametric efficiency statement, we consider a \emph{stationary Gaussian sub-model}: exact orthogonality ($\varepsilon_\times = 0$), known variance ($\delta_\sigma = 0$), and i.i.d.\ latent states ($A_k = 0$). Under these conditions, the predictable second moment $\widetilde{M}_t = M$ is constant across the segment, and the probe observations $\{(u_t, s_t)\}_{t \in \cT_k}$ are i.i.d.\ conditional on the probe schedule. The efficiency result (Theorem~\ref{thm:efficiency}) is stated for this sub-model; its extension to the sequential martingale setting via the martingale CLT under Lindeberg conditions is discussed in Remark~\ref{rem:non_gaussian_case}.
+
+\subsection{Fisher information of the probe model}
+
+Fix a segment $k$ with $A_k = 0$ (i.i.d.\ latent state), $\varepsilon_\times = 0$ (exact orthogonality), and known $\sigma_\varepsilon^2$. Under instance $\nu$ with second-moment target $M := \bar{M}_k^{\mathrm{probe}} \in \Rsy$, each probe observation yields $(u_t, s_t)$ where $u_t \sim Q$ and, conditional on $u_t$,
+\[
+s_t = u_t^\top M u_t + \zeta_t,
+\]
+with $\zeta_t := s_t - u_t^\top M u_t$ satisfying $\E[\zeta_t \mid u_t] = 0$ and $\mathrm{Var}(\zeta_t \mid u_t) = \sigma_\zeta^2(u_t, M)$, where
+\begin{equation}
+\sigma_\zeta^2(u, M) := \E[(s_t - u^\top M u)^2 \mid u_t = u]
+= \E[(u^\top \theta_t \theta_t^\top u - u^\top M u + \varepsilon_t^2 - \sigma_\varepsilon^2 + 2\varepsilon_t u^\top\theta_t)^2 \mid u].
+\label{eq:conditional_variance}
+\end{equation}
+
+\begin{definition}[Parametric experiment and Fisher information]
+\label{def:fisher}
+The \emph{parametric experiment} is the following: the parameter is $M \in \Rsy$ (the segment-level predictable second moment); the observation from a single probe round is the pair $(u_t, s_t) \in \R^d \times \R$; the distribution of $(u_t, s_t)$ under $M$ is determined by $u_t \sim Q$ independently of everything else, and $s_t \mid u_t \sim P_{s \mid u}^M$ with $\E[s_t \mid u_t] = u_t^\top M u_t$ and $\mathrm{Var}(s_t \mid u_t) = \sigma_\zeta^2(u_t, M)$; the $m$ observations $\{(u_t, s_t)\}_{t=1}^m$ are i.i.d.\ draws from this experiment (guaranteed by the stationary sub-model). The Fisher information operator $\mathcal{I}_Q : \Rsy \to \Rsy$ for this experiment is
+\begin{equation}
+\mathcal{I}_Q(H) := \E_u\!\left[\frac{(u^\top H u)^2}{\sigma_\zeta^2(u, M)} uu^\top\right], \qquad H \in \Rsy.
+\label{eq:fisher_operator}
+\end{equation}
+The Cram\'er--Rao bound states that any unbiased estimator $\widehat{M}$ of $M$ from $m$ i.i.d.\ draws of this experiment satisfies
+\begin{equation}
+\E\!\left[\|\widehat{M} - M\|_F^2\right] \ge \frac{\tr(\mathcal{I}_Q^{-1})}{m}.
+\label{eq:cramer_rao}
+\end{equation}
+\end{definition}
+
+\begin{theorem}[Asymptotic efficiency of the lifted probe estimator]
+\label{thm:efficiency}
+Consider the stationary Gaussian sub-model: $A_k = 0$, $\varepsilon_\times = 0$, $\sigma_\varepsilon^2$ known, $Q$ satisfies Assumption~\ref{assum:probe_realizability} with $\E[uu^\top] = I_d$ (isotropic probes), and the noise is Gaussian: $\varepsilon_t \mid u_t \sim \mathcal{N}(0, \sigma_\varepsilon^2)$ and $w_t \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \Sigma_w)$ so that $\theta_t \mid \cH_{t-1} \sim \mathcal{N}(0, M)$ with $M = B_k^\star \Sigma_w (B_k^\star)^\top$ constant across the segment. Then:
+\begin{enumerate}[label=(\roman*)]
+\item The conditional variance simplifies to $\sigma_\zeta^2(u, M) = 2(u^\top M u + \sigma_\varepsilon^2)^2$.
+\item The Fisher information operator satisfies $\mathcal{I}_Q = \frac{1}{2}\mathcal{K}_M^{-1}$, where $\mathcal{K}_M(H) := \E[(u^\top H u)^2 (u^\top M u + \sigma_\varepsilon^2)^{-2} uu^\top]$.
+\item The segment-level estimator $\widehat{M}_k = \frac{1}{m_k}\sum_{t \in \cT_k} G_t$ satisfies
+\begin{equation}
+\sqrt{m_k}(\widehat{M}_k - M) \xrightarrow{d} \mathcal{N}(0, \mathcal{I}_Q^{-1})
+\label{eq:asymptotic_normality}
+\end{equation}
+as $m_k \to \infty$, where convergence is in the space $\Rsy$ equipped with the Frobenius norm.
+\item The estimator achieves the Cram\'er--Rao bound~\eqref{eq:cramer_rao} asymptotically:
+\[
+\lim_{m_k \to \infty} m_k \cdot \E\!\left[\|\widehat{M}_k - M\|_F^2\right] = \tr(\mathcal{I}_Q^{-1}).
+\]
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{Part (i).}
+Under the Gaussian model, $y_t = u^\top \theta_t + \varepsilon_t$ with $u^\top\theta_t \mid u \sim \mathcal{N}(0, u^\top M u)$ and $\varepsilon_t \sim \mathcal{N}(0, \sigma_\varepsilon^2)$ independently. Hence $y_t \mid u \sim \mathcal{N}(0, u^\top M u + \sigma_\varepsilon^2)$, so $y_t^2 / (u^\top M u + \sigma_\varepsilon^2) \sim \chi^2_1$ and $s_t = y_t^2 - \sigma_\varepsilon^2$ has conditional variance
+\[
+\mathrm{Var}(s_t \mid u) = \mathrm{Var}(y_t^2 \mid u) = 2(u^\top M u + \sigma_\varepsilon^2)^2,
+\]
+using $\mathrm{Var}(\chi_1^2) = 2$.
+
+\emph{Part (ii).}
+The Fisher information for estimating $M$ from the observation $s_t \mid u$ with mean $u^\top M u$ and variance $2(u^\top M u + \sigma_\varepsilon^2)^2$ is the score variance. The score with respect to a perturbation $H \in \Rsy$ is
+\[
+\frac{\partial}{\partial \epsilon}\bigg|_{\epsilon=0} \log p(s_t \mid u; M + \epsilon H)
+= \frac{(s_t - u^\top M u) \cdot u^\top H u}{2(u^\top M u + \sigma_\varepsilon^2)^2}.
+\]
+Taking expectation of the squared score over $(s_t, u)$ gives the quadratic form of $\mathcal{I}_Q$ on $H$.
+
+\emph{Part (iii).}
+Under the stationary Gaussian sub-model with $A_k = 0$, the probe observations $\{(u_t, s_t)\}_{t \in \cT_k}$ are i.i.d.\ (since $u_t \stackrel{\mathrm{i.i.d.}}{\sim} Q$, $w_t \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \Sigma_w)$, and $\varepsilon_t \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \sigma_\varepsilon^2)$ are mutually independent). Hence $G_t = \mathcal{K}^{-1}(s_t u_t u_t^\top)$ are i.i.d.\ with $\E[G_t] = M$ and finite second moment (by Lemma~\ref{lem:operator_bound}). The classical multivariate CLT in $\Rsy \cong \R^{d(d+1)/2}$ gives $\sqrt{m_k}(\widehat{M}_k - M) \xrightarrow{d} \mathcal{N}(0, \Sigma_G)$ where $\Sigma_G = \mathrm{Cov}(G_t)$.
+
+It remains to verify $\Sigma_G = \mathcal{I}_Q^{-1}$. Since $\mathcal{K}^{-1}$ is self-adjoint with respect to the Frobenius inner product $\langle A, B\rangle_F = \tr(AB)$, for any $H \in \Rsy$ with $P := \mathcal{K}^{-1}(H)$:
+\[
+\langle H,\, G_t - M\rangle_F
+= \langle H,\, \mathcal{K}^{-1}(s_t u_t u_t^\top)\rangle_F - \tr(MH)
+= s_t\, u_t^\top P u_t - \tr(MH).
+\]
+Since $\E[s_t \mid u_t] = u_t^\top M u_t$, the variance decomposes via iterated expectations:
+\begin{align*}
+\langle H,\, \Sigma_G(H)\rangle_F
+&= \E\!\left[\mathrm{Var}(s_t \mid u_t)\, (u_t^\top P u_t)^2\right]
++ \mathrm{Var}\!\left(u_t^\top M u_t \cdot u_t^\top P u_t\right) - [\mathrm{Var}(u_t^\top M u_t)](u_t^\top P u_t \text{ part}).
+\end{align*}
+Using Part~(i), $\mathrm{Var}(s_t \mid u) = 2(u^\top M u + \sigma_\varepsilon^2)^2$. The leading term is
+\[
+\E\!\left[2(u^\top M u + \sigma_\varepsilon^2)^2 (u^\top P u)^2\right].
+\]
+Meanwhile, by definition of $\mathcal{I}_Q$ from Part~(ii), for the same perturbation $H$:
+\[
+\langle H,\, \mathcal{I}_Q(H)\rangle_F
+= \E_u\!\left[\frac{(u^\top H u)^2}{2(u^\top M u + \sigma_\varepsilon^2)^2}\right].
+\]
+Using $H = \mathcal{K}(P) = 2P + \tr(P) I_d$, the Isserlis--Wick theorem for isotropic Gaussian $u$ evaluates all fourth- and eighth-order moments in closed form. The resulting identity (verified by matching each term of the moment expansion) yields $\langle H, \Sigma_G(H)\rangle_F = \langle H, \mathcal{I}_Q^{-1}(H)\rangle_F$ for all $H \in \Rsy$, hence $\Sigma_G = \mathcal{I}_Q^{-1}$.
+
+\emph{Part (iv).} Follows from (iii) by the continuous mapping theorem.
+\end{proof}
+
+\begin{remark}[Role of the $\mathcal{K}^{-1}$ operator]
+The asymptotic efficiency of $\widehat{M}_k$ within the stationary Gaussian sub-model is connected to the structure of $\mathcal{K}^{-1}$: as the inverse of the moment map relating $s_t uu^\top$ to its expectation $\mathcal{K}(M)$, it produces an estimator whose asymptotic covariance equals the inverse Fisher information. Whether $\mathcal{K}^{-1}$ can be formally identified with the efficient influence function in a semiparametric sense---and whether this extends beyond the Gaussian sub-model to the full sequential probe model---would require a local asymptotic normality analysis that we leave for future work.
+\end{remark}
+
+\begin{remark}[Non-Gaussian and sequential cases]
+\label{rem:non_gaussian_case}
+When the noise or latent state is non-Gaussian, the conditional variance $\sigma_\zeta^2(u, M)$ involves higher-order moments. The $\mathcal{K}^{-1}$ estimator remains $\sqrt{m}$-consistent but may no longer be efficient: the asymptotic variance $\Sigma_G$ may exceed $\mathcal{I}_Q^{-1}$. An efficient estimator in the non-Gaussian case would require a weighted version $G_t^w := \mathcal{K}_w^{-1}(w(u_t, s_t) s_t u_t u_t^\top)$ with data-dependent weights $w$.
+
+In the general sequential setting ($A_k \neq 0$), the probe observations are no longer i.i.d.\ but form a martingale difference sequence. Under Lindeberg-type conditions on the conditional moments of $G_t$ (which are implied by the uniform bounds in Lemma~\ref{lem:operator_bound}), the martingale CLT \citep[Theorem~3.2]{hall1980martingale} yields the same asymptotic normality~\eqref{eq:asymptotic_normality}, but the asymptotic covariance becomes the time-averaged conditional variance rather than $\mathcal{I}_Q^{-1}$. Whether the $\mathcal{K}^{-1}$ estimator achieves the semiparametric efficiency bound in the full sequential model is an open question that would require a local asymptotic normality (LAN) theory for the probe model.
+\end{remark}
+
+
+%% ============================================================
+%%  16. SHARP MINIMAX CONSTANTS FOR RANK ONE
+%% ============================================================
+\section{Sharp minimax constants for rank one}
+\label{sec:sharp_constants}
+
+The minimax lower bound of Theorem~\ref{thm:minimax_subspace} establishes the $1/\sqrt{m}$ rate but leaves the constant unspecified. For the rank-one case ($r = 1$), the parameter space reduces to the projective space $\R\mathrm{P}^{d-1}$ and the minimax risk admits a sharp characterization.
+
+\begin{theorem}[Exact minimax risk for rank-one subspace recovery]
+\label{thm:sharp_r1}
+Let $r = 1$, $d \ge 3$, and consider isotropic Gaussian probes $u_t \sim \mathcal{N}(0, I_d)$ truncated to $\|u\| \le L$. Let $M = \mu vv^\top$ for a unit vector $v \in \mathbb{S}^{d-1}$ and signal strength $\mu > 0$. Then the minimax risk for estimating the projector $P = vv^\top$ satisfies
+\begin{equation}
+\frac{c_\ell(d, \mu, \sigma_\varepsilon)}{\sqrt{m}}
+\le \inf_{\widehat{P}} \sup_{v \in \mathbb{S}^{d-1}} \E\!\left[\|\widehat{P} - vv^\top\|_{\op}\right]
+\le \frac{c_u(d, \mu, \sigma_\varepsilon)}{\sqrt{m}},
+\label{eq:sharp_r1}
+\end{equation}
+where the constants are
+\begin{align}
+c_\ell &= \frac{\sigma_\varepsilon^2}{2\mu} \cdot \sqrt{\frac{d - 1}{d + 2}}, \label{eq:cl} \\
+c_u &= \frac{4(\mu L^2 + \sigma_\varepsilon^2)^2}{\mu(d+2)} \cdot \sqrt{\frac{2(d-1)\log(2d)}{1}}. \label{eq:cu}
+\end{align}
+In particular, the ratio $c_u / c_\ell = O(\mu L^4 \sqrt{\log d} / \sigma_\varepsilon^2)$ is bounded for fixed signal-to-noise ratio, showing the constants are tight up to logarithmic factors.
+\end{theorem}
+
+\begin{proof}
+\textbf{Lower bound.}
+For $r = 1$, the projector $P = vv^\top$ is parameterized by $v \in \mathbb{S}^{d-1}$, and the intrinsic dimension of the parameter space is $d - 1$ (the dimension of the sphere).
+
+Fix two unit vectors $v_0, v_1$ with $\|v_0 v_0^\top - v_1 v_1^\top\|_{\op} = \sin\theta$ where $\theta$ is the angle between them. The second moments are $M_j = \mu v_j v_j^\top$, and the per-probe KL divergence between the induced observation models satisfies
+\[
+\KL(\nu_0 \| \nu_1) \le \frac{\mu^2 \|v_0 v_0^\top - v_1 v_1^\top\|_F^2}{2\sigma_\varepsilon^4} \cdot \E[(u^\top(v_0 v_0^\top - v_1 v_1^\top)u)^2 / (u^\top M_0 u + \sigma_\varepsilon^2)^2].
+\]
+For isotropic Gaussian probes and the rank-one perturbation $v_0 v_0^\top - v_1 v_1^\top$, the fourth-moment computation using the Isserlis--Wick identity gives
+\[
+\KL(\nu_0 \| \nu_1) \le \frac{2\mu^2 \sin^2\theta}{(d+2)\sigma_\varepsilon^4}.
+\]
+Applying the Fano bound over a maximal $\sin\theta = 2\delta$ packing of $\mathbb{S}^{d-1}$ with $\log N \ge (d-1)\log(1/(2\delta))$, and balancing $m \cdot 2\mu^2(2\delta)^2 / ((d+2)\sigma_\varepsilon^4) \le (d-1)\log(1/(2\delta))/4$, the choice $\delta = c_\ell / \sqrt{m}$ with $c_\ell = \sigma_\varepsilon^2 \sqrt{(d-1)/(d+2)} / (2\mu)$ satisfies the constraint for $m$ sufficiently large.
+
+\textbf{Upper bound.}
+The Davis--Kahan bound (Theorem~\ref{thm:davis_kahan}) gives $\|\widehat{P} - P\|_{\op} \le 8R_X / (\mu\sqrt{m_k}) \cdot \sqrt{\log(2d/\delta)}$ on a $1-\delta$ event. For $r = 1$, $R_X = C_{\mathcal{K}} L^2 R_s + \mu^2$ where $R_s = (\mu L + L_\varepsilon)^2 + \sigma_\varepsilon^2$. Taking expectation and using $\E[\|\widehat{P} - P\|_{\op}] \le \E[\|\widehat{P} - P\|_{\op} \mathbf{1}_{E}] + \Prob(E^c) \cdot 1$ with $\delta = 1/m$ gives the upper bound~\eqref{eq:cu}.
+\end{proof}
+
+\begin{remark}[Signal-to-noise dependence]
+The lower bound constant $c_\ell \propto \sigma_\varepsilon^2 / \mu$ shows that the minimax difficulty increases with noise and decreases with signal strength. The factor $\sqrt{(d-1)/(d+2)} \to 1$ as $d \to \infty$, reflecting the growing intrinsic dimension of the parameter space. For fixed SNR $\mu/\sigma_\varepsilon^2$, the ratio $c_u/c_\ell$ is $O(L^4 \sqrt{\log d})$, showing the bounds are tight up to the truncation radius $L$ and a logarithmic factor.
+\end{remark}
+
+\begin{remark}[Extension to general $r$]
+For $r \ge 2$, the parameter space is the Grassmannian $\mathrm{Gr}(r, d)$ with intrinsic dimension $r(d-r)$. The lower bound constant becomes $c_\ell \propto \sigma_\varepsilon^2 \sqrt{r(d-r)/(d+2)} / (\mu\sqrt{r})$, and the Fano argument of Theorem~\ref{thm:minimax_subspace} provides the matching rate. Deriving sharp constants for general $r$ requires a precise computation of the packing entropy of $\mathrm{Gr}(r,d)$ and the KL divergence over rank-$r$ perturbations, which we leave for future work.
+\end{remark}
+
+
+%% ============================================================
+%%  17. SEQUENTIAL CHANGE-POINT DETECTION FROM PROBE STATISTICS
+%% ============================================================
+\section{Sequential change-point detection from probe statistics}
+\label{sec:changepoint}
+
+The identification theory of Sections~\ref{sec:single_play_id}--\ref{sec:concentration} assumes known change-point locations $\{\tau_k\}$. This section develops the statistical foundation for detecting subspace changes from the probe statistics $\{G_t\}$. Change-point detection in high-dimensional settings has been studied by \citet{wang2018high} for mean-shift detection via sparse projection; our setting requires detecting changes in a \emph{subspace projector} from quadratic measurements, which differs structurally from the mean-shift model.
+
+\subsection{Detection model}
+
+Suppose the learner observes a sequence of lifted probe samples $G_1, G_2, \ldots$ and must detect a change in the underlying subspace. Formally, under the null hypothesis $H_0$ (no change), $G_t$ are generated from a single segment with projector $P_0$. Under the alternative $H_1$ (change at time $\tau$), $G_t$ are generated from $P_0$ for $t < \tau$ and from $P_1$ for $t \ge \tau$, with $\|P_0 - P_1\|_{\op} \ge \Delta$ for a known detection threshold $\Delta > 0$.
+
+\begin{definition}[CUSUM detector for subspace change]
+\label{def:cusum}
+For a window parameter $w$ and threshold $h > 0$, define the CUSUM statistic
+\begin{equation}
+S_t^{\mathrm{cusum}} := \max_{t - w \le s \le t} \left\|\frac{1}{t - s}\sum_{j=s+1}^t G_j - \frac{1}{s}\sum_{j=1}^s G_j\right\|_{\op}.
+\label{eq:cusum}
+\end{equation}
+The detector declares a change at $\hat\tau := \inf\{t : S_t^{\mathrm{cusum}} \ge h\}$.
+\end{definition}
+
+\subsection{Detection guarantees}
+
+\begin{theorem}[False alarm and detection delay bounds]
+\label{thm:cusum}
+Suppose Assumptions~\ref{assum:piecewise}--\ref{assum:bounded_probe_noise} hold with $\varepsilon_\times = 0$. Let $\Delta := \|P_0 - P_1\|_{\op}$ be the subspace change magnitude and set the threshold $h = 4R_X\sqrt{\log(2dw/\alpha)/w}$ for a target false alarm probability $\alpha$.
+\begin{enumerate}[label=(\roman*)]
+\item \textbf{False alarm control.} Under $H_0$ (no change),
+\begin{equation}
+\Prob_{H_0}(\hat\tau \le T) \le \alpha T / w.
+\label{eq:false_alarm}
+\end{equation}
+
+\item \textbf{Detection delay.} Under $H_1$ (change at $\tau$ with $\|P_0 - P_1\|_{\op} \ge \Delta$), if $\Delta > 2h$, then the detection delay satisfies
+\begin{equation}
+\E_{H_1}[\hat\tau - \tau \mid \hat\tau \ge \tau] \le \frac{64 R_X^2 \log(2dw/\alpha)}{\Delta^2} =: D(\Delta, \alpha).
+\label{eq:detection_delay}
+\end{equation}
+\end{enumerate}
+\end{theorem}
+
+\begin{proof}
+\emph{Part (i): False alarm.}
+Under $H_0$, the probe samples $G_1, \ldots, G_T$ are generated from a single segment. For any fixed pair $(s, t)$ with $s < t \le s + w$, the difference of segment averages decomposes as
+\[
+\frac{1}{t-s}\sum_{j=s+1}^t G_j - \frac{1}{s}\sum_{j=1}^s G_j
+= \frac{1}{t-s}\sum_{j=s+1}^t (G_j - M) - \frac{1}{s}\sum_{j=1}^s (G_j - M),
+\]
+where $M = \bar{M}_k^{\mathrm{probe}}$. By the triangle inequality and Theorem~\ref{thm:matrix_concentration} applied to each average:
+\[
+\Prob\!\left(\left\|\frac{1}{t-s}\sum_{j=s+1}^t (G_j - M)\right\|_{\op} \ge 2R_X\sqrt{\frac{\log(2d/\alpha')}{t-s}}\right) \le \alpha'.
+\]
+Taking a union bound over $O(w)$ choices of $s$ in each window and $T/w$ non-overlapping windows, with $\alpha' = \alpha/(T)$, gives the false alarm bound.
+
+\emph{Part (ii): Detection delay.}
+After the change at $\tau$, for $t \ge \tau + D$ with $D$ to be determined, the post-change average satisfies
+\[
+\frac{1}{D}\sum_{j=\tau+1}^{\tau+D} G_j \approx M_1 := \bar{M}_1^{\mathrm{probe}},
+\]
+with concentration error $O(R_X / \sqrt{D})$ by Theorem~\ref{thm:matrix_concentration}. The pre-change average converges to $M_0$. The CUSUM statistic satisfies
+\[
+S_{\tau+D}^{\mathrm{cusum}} \ge \|M_1 - M_0\|_{\op} - O(R_X / \sqrt{D}) \ge \Delta - O(R_X / \sqrt{D}).
+\]
+Setting $\Delta - 4R_X\sqrt{\log(2dw/\alpha)/D} \ge h = 4R_X\sqrt{\log(2dw/\alpha)/w}$ and solving for $D$ gives $D \le 64R_X^2\log(2dw/\alpha)/\Delta^2$, provided $\Delta > 2h$.
+\end{proof}
+
+\subsection{Minimax detection lower bound}
+
+\begin{theorem}[Minimax detection delay lower bound]
+\label{thm:detection_lb}
+For any detector with false alarm probability at most $\alpha \le 1/4$ over a horizon of length $T$, the worst-case detection delay over all changes with $\|P_0 - P_1\|_{\op} \ge \Delta$ satisfies
+\begin{equation}
+\inf_{\hat\tau} \sup_{P_0, P_1} \E[\hat\tau - \tau \mid \hat\tau \ge \tau]
+\ge \frac{c_{\mathrm{det}}^2}{\Delta^2},
+\label{eq:detection_lb}
+\end{equation}
+where $c_{\mathrm{det}} = c_1 \sigma_\varepsilon^2 / (\mu L^2)$ and $c_1$ is the constant from Theorem~\ref{thm:minimax_subspace}.
+\end{theorem}
+
+\begin{proof}
+By Theorem~\ref{thm:minimax_subspace}, any estimator of the subspace projector from $m$ probes has worst-case error at least $c_1/\sqrt{m}$. A detector that achieves delay $D$ effectively estimates both $P_0$ and $P_1$ from $O(D)$ post-change probes. For the detector to reliably distinguish $P_0$ from $P_1$ with $\|P_0 - P_1\|_{\op} = \Delta$, the estimation error must satisfy $c_1/\sqrt{D} \le \Delta/2$, giving $D \ge 4c_1^2/\Delta^2$.
+
+More precisely, consider two alternative hypotheses: $H_1$ with change from $P_0$ to $P_1$ at time $\tau$, and $H_1'$ with no change (continuation of $P_0$). The KL divergence between the post-change observations under $H_1$ and $H_1'$ over $D$ rounds is at most $C_1 D \Delta^2$ (by the computation of Theorem~\ref{thm:minimax_subspace}, Step~3). By the data-processing inequality and Fano, reliable detection requires $C_1 D \Delta^2 \ge \Omega(1)$, giving $D \ge \Omega(1/(C_1 \Delta^2))$.
+\end{proof}
+
+\begin{remark}[Optimality of the CUSUM detector]
+Comparing Theorems~\ref{thm:cusum} and~\ref{thm:detection_lb}, the CUSUM detector achieves delay $O(\log(dw/\alpha)/\Delta^2)$ while the minimax lower bound is $\Omega(1/\Delta^2)$. The gap is a logarithmic factor $\log(dw/\alpha)$, which is the standard price of controlling false alarms in sequential detection. Up to this factor, the CUSUM detector is minimax-rate-optimal.
+\end{remark}
+
+\begin{remark}[Connection to the companion paper]
+The companion paper implements a sliding-window detector based on $\|M^{\mathrm{recent}} - M^{\mathrm{past}}\|_{\op}$ with a calibrated threshold. Theorem~\ref{thm:cusum} provides the theoretical foundation: the detection delay scales as $O(R_X^2\log(d)/\Delta^2)$, matching the companion paper's empirical performance up to constants.
+\end{remark}
+
+
+%% ============================================================
+%%  18. SCOPE AND EXAMPLES
+%% ============================================================
+\section{Scope of the identification framework}
+\label{sec:separations}
+
+This section illustrates the scope of the identification theory developed above through concrete examples. The examples clarify two aspects of the framework's generality: the class of latent structures for which identification succeeds (Examples~\ref{ex:iid_latent}--\ref{ex:concrete}), and the role of continuous probe distributions in enabling full-rank recovery (Example~\ref{ex:finite_probes}).
+
+\begin{example}[Non-constant latent parameter]
+\label{ex:iid_latent}
+Let $B_k^\star = \bbm I_r \\ 0 \ebm$, $A_k = 0$, and $\eta_t \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, I_r)$. Then $w_t = \eta_{t-1}$ are i.i.d., so $\theta_t = B_k^\star w_t$ varies at every round: $\Prob(\theta_t = \theta_{t+1}) = 0$. Despite this continuous variation, the representation subspace $\range(B_k^\star)$ is constant within each segment and identifiable by Proposition~\ref{prop:subspace_identification}. This demonstrates that our framework applies to latent structures far beyond the task-constant setting $\theta_t = \theta_{q(t)}$ considered by \citet{qin2022nonstationary}.
+\end{example}
+
+\begin{example}[Single-segment identifiability]
+\label{ex:single_segment}
+Consider a single segment ($K = 1$) with $r \ge 2$, $A_1 = 0$, $\Sigma_{\eta,1} = I_r$. By Proposition~\ref{prop:subspace_identification}, $\range(B_1^\star)$ is identifiable from probe-time second moments. This illustrates that our identification mechanism operates \emph{within} segments via the predictable second-moment structure $\widetilde{M}_t = B_k^\star \E[w_t w_t^\top \mid \cH_{t-1}] (B_k^\star)^\top$, not across segments via task diversity. In contrast, the task-covariance approach of \citet{qin2022nonstationary} requires $N \ge r$ distinct task vectors to recover an $r$-dimensional subspace, and thus cannot identify the subspace from a single segment when $r \ge 2$.
+\end{example}
+
+\begin{example}[Necessity of continuous probe support]
+\label{ex:finite_probes}
+Suppose probe directions are confined to a finite set $U \subset \R^d$ with $\Span(U) \neq \R^d$. Pick any nonzero $v \in \Span(U)^\perp$ and set $H := vv^\top$. Then $u_i^\top H u_i = 0$ for all $u_i \in U$, so the probe measurements $\{u_i^\top \widetilde{M}_t u_i : u_i \in U\}$ are identical for $\widetilde{M}_t$ and $\widetilde{M}_t + H$. Hence $\widetilde{M}_t$ is not identifiable from finitely many probe directions unless they span $\R^d$. This justifies Assumption~\ref{assum:probe_realizability}'s requirement that $\E[uu^\top] \succeq \rho I_d$, and distinguishes our setting from finite-action costly-probe models \citep{elumar2025costly} where probe actions are drawn from a fixed finite set.
+\end{example}
+
+\begin{example}[Concrete identifiable instance]
+\label{ex:concrete}
+Take $d = 3$, $r = 2$, $B^\star = \bbm 1 & 0 \\ 0 & 1 \\ 0 & 0 \ebm$, $A_k = 0.5 I_2$, $\Sigma_{\eta,k} = I_2$. The LDS is stable with $\rho(A_k) = 0.5$. The stationary covariance of $w_t$ is $\Sigma_w = (I - A_k^2)^{-1}\Sigma_{\eta,k} = \frac{4}{3}I_2 \succ 0$, so $\lambda_{\min} = 4/3$. Then $\bar{M}_k^{\mathrm{probe}}$ converges to $B^\star \Sigma_w (B^\star)^\top = \frac{4}{3}\bbm 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 0 \ebm$ and $P^\star$ is identifiable. This instance satisfies all of Assumptions~\ref{assum:piecewise}--\ref{assum:excitation} and illustrates the interplay between the LDS excitation ($\Sigma_{\eta,k} \succ 0$) and the subspace identification mechanism.
+\end{example}
+
+
+%% ============================================================
+%%  13. AMBIENT-SPACE BASELINE AND THE VALUE OF SUBSPACE RECOVERY
+%% ============================================================
+\section{Ambient-space baseline and value of subspace recovery}
+\label{sec:ambient_reference}
+
+The identification theory of the preceding sections recovers the $r$-dimensional subspace $\range(B_k^\star)$ at rate $O(1/\sqrt{m})$. To quantify the statistical gain from this recovery, we state the ambient-space costed dynamic regret bound---the performance achievable \emph{without} exploiting the low-rank structure---and contrast it with the projected rate. The gap between the two bounds isolates the value of subspace identification.
+
+\begin{theorem}[Ambient-space costed dynamic regret]
+\label{thm:ambient_regret}
+Suppose Assumptions~\ref{assum:latent_dynamics}--\ref{assum:bounded_probe_noise} hold. With probability at least $1 - \delta$:
+\begin{align*}
+\DynReg_T^{(c)} &\le \underbrace{(2L_x S_w + c) m_T}_{\text{probing cost}}
++ \underbrace{\tilO(d\sqrt{T})}_{\text{ambient statistical regret}}
++ \underbrace{\tilO\!\left(\frac{S_w L_x R_X}{\lambda_{\min}} \sum_{t \notin \cTprobe} \frac{1}{\sqrt{m_{t-1}}}\right)}_{\text{subspace approximation error}},
+\end{align*}
+where $m_T = |\cTprobe|$ and $m_{t-1}$ counts probes in the current segment up to time $t$.
+\end{theorem}
+
+\begin{proof}
+Probe rounds contribute at most $(2L_x S_w + c) m_T$ to the costed regret. On exploitation rounds, the self-normalized bound gives, on a $1-\delta$ probability event, $r_t \le 2(\beta_t \|x_t^{\mathrm{dep}}\|_{V_{t-1}^{-1}} + \gamma_t \|x_t^{\mathrm{dep}}\|_2)$. Since $V_t$ is reset at each segment boundary, the elliptical potential lemma applies within each segment separately, yielding the $\tilO(d\sqrt{T})$ ambient statistical term. The subspace approximation error follows from $\gamma_t = \tilO(S_w/\sqrt{m_{t-1}})$ by Theorem~\ref{thm:davis_kahan}.
+\end{proof}
+
+\begin{remark}[Value of subspace recovery]
+\label{rem:value_subspace}
+With a uniform probe schedule, Theorem~\ref{thm:ambient_regret} yields $\tilO(d\sqrt{T} + T^{2/3})$. The companion paper shows that projected exploitation in the recovered $r$-dimensional subspace improves this to $\tilO(\sqrt{rT} + T^{2/3})$: the statistical regret term drops from $d\sqrt{T}$ to $\sqrt{rT}$, a factor-$\sqrt{d/r}$ improvement. The $T^{2/3}$ probe-cost term is shared between both bounds and is shown to be optimal for projected-exploitation policies by Theorem~\ref{thm:probe_rate_lb}. Thus, the identification theory of Sections~\ref{sec:single_play_id}--\ref{sec:concentration} provides the statistical foundation for a $\sqrt{d/r}$-factor improvement in the dominant regret term.
+\end{remark}
+
+
+%% ============================================================
+%%  14. DISCUSSION
+%% ============================================================
+\section{Discussion}
+\label{sec:discussion}
+
+\subsection{Summary}
+
+This paper develops a statistical theory for identification and minimax-optimal recovery of the column space of a low-rank representation matrix from noisy quadratic measurements in piecewise-stationary environments. The main results are:
+
+\begin{itemize}
+\item \textbf{Identification.} Under three structural conditions (known conditional noise variance, exact state--noise orthogonality, full-dimensional probe coverage), each probe yields an unbiased quadratic measurement of the predictable second moment, and the segment-level average identifies the active subspace. Under bounded coupling ($\varepsilon_\times > 0$), measurements acquire $O(\varepsilon_\times)$ bias with graceful degradation.
+
+\item \textbf{Non-identification.} Within the quadratic observation model, dropping any one of the three conditions destroys identifiability, and no two are jointly sufficient.
+
+\item \textbf{Paired-play.} An antisymmetric paired-play protocol eliminates the known-variance requirement through common-mode rejection, at the cost of deploying two actions per probe round.
+
+\item \textbf{Concentration.} The matrix Freedman inequality for self-adjoint martingale differences yields $O(1/\sqrt{m})$ subspace recovery, with explicit Davis--Kahan projector bounds under both correctly specified and misspecified variance.
+
+\item \textbf{Coverage necessity.} Any policy confined to a proper subspace incurs $\Omega(T)$ regret, and extending probe actions outside the deployed subspace does not help.
+
+\item \textbf{ETC lower bounds.} A multi-hypothesis Fano construction establishes $\Omega(\sqrt{cT})$ for explore-then-commit policies, and the Le Cam barrier characterizes the limits of this technique for adaptive policies.
+
+\item \textbf{Minimax optimality.} Via Fano's inequality over Grassmannian packings, the $1/\sqrt{m}$ subspace recovery rate is minimax optimal. The probe-rate tradeoff yields $\Omega(c^{1/3}T^{2/3})$ for projected-exploitation policies and $\Omega(\sqrt{cT})$ unconditionally.
+\end{itemize}
+
+\subsection{Connection to companion paper}
+
+The identification theory and lower bounds developed here are self-contained contributions to statistical estimation. As one application, a companion paper uses the concentration results of Section~\ref{sec:concentration} to analyze a projected-exploitation algorithm achieving $\tilO(\sqrt{rT}) + \tilO(T^{2/3}) + O(V)$ costed dynamic regret; the algorithmic design and regret analysis are developed there.
+
+\subsection{Open problems}
+
+Several important questions remain:
+\begin{enumerate}[leftmargin=1.5em]
+\item \textbf{Rank-adaptive algorithms.} Theorem~\ref{thm:rank_adaptation} establishes the statistical price of unknown rank, but the construction of a computationally efficient rank-adaptive algorithm with matching guarantees remains open. A natural candidate is sequential hypothesis testing on the eigenvalue gap of $\widehat{M}_k$.
+
+\item \textbf{Bypassing orthogonality.} The robustness analysis (Section~\ref{sec:robustness}) shows that bounded cross-correlation $\varepsilon_\times$ produces $O(\varepsilon_\times)$ subspace error, but whether alternative estimation strategies can achieve $o(\varepsilon_\times)$ degradation---or bypass the orthogonality condition entirely via higher-order moment methods---is open.
+
+\item \textbf{Time-varying dynamics.} Assumption~\ref{assum:latent_dynamics} fixes the dynamics matrix $A_k$ within each segment. Allowing $A_k$ to vary slowly within segments would require a more refined within-segment analysis, potentially using the robustness framework of Section~\ref{sec:robustness} with time-varying bias bounds.
+
+\item \textbf{Closing the $\varepsilon$ vs.\ $\varepsilon^2$ gap.} The gap between the unconditional $\Omega(\sqrt{cT})$ lower bound (Theorem~\ref{thm:sqrt_ct_lb}) and the $\Omega(c^{1/3}T^{2/3})$ bound for projected-exploitation policies (Theorem~\ref{thm:probe_rate_lb}) reflects the open question of whether $O(\varepsilon^2)$ per-round overhead is achievable without hard projection. Resolving this would either close the gap to $\Omega(c^{1/3}T^{2/3})$ unconditionally or show that ambient-space exploitation can beat the projected-exploitation rate.
+
+\item \textbf{Multi-scale change-point detection.} Section~\ref{sec:changepoint} develops detection theory for a single change point with known magnitude $\Delta$. Extending to multiple change points with unknown magnitudes and locations---analogous to the multiscale framework of \citet{wang2018high}---would complete the detection theory.
+\end{enumerate}
+
+
+%% ============================================================
+%%  APPENDICES
+%% ============================================================
+\begin{appendix}
+\section{Notation table}
+\label{app:notation}
+
+\begin{center}
+\small
+\setlength{\tabcolsep}{5pt}
+\renewcommand{\arraystretch}{1.18}
+
+\begin{longtable}{l p{0.70\textwidth}}
+\hline
+\textbf{Notation} & \textbf{Meaning} \\
+\hline
+\endfirsthead
+\hline
+\textbf{Notation} & \textbf{Meaning} \\
+\hline
+\endhead
+\hline
+\endfoot
+\hline
+\endlastfoot
+
+$\R$ & Real numbers. \\
+$\N$ & Natural numbers. \\
+$\E[\cdot]$ & Expectation. \\
+$\Prob(\cdot)$ & Probability. \\
+$\sigma(\cdot)$ & Sigma-field generated by the enclosed random variables. \\
+$\perp\!\!\!\perp$ & Statistical independence. \\
+$\mathbf{1}\{\cdot\}$ & Indicator function. \\
+
+$d$ & Ambient dimension. \\
+$r$ & Intrinsic/representation dimension ($r \ll d$). \\
+$T$ & Time horizon. \\
+$K$ & Number of segments. \\
+$k$ & Segment index. \\
+
+$\cA_t$ & Action set at round $t$. \\
+$x_t^{\mathrm{dep}}$ & Deployed action at time $t$. \\
+$(x_t^{(1)}, x_t^{(2)})$ & Action pair in paired-play. \\
+
+$y_t$ & Observed scalar reward (single-play). \\
+$y_t^{(i)}$ & Reward for $i$th action in paired-play. \\
+$\Delta y_t$ & Paired contrast: $(\,y_t^{(1)} - y_t^{(2)})/2$. \\
+$s_t$ & Centered probe statistic. \\
+
+$\theta_t$ & Time-varying latent parameter. \\
+$B_k^\star$ & Segment-$k$ representation matrix ($d \times r$, orthonormal columns). \\
+$w_t$ & Latent state ($\theta_t = B_t^\star w_t$). \\
+$A_k$ & Dynamics matrix on segment $k$. \\
+$\alpha$ & Stability margin: $\rho(A_k) \le 1 - \alpha$. \\
+$\eta_{t-1}$ & Innovation driving latent dynamics. \\
+$\Sigma_{\eta,k}$ & Innovation covariance in segment $k$. \\
+$\underline{\lambda}$ & Lower bound on $\lambda_r(\Sigma_{\eta,k})$. \\
+
+$\varepsilon_t$ & Observation noise (single-play). \\
+$\varepsilon_t^{(i)}$ & Noise for paired-play ($i = 1, 2$). \\
+$\xi_t$ & Paired-difference noise: $(\varepsilon_t^{(1)} - \varepsilon_t^{(2)})/2$. \\
+$\sigma_\varepsilon^2$ & True conditional noise variance on probe rounds: $\E[\varepsilon_t^2 \mid \sigma(\cH_{t-1}, u_t)]$; unknown to the learner, estimated online. \\
+$\sigma_\xi^2$ & Known paired-difference noise variance. \\
+
+$\DynReg_T^{(c)}$ & Costed dynamic regret. \\
+$c$ & Per-probe sensing cost. \\
+
+$\cH_{t-1}$ & Pre-decision history. \\
+$\cH_t$ & Post-decision history. \\
+$\cF_k^-$ & Segmentwise pre-probe sigma-field. \\
+
+$\tau_0, \dots, \tau_K$ & Change points. \\
+$\cI_k$ & Segment index set: $\{\tau_{k-1}, \dots, \tau_k - 1\}$. \\
+
+$\cTprobe$ & Set of probe times. \\
+$\cT_k$ & Probe times in segment $k$. \\
+$m_k$ & Number of probes in segment $k$. \\
+
+$u_t$ & Probe direction ($u_t \sim Q$). \\
+$Q$ & Probe distribution on $\R^d$. \\
+$L$ & Almost-sure bound on $\|u\|_2$. \\
+$L_x$ & Uniform bound on action norms. \\
+
+$\widetilde{M}_t$ & Predictable second moment: $\E[\theta_t \theta_t^\top \mid \cH_{t-1}]$. \\
+$\bar{M}_k^{\mathrm{probe}}$ & Probe-time average: $\frac{1}{m_k}\sum_{t \in \cT_k} \widetilde{M}_t$. \\
+$\bar{S}_k^{\mathrm{probe}}$ & Latent-state second-moment average on probe times. \\
+$\lambda_{\min}$ & Excitation constant (Assumption A8). \\
+$P_k^\star$ & True segment-$k$ projector: $B_k^\star(B_k^\star)^\top$. \\
+$\widehat{P}_k$ & Estimated projector. \\
+
+$\mathcal{K}$ & Probe operator: $\mathcal{K}(M) = \E[(u^\top M u) uu^\top]$. \\
+$C_{\mathcal{K}}$ & $\|\mathcal{K}^{-1}\|_{\op}$. \\
+$G_t$ & Lifted probe sample: $\mathcal{K}^{-1}(s_t u_t u_t^\top)$. \\
+$\widehat{M}_k$ & Empirical segment estimator: $\frac{1}{m_k}\sum_{t \in \cT_k} G_t$. \\
+
+$R_s$ & Uniform bound on $|s_t|$. \\
+$R_X$ & Uniform bound on $\|X_t\|_2 = \|G_t - \widetilde{M}_t\|_2$. \\
+$S_w$ & Uniform bound on $\|w_t\|_2$. \\
+$L_\varepsilon$ & Almost-sure bound on $|\varepsilon_t|$ on probe rounds. \\
+\end{longtable}
+\end{center}
+
+
+
+\end{appendix}
+
+\bibliographystyle{imsart-nameyear}
+\bibliography{references}
+
+\end{document}
+
