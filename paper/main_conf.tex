@@ -3362,9 +3362,7 @@ The improvement from Theorem~\ref{thm:closed_dynamic_regret}---replacing $d\sqrt
 \label{proof:minimax_subspace_recovery}
 
 \begin{proof}
-The proof has six steps: constructing a Grassmannian packing, building valid model instances, computing pairwise KL divergences, applying Fano's inequality, balancing the packing radius, and verifying the model assumptions.
-
-\textbf{Step 1: Grassmannian packing.}
+\textbf{Grassmannian packing.}
 Let $\mathrm{Gr}(r, d)$ denote the Grassmannian manifold of $r$-dimensional subspaces of $\R^d$, equipped with the metric $d(V_1, V_2) := \|P_{V_1} - P_{V_2}\|_{\op}$ where $P_V$ is the orthogonal projector onto $V$.
 By standard volumetric arguments on the Grassmannian \citep{szarek1983finite}, for any $\delta \in (0, 1/2)$, there exists a $2\delta$-packing $\{V_1, \ldots, V_N\} \subset \mathrm{Gr}(r, d)$ such that
 \begin{equation}
@@ -3375,7 +3373,7 @@ By standard volumetric arguments on the Grassmannian \citep{szarek1983finite}, f
 \end{equation}
 where $c_0 > 0$ is a universal constant.  The $r(d-r)$ factor reflects the dimension of the Grassmannian.
 
-\textbf{Step 2: Instance construction.}
+\textbf{Instance construction.}
 For each $j \in \{1, \ldots, N\}$, let $B_j \in \R^{d \times r}$ be an orthonormal basis of $V_j$, so $P_{V_j} = B_j B_j^\top$.  Define instance $\nu_j$ as follows:
 \begin{itemize}[nosep]
 \item One segment ($K = 1$), representation matrix $B^\star = B_j$.
@@ -3385,7 +3383,7 @@ For each $j \in \{1, \ldots, N\}$, let $B_j \in \R^{d \times r}$ be an orthonorm
 \end{itemize}
 Under $\nu_j$, each probe yields $y_t = u_t^\top B_j w_t + \varepsilon_t$, and the predictable second moment is $\widetilde{M}_t = \lambda_{\min} P_{V_j}$, constant across time.  The centered probe statistic is $s_t = y_t^2 - \sigma_\varepsilon^2$.
 
-\textbf{Step 3: Pairwise KL divergence.}
+\textbf{Pairwise KL divergence.}
 Fix two instances $\nu_i, \nu_j$.  Conditional on $u_t = u$, under $\nu_i$ we have
 \[
 y_t \mid u \sim \mathcal{N}\!\left(0,\, \lambda_{\min}\, u^\top P_{V_i} u + \sigma_\varepsilon^2\right),
@@ -3417,8 +3415,8 @@ Since the packing satisfies $\|P_{V_i} - P_{V_j}\|_{\op} \le 1$ and $\|P_{V_i} -
 \end{equation}
 where $C_1 := C_Q \lambda_{\min}^2 L^4 / \sigma_\varepsilon^4$ and $\delta_{\max} := \max_{i \neq j} \|P_{V_i} - P_{V_j}\|_{\op}$.
 
-\textbf{Step 4: Fano's inequality.}
-By the generalized Fano inequality \citep[Theorem~2.7]{takezawa2005introduction}, if
+\textbf{Fano's inequality.}
+By the generalized Fano inequality \citep[Theorem~2.7]{tsybakov2009introduction}, if
 \begin{equation}
 \max_{i \neq j} \KL(\nu_i^m \| \nu_j^m) \le \frac{\alpha \log N}{2}
 \label{eq:fano_condition}
@@ -3429,7 +3427,7 @@ for some $\alpha \in (0, 1)$, then
 \ge \delta\, (1 - \alpha - (\log 2) / \log N).
 \]
 
-\textbf{Step 5: Balancing.}
+\textbf{Balancing.}
 We require~\eqref{eq:fano_condition} to hold with $\alpha = 1/2$.  Substituting~\eqref{eq:kl_max} and~\eqref{eq:packing}, it suffices that
 \[
 C_1\, m\, r\, \delta_{\max}^2 \le \frac{c_0\, r(d - r) \log(1/\delta)}{4}.
@@ -3445,7 +3443,7 @@ Set $\delta = c_2 / \sqrt{m}$ for a constant $c_2 > 0$ chosen small enough that 
 \ge \frac{c_2}{4\sqrt{m}}.
 \]
 
-\textbf{Step 6: Assumption verification.}
+\textbf{Assumption verification.}
 Each constructed instance $\nu_j$ satisfies all required assumptions:
 \begin{itemize}[nosep]
 \item Assumption~\ref{assum:latent_dynamics}: single segment with orthonormal $B_j$; $A_1 = 0$, so $\rho(A_1) = 0 < 1 - \alpha$ for any $\alpha \in (0, 1)$; innovations $\eta_t \sim \mathcal{N}(0, \lambda_{\min} I_r)$ are i.i.d., zero-mean, with $\lambda_r(\Sigma_{\eta,1}) = \lambda_{\min}$.
