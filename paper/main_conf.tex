@@ -852,8 +852,7 @@ The appendix contains a discussion of limitations (Appendix~\ref{sec:discussion}
     probes to a proper subspace $S \subsetneq \R^d$ causes $\Omega(T)$ regret, and the Experiment~C ablation
     (Figure~\ref{fig:robustness-abc}c) confirms monotonic degradation as coverage decreases.
     Whether partial coverage (e.g., probes spanning a subspace containing $\range(B_k^\star)$) can yield intermediate
-    guarantees is an open question; the lifted operator approach requires invertibility of $\mathcal{K}$, which fails
-    without full rank $\E[uu^\top]$.
+    guarantees is an open question; the lifted operator approach requires invertibility of $\mathcal{K}$, which needs both full-rank $\E[uu^\top]$ and a non-degenerate fourth-moment tensor (Lemma~\ref{lem:K_invertible}).
 Theorems~\ref{thm:restricted_span_minimax_regret}--\ref{thm:two_point_testing_incomplete_coverage}
   and Experiment~C show that relaxing full coverage causes
   \emph{provably unavoidable} $\Omega(T)$ regret blow-up, indicating that this is not
@@ -1272,8 +1271,8 @@ Lemma~\ref{lem:probe_excitation} \newline (Probe-time excitation) &
   Subspace identifiable from probes. Dep: Assump.~\ref{assum:latent_dynamics} \\
 
 Lemma~\ref{lem:K_invertible} \newline ($\mathcal K$ invertibility) &
-  Probe moment operator $\mathcal K(M)\!=\!\E[(u^\top\! Mu)\,uu^\top]$ is invertible on $\R_{\mathrm{sym}}^{d\times d}$ &
-  Lifts scalar data to matrix estimates. Dep: Assump.~\ref{assum:probe_realizability} \\
+  Probe moment operator $\mathcal K(M)\!=\!\E[(u^\top\! Mu)\,uu^\top]$ is invertible on $\R_{\mathrm{sym}}^{d\times d}$ when $Q$ has positive-definite fourth-moment tensor (holds for Gaussian/sphere probes) &
+  Lifts scalar data to matrix estimates. Dep: Assump.~\ref{assum:probe_realizability} + fourth-moment condition \\
 
 Proposition~\ref{prop:quad} \newline (Quadratic measurement) &
   $\E[s_t\mid\cH_{t-1},u_t]\!=\!u_t^\top\widetilde M_t\,u_t$: each probe yields a quadratic measurement of the predictable second moment &
@@ -1287,8 +1286,8 @@ Proposition~\ref{prop:subspace_identification} \newline (Subspace identification
   $\range(\bar M_k^{\mathrm{probe}})\!=\!\range(B_k^\star)$: exact subspace recovery at population level &
   Completes identifiability. Dep: Lemma~\ref{lem:probe_excitation}, Prop.~\ref{prop:segment_factorization} \\
 
-Proposition~\ref{prop:lifted_probe_unbiased} \newline (Unbiased lifted probe) &
-  $\E[G_t\mid\cH_{t-1}]\!=\!\widetilde M_t$: each lifted sample unbiased for $\widetilde M_t$ &
+Proposition~\ref{prop:lifted_probe_unbiased} \newline (Lifted probe sample) &
+  $\E[G_t\mid\cH_{t-1}]\!=\!\widetilde M_t + \widetilde B_t$ with $\|\widetilde B_t\| \le |\delta_\sigma|C_{\mathcal K}L^2 + 2C_{\mathcal K}L^3\epsilon_\times$; unbiased when $\delta_\sigma\!=\!\epsilon_\times\!=\!0$ &
   Justifies matrix estimator. Dep: Prop.~\ref{prop:quad}, Lemma~\ref{lem:K_invertible} \\
 
 Proposition~\ref{prop:biased_measurement} \newline (Biased measurement) &
