@@ -99,7 +99,7 @@
   destroys identifiability, while approximate violations degrade gracefully.
   Building on this characterization, we propose \emph{Single-Play Subspace-Calibrated Optimism} (SPSC), achieving costed dynamic
   regret $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$.
-    Under the natural condition that projected exploitation incurs $\Omega(\varepsilon)$ per-round regret from subspace error $\varepsilon$, an $\Omega(c^{1/3}T^{2/3})$ lower bound matches the upper bound for all projected-exploitation policies, confirming the probe--subspace tradeoff is tight for this class; an
+    Under the natural condition that projected exploitation incurs $\Omega(\varepsilon)$ per-round regret from subspace error $\varepsilon$---a condition satisfied by hard-projection policies including SPSC---a matching $\Omega(c^{1/3}T^{2/3})$ lower bound confirms the probe--subspace tradeoff is tight; an
   adaptive variant removes the need for oracle segment boundaries. Experiments confirm the predicted phase transition: SPSC achieves regret reductions over ambient-space baselines when $d - r \gg
   T^{1/6}$, and incurs higher cost when $d - r \lesssim T^{1/6}$, matching theory on synthetic and real-data benchmarks.
   \end{abstract}
@@ -209,8 +209,8 @@ not~$r$.
   (Theorem~\ref{thm:probe_rate_lb}), under the condition that
   projected exploitation incurs $\Omega(\varepsilon)$ per-round
   regret from subspace error $\varepsilon$, matches the upper bound
-  for all projected-exploitation policies---a class that includes
-  SPSC and all known algorithms for this problem
+  for projected-exploitation policies satisfying this condition---a
+  class that includes SPSC and all known algorithms for this problem
   (Remark~\ref{rem:eps_gap_resolved}).
   An adaptive variant detects change points without oracle boundaries
   and achieves the same leading rate with $O(K)$ overhead.
@@ -940,8 +940,9 @@ The probe-side conditions in Assumption~\ref{assum:probe_noise} are stated in th
   Theorem~\ref{thm:etc_lower_bound} (Appendix~\ref{app:probe_cost_lower_bound}) proves an $\Omega(\sqrt{cT})$ minimax lower bound for
    the probe--subspace tradeoff via a Le~Cam two-point argument, applying to all explore-then-commit policies.
   Theorem~\ref{thm:minimax_subspace_recovery} (Appendix~\ref{app:minimax_subspace}) proves the $1/\sqrt{m}$ subspace recovery rate is minimax optimal via Fano's inequality over Grassmannian packings.
-  Building on this, Theorem~\ref{thm:probe_rate_lb} (Appendix~\ref{app:matching_lower_bound}) establishes a matching $\Omega(c^{1/3}T^{2/3})$ lower bound for all projected-exploitation policies---any method that estimates a subspace and exploits within it, including SPSC---under the condition that projected exploitation with subspace error $\varepsilon$ incurs $\Omega(\varepsilon)$ per-round regret.
-  This condition is satisfied by hard projection (which creates an irreducible $O(\varepsilon)$ bias), confirming that the $\widetilde{O}(c^{1/3}T^{2/3})$ probe--subspace tradeoff term in Theorem~\ref{thm:closed_dynamic_regret} is tight for this policy class.
+  Building on this, Theorem~\ref{thm:probe_rate_lb} (Appendix~\ref{app:matching_lower_bound}) establishes a matching $\Omega(c^{1/3}T^{2/3})$ lower bound for projected-exploitation policies under the condition that subspace error $\varepsilon$ incurs $\Omega(\varepsilon)$ per-round regret.
+  Hard projection onto a misaligned subspace provides the mechanism for this linear-in-$\varepsilon$ loss, and SPSC and all known algorithms for this problem satisfy the condition.
+  Theorem~\ref{thm:probe_rate_lb} thus shows that the $\widetilde{O}(c^{1/3}T^{2/3})$ probe--subspace tradeoff term in Theorem~\ref{thm:closed_dynamic_regret} is tight for this policy class.
 
   The only remaining open question is whether an algorithm operating in the full $d$-dimensional ambient space (without projecting onto the estimated subspace) could achieve $O(\varepsilon^2)$ per-round overhead and thus $O(\sqrt{cT})$ total regret.
   Theorem~\ref{thm:regret_allocation} (Appendix~\ref{app:probe_allocation}) further shows that the optimal probe allocation across segments of varying length $\ell_k$ is $m_k^\star = (\gamma \ell_k / (2c))^{2/3}$, matching the allocation used by SPSC.
@@ -1455,8 +1456,8 @@ Thm.~\ref{thm:minimax_subspace_recovery} \newline (Minimax $1/\sqrt{m}$) &
   Foundation for matching lower bound \\
 
 Thm.~\ref{thm:probe_rate_lb} \newline (Matching $\Omega(c^{1/3}T^{2/3})$) &
-  Matches upper bound for all projected-exploitation policies &
-  Closes the gap (Remark~\ref{rem:eps_gap_resolved}) \\
+  Conditional matching lower bound for projected-exploitation policies under linear-in-$\varepsilon$ loss &
+  Matches upper bound for this class (Remark~\ref{rem:eps_gap_resolved}) \\
 
 Thm.~\ref{thm:regret_allocation} \newline (Optimal allocation) &
   Optimal probe allocation $m_k^\star = (\gamma\ell_k/(2c))^{2/3}$; confirms SPSC's allocation &
@@ -1519,7 +1520,7 @@ Full-dimensional probe coverage
 &
 The probe mechanism deliberately excites all directions that may carry reward mass.
 &
-Ensures that no potentially active subspace direction is invisible to probing, and guarantees invertibility of the probe operator used to lift quadratic measurements into matrix estimates.
+Ensures that no potentially active subspace direction is invisible to probing; together with the fourth-moment nondegeneracy condition of Lemma~\ref{lem:K_invertible}, yields invertibility of the probe operator used to lift quadratic measurements into matrix estimates.
 &
 If the probe distribution misses directions, those directions cannot be recovered from single-play scalar feedback, and subspace identifiability fails. \\
 
@@ -2346,12 +2347,12 @@ Proof in \S\ref{proof:probe_rate_lb}.
 \label{rem:eps_gap_resolved}
 Theorem~\ref{thm:sqrt_ct_all} uses the information-theoretic $\Omega(\varepsilon^2)$ per-round cost, yielding $\Omega(\sqrt{cT})$.
 Theorem~\ref{thm:probe_rate_lb} uses the $\Omega(\varepsilon)$ per-round cost inherent to projected exploitation, yielding $\Omega(c^{1/3}T^{2/3})$, which matches the upper bound in Theorem~\ref{thm:closed_dynamic_regret}.
-The condition of Theorem~\ref{thm:probe_rate_lb} is satisfied by any policy that performs projected exploitation---including SPSC and all known algorithms for this problem---because hard projection onto a misaligned subspace creates an irreducible $O(\varepsilon)$ bias.
+Hard projection onto a misaligned subspace creates an $O(\varepsilon)$ bias that provides the mechanism for the linear-in-$\varepsilon$ loss condition of Theorem~\ref{thm:probe_rate_lb}; SPSC and all known algorithms for this problem satisfy this condition.
 Whether an algorithm operating in the full ambient space can achieve $O(\varepsilon^2)$ per-round overhead remains open.
 \end{remark}
 
 \begin{remark}[Matching upper bound]
-SPSC achieves $\widetilde{O}(\sqrt{rT}) + \widetilde{O}(c^{1/3}T^{2/3}) + O(V)$ via projected exploitation with $m \asymp (T/c)^{2/3}$ probes per segment.  Theorem~\ref{thm:probe_rate_lb} shows that the $c^{1/3}T^{2/3}$ term is tight for any policy using projected exploitation.
+SPSC achieves $\widetilde{O}(\sqrt{rT}) + \widetilde{O}(c^{1/3}T^{2/3}) + O(V)$ via projected exploitation with $m \asymp (T/c)^{2/3}$ probes per segment.  Theorem~\ref{thm:probe_rate_lb} shows that the $c^{1/3}T^{2/3}$ term is tight for projected-exploitation policies satisfying the linear-in-$\varepsilon$ loss condition.
 \end{remark}
 
 \subsection{Optimal Probe Allocation Across Segments}
