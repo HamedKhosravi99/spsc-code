@@ -2342,11 +2342,60 @@ Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} with $d \
 
 Proof in \S\ref{proof:probe_rate_lb}.
 
+The following lemma shows that the linear-in-$\varepsilon$ loss condition of Theorem~\ref{thm:probe_rate_lb} is genuinely realized by hard-projection scoring on a concrete bounded-action instance.
+
+\begin{lemma}[Linear loss for hard-projection scoring]
+\label{lem:hard_projection_linear_loss}
+Let $d=2$, $r=1$, and let the true projector be $P^\star = e_1 e_1^\top$.
+Let the estimated projector be $\widehat{P} = uu^\top$ with $u = (\cos\alpha, \sin\alpha)$ and $\sin\alpha = \varepsilon \in (0, 1/4]$.
+Let $\theta = S_w e_1$ and define the action set $\cA_\varepsilon := \{0,\, x_\varepsilon\}$ where
+\[
+x_\varepsilon := \frac{R_{\cA}}{\sqrt{1+a^2}}(a,\,-1), \qquad a := \tfrac{1}{2}\tan\alpha.
+\]
+Consider the hard-projection scoring rule $x \mapsto x^\top \widehat{P}\theta$.
+Then for all sufficiently small $\varepsilon$: (i) the true best action is $x_\varepsilon$; (ii) the scoring rule selects $0$; and (iii) the per-round regret satisfies
+\[
+\max_{x \in \cA_\varepsilon} x^\top\theta - x_{\mathrm{HP}}^\top\theta \ge c_{\mathrm{hp}}\, R_{\cA}\, S_w\, \varepsilon
+\]
+for an absolute constant $c_{\mathrm{hp}} > 0$.
+\end{lemma}
+
+\begin{proof}
+\emph{True reward.}
+Since $\theta = S_w e_1$, the reward of the nonzero arm is
+$x_\varepsilon^\top\theta = R_{\cA} S_w\, a / \sqrt{1+a^2}$.
+With $a = \frac{1}{2}\tan\alpha$ and $\sin\alpha = \varepsilon$, we have $a = \varepsilon/(2\cos\alpha) \asymp \varepsilon$ for small $\varepsilon$, so $x_\varepsilon^\top\theta \asymp R_{\cA} S_w \varepsilon > 0$.
+The true best action is $x_\varepsilon$.
+
+\emph{Hard-projection score.}
+Since $\widehat{P} = uu^\top$ and $u^\top\theta = S_w\cos\alpha$:
+\[
+x_\varepsilon^\top \widehat{P}\theta
+= (x_\varepsilon^\top u)(u^\top\theta)
+= \frac{R_{\cA} S_w}{\sqrt{1+a^2}}(a\cos\alpha - \sin\alpha)\cos\alpha.
+\]
+Substituting $a = \frac{1}{2}\tan\alpha$:
+\[
+a\cos\alpha - \sin\alpha = \tfrac{1}{2}\sin\alpha - \sin\alpha = -\tfrac{1}{2}\sin\alpha,
+\]
+so $x_\varepsilon^\top \widehat{P}\theta = -\frac{1}{2}\frac{R_{\cA} S_w}{\sqrt{1+a^2}}\sin\alpha\cos\alpha < 0$.
+Since $0^\top \widehat{P}\theta = 0$, the scoring rule selects $0$.
+
+\emph{Regret.}
+The chosen action has true reward $0$; the optimal action has reward $x_\varepsilon^\top\theta = R_{\cA} S_w\, a/\sqrt{1+a^2} \ge c_{\mathrm{hp}} R_{\cA} S_w \varepsilon$ for a constant $c_{\mathrm{hp}} > 0$ and all sufficiently small $\varepsilon$.
+\end{proof}
+
+\begin{remark}[Scope of Lemma~\ref{lem:hard_projection_linear_loss}]
+\label{rem:hard_projection_scope}
+Lemma~\ref{lem:hard_projection_linear_loss} shows that the linear-in-$\varepsilon$ loss condition in Theorem~\ref{thm:probe_rate_lb} is genuinely realized by hard-projection scoring on a bounded-action instance.
+It does not by itself prove the minimax lower bound of Theorem~\ref{thm:probe_rate_lb}, because the latter additionally requires coupling this linear-loss mechanism to the subspace-recovery lower bound of Theorem~\ref{thm:minimax_subspace_recovery} over a common lower-bound family.
+\end{remark}
+
 \begin{remark}[The $\varepsilon$ vs.\ $\varepsilon^2$ resolution]
 \label{rem:eps_gap_resolved}
 Theorem~\ref{thm:sqrt_ct_all} uses the information-theoretic $\Omega(\varepsilon^2)$ per-round cost, yielding $\Omega(\sqrt{cT})$.
 Theorem~\ref{thm:probe_rate_lb} uses the $\Omega(\varepsilon)$ per-round cost inherent to projected exploitation, yielding $\Omega(c^{1/3}T^{2/3})$, which matches the upper bound in Theorem~\ref{thm:closed_dynamic_regret}.
-Hard projection onto a misaligned subspace creates an $O(\varepsilon)$ bias that provides the mechanism for the linear-in-$\varepsilon$ loss condition of Theorem~\ref{thm:probe_rate_lb}.
+Lemma~\ref{lem:hard_projection_linear_loss} provides a concrete construction showing that hard-projection scoring realizes this linear-in-$\varepsilon$ loss on a bounded-action instance.
 Whether an algorithm operating in the full ambient space can achieve $O(\varepsilon^2)$ per-round overhead remains open.
 \end{remark}
 
