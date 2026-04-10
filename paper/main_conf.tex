@@ -584,6 +584,8 @@ Proofs are in Appendix~\ref{app:all_proofs} (\S\ref{proof:full_horizon_windowed}
   The three terms have clear roles: $\widetilde O(r\sqrt{T})$ is the projected exploitation cost (vs.\ $\widetilde O(d\sqrt{T})$ in
   ambient space), $\widetilde O(T^{2/3})$ is the probe--subspace tradeoff, and $O(V)$ is the irreducible drift price.
 
+  \emph{Window size in theory vs.\ practice.} The choice $W^\star = 1$ minimizes the worst-case bound under an adversarial within-segment variation argument. Under the autocorrelated LDS dynamics of Assumption~\ref{assum:latent_dynamics}, however, the effective local variation is much smaller than the worst case, so larger windows reduce statistical error without inflating the drift term. All experiments use $W \in [100, 400]$; the probe-rate ablation in Appendix~\ref{app:probe_ablation} confirms a U-shaped tradeoff with the optimum near $W = 100$.
+
   \begin{theorem}[General regret bound under approximate probe conditions]
   \label{thm:closed_dynamic_regret_general}
   \label{cor:regret_misspecified_variance}
@@ -659,6 +661,8 @@ m_{\mathrm{relearn}}
   (Table~\ref{tab:experiment_roadmap}) including sensitivity analyses and the Warfarin clinical dosing benchmark
   (Appendix~\ref{app:warfarin}).
   Setup details are in Appendix~\ref{app:synthetic_setup}.
+
+  \paragraph{Choice of baselines.} The primary competitors are nonstationary linear bandits in the ambient $d$-dimensional space (D-LinUCB, SW-LinUCB, Restart-LinUCB), which are the state of the art for the setting SPSC targets: changing reward parameters under bounded scalar feedback. Oracle-LinUCB (with the true subspace) provides a performance ceiling. We do \emph{not} include restarted versions of recent stationary low-rank methods (e.g., \citet{pmlr-v235-jedra24a, pmlr-v235-jang24e}) because they assume richer feedback models (bilinear/full-vector observations) or stationary representations, and a naive restart wrapper would not be apples-to-apples in our single-play scalar-feedback setting; Appendix~\ref{app:related_table} discusses this in detail.
 
   \paragraph{Experiment 1: Phase transition (Theorems~\ref{thm:closed_dynamic_regret},~\ref{thm:ambient_regret}).}
   Figure~\ref{fig:synthetic-phase} shows the SPSC/LinUCB regret ratio over a broad $(d,r)$ grid. The empirical crossover boundary
@@ -942,7 +946,7 @@ The probe-side conditions in Assumption~\ref{assum:probe_noise} are stated in th
   Building on this, Theorem~\ref{thm:probe_rate_lb} (Appendix~\ref{app:matching_lower_bound}) establishes an unconditional matching $\Omega(c^{1/3}T^{2/3})$ lower bound for hard-projection score-maximizing policies (Definition~\ref{def:hard_projection_policy_class})---a class capturing the hard-projection mechanism underlying SPSC-style projected exploitation---via a fixed two-point lower-bound family satisfying Assumption~\ref{assum:probe_realizability}.
   The $\widetilde{O}(c^{1/3}T^{2/3})$ probe--subspace tradeoff term in Theorem~\ref{thm:closed_dynamic_regret} is therefore tight for this policy class.
 
-  The remaining open question is whether a broader projected-exploitation class, or algorithms operating in the full $d$-dimensional ambient space, can achieve $O(\sqrt{cT})$ total regret.
+  \emph{Scope summary.} The two lower bounds have complementary scopes: $\Omega(\sqrt{cT})$ is the unconditional ETC-style barrier that holds for \emph{all} admissible policies, while $\Omega(c^{1/3}T^{2/3})$ is tight specifically for hard-projection score-maximizing policies. Whether broader projected-exploitation classes or ambient-space algorithms can break the latter remains open.
   Theorem~\ref{thm:regret_allocation} (Appendix~\ref{app:probe_allocation}) further shows that the optimal probe allocation across segments of varying length $\ell_k$ is $m_k^\star = (\gamma \ell_k / (2c))^{2/3}$, matching the allocation used by SPSC.
 
 \paragraph{Dimension scaling.}
