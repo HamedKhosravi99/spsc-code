@@ -666,7 +666,7 @@ m_{\mathrm{relearn}}
 
   \paragraph{Experiment 1: Phase transition (Theorems~\ref{thm:closed_dynamic_regret},~\ref{thm:ambient_regret}).}
   Figure~\ref{fig:synthetic-phase} shows the SPSC/LinUCB regret ratio over a broad $(d,r)$ grid. The empirical crossover boundary
-  closely tracks $d{-}r = T^{1/6}$: LinUCB wins at $d \le 20$, SPSC dominates at $d \ge 45$ with $2$--$34\%$ reductions, and every
+  closely tracks $d{-}r = T^{1/6}$: LinUCB wins at $d \le 20$, SPSC dominates at $d \ge 45$ with $13$--$34\%$ reductions, and every
   $r$-curve tracks $\sqrt{r/d}$, validating the leading-rate improvement from $d\sqrt{T}$ to $r\sqrt{T}$.
 
     \begin{figure}[!htpb]
@@ -3763,7 +3763,7 @@ Table~\ref{tab:experiment_roadmap} provides a complete roadmap: each row links o
   \midrule
 
   1.\ Phase transition (Fig.~\ref{fig:synthetic-phase}) &
-  $d{\in}\{10,...,80\}$, $r{\in}\{1,...,20\}$, $K{=}10$, $T{=}5000$; 3 seeds &
+  $d{\in}\{10,...,80\}$, $r{\in}\{1,...,20\}$, $K{=}10$, $T{=}5000$; 10 seeds &
   Thm.~\ref{thm:closed_dynamic_regret} vs.\ Thm.~\ref{thm:ambient_regret}: SPSC wins when $d{-}r > T^{1/6}$ &
   Phase transition confirmed: LinUCB wins at $d{\le}20$; SPSC wins $2$--$34\%$ at $d{\ge}45$; crossover at $d{\approx}30$ matches
   $T^{1/6}$ &
@@ -4007,7 +4007,7 @@ across all tested ranks with improvements of $2$--$34\%$.
 \begin{table}[!htpb]
 \centering
 \caption{Synthetic phase-transition benchmark: full results
-($K{=}10$, $T{=}5{,}000$, $3$ seeds/cell).
+($K{=}10$, $T{=}5{,}000$, $10$ seeds/cell).
 Ratio $< 1$ indicates SPSC wins; bold entries highlight
 $\ge 15\%$ improvement.}
 \label{tab:synthetic-phase}
@@ -4017,43 +4017,43 @@ $\ge 15\%$ improvement.}
 \toprule
 $d$ & $r$ & SPSC & LinUCB & Oracle & Ratio & $\sqrt{r/d}$ \\
 \midrule
-10 &  1 & 2333 &  401 &    7 & 5.81 & 0.316 \\
-10 &  3 & 1511 &  452 &  118 & 3.34 & 0.548 \\
-10 &  5 & 1327 &  422 &  209 & 3.15 & 0.707 \\
+10 &  1 & 2250 &  414 &    8 & 5.44 & 0.316 \\
+10 &  3 & 1689 &  436 &  114 & 3.87 & 0.548 \\
+10 &  5 & 1357 &  414 &  204 & 3.28 & 0.707 \\
 \midrule
-20 &  1 & 2397 & 1086 &    8 & 2.21 & 0.224 \\
-20 &  3 & 1966 & 1025 &  117 & 1.92 & 0.387 \\
-20 &  5 & 1526 &  954 &  219 & 1.60 & 0.500 \\
-20 & 10 & 1238 &  984 &  481 & 1.26 & 0.707 \\
-20 & 15 &  967 &  917 &  675 & 1.05 & 0.866 \\
+20 &  1 & 2327 & 1060 &    8 & 2.20 & 0.224 \\
+20 &  3 & 1970 & 1081 &  118 & 1.82 & 0.387 \\
+20 &  5 & 1539 &  953 &  218 & 1.62 & 0.500 \\
+20 & 10 & 1220 &  972 &  491 & 1.26 & 0.707 \\
+20 & 15 &  986 &  883 &  664 & 1.12 & 0.866 \\
 \midrule
-30 &  1 & 2463 & 1678 &    7 & 1.47 & 0.183 \\
-30 &  3 & 1882 & 1708 &  124 & 1.10 & 0.316 \\
-30 &  5 & 1633 & 1561 &  229 & 1.05 & 0.408 \\
-30 & 10 & 1251 & 1244 &  478 & 1.01 & 0.577 \\
-30 & 15 & 1209 & 1283 &  723 & \textbf{0.94} & 0.707 \\
-30 & 20 & 1193 & 1257 &  895 & 0.95 & 0.816 \\
+30 &  1 & 2269 & 1669 &    8 & 1.36 & 0.183 \\
+30 &  3 & 1936 & 1638 &  118 & 1.18 & 0.316 \\
+30 &  5 & 1593 & 1516 &  226 & 1.05 & 0.408 \\
+30 & 10 & 1273 & 1265 &  485 & 1.01 & 0.577 \\
+30 & 15 & 1193 & 1236 &  695 & 0.96 & 0.707 \\
+30 & 20 & 1194 & 1244 &  888 & 0.96 & 0.816 \\
 \midrule
-45 &  1 & 2235 & 2282 &    9 & 0.98 & 0.149 \\
-45 &  3 & 1845 & 2192 &  113 & \textbf{0.84} & 0.258 \\
-45 &  5 & 1668 & 1999 &  218 & \textbf{0.83} & 0.333 \\
-45 & 10 & 1270 & 1611 &  457 & \textbf{0.79} & 0.471 \\
-45 & 15 & 1251 & 1456 &  692 & \textbf{0.86} & 0.577 \\
-45 & 20 & 1335 & 1556 &  919 & \textbf{0.86} & 0.667 \\
+45 &  1 & 2283 & 2258 &    7 & 1.01 & 0.149 \\
+45 &  3 & 1890 & 2212 &  117 & \textbf{0.85} & 0.258 \\
+45 &  5 & 1630 & 2006 &  222 & \textbf{0.81} & 0.333 \\
+45 & 10 & 1322 & 1629 &  467 & \textbf{0.81} & 0.471 \\
+45 & 15 & 1237 & 1452 &  680 & \textbf{0.85} & 0.577 \\
+45 & 20 & 1278 & 1477 &  874 & \textbf{0.87} & 0.667 \\
 \midrule
-60 &  1 & 2306 & 2694 &    8 & \textbf{0.86} & 0.129 \\
-60 &  3 & 1752 & 2532 &  108 & \textbf{0.69} & 0.224 \\
-60 &  5 & 1674 & 2433 &  235 & \textbf{0.69} & 0.289 \\
-60 & 10 & 1335 & 1900 &  497 & \textbf{0.70} & 0.408 \\
-60 & 15 & 1272 & 1640 &  681 & \textbf{0.78} & 0.500 \\
-60 & 20 & 1232 & 1484 &  838 & \textbf{0.83} & 0.577 \\
+60 &  1 & 2379 & 2590 &    8 & 0.92 & 0.129 \\
+60 &  3 & 1850 & 2580 &  115 & \textbf{0.72} & 0.224 \\
+60 &  5 & 1696 & 2333 &  229 & \textbf{0.73} & 0.289 \\
+60 & 10 & 1338 & 1884 &  490 & \textbf{0.71} & 0.408 \\
+60 & 15 & 1245 & 1571 &  666 & \textbf{0.79} & 0.500 \\
+60 & 20 & 1216 & 1448 &  821 & \textbf{0.84} & 0.577 \\
 \midrule
-80 &  1 & 2391 & 2878 &    6 & \textbf{0.83} & 0.112 \\
-80 &  3 & 2050 & 2978 &  120 & \textbf{0.69} & 0.194 \\
-80 &  5 & 1674 & 2544 &  222 & \textbf{0.66} & 0.250 \\
-80 & 10 & 1368 & 1881 &  449 & \textbf{0.73} & 0.354 \\
-80 & 15 & 1249 & 1644 &  631 & \textbf{0.76} & 0.433 \\
-80 & 20 & 1273 & 1614 &  845 & \textbf{0.79} & 0.500 \\
+80 &  1 & 2430 & 2896 &    7 & \textbf{0.84} & 0.112 \\
+80 &  3 & 2004 & 2812 &  115 & \textbf{0.71} & 0.194 \\
+80 &  5 & 1665 & 2507 &  219 & \textbf{0.66} & 0.250 \\
+80 & 10 & 1392 & 2030 &  479 & \textbf{0.69} & 0.354 \\
+80 & 15 & 1270 & 1701 &  662 & \textbf{0.75} & 0.433 \\
+80 & 20 & 1250 & 1583 &  826 & \textbf{0.79} & 0.500 \\
 \bottomrule
 \end{tabular}
 \end{table}
