@@ -852,22 +852,22 @@ The appendix contains a discussion of limitations (Appendix~\ref{sec:discussion}
   action
     dimensions are locked, or on platforms where the item pool does not span $\R^d$.
     In such settings our guarantees do not apply: Theorem~\ref{thm:restricted_span_minimax_regret} shows that restricting
-    probes to a proper subspace $S \subsetneq \R^d$ causes $\Omega(T)$ regret, and the Experiment~C ablation
+    probes to a proper subspace $S \subsetneq \R^d$ causes $\Omega(T)$ regret, and the Experiment~C ablation in Appendix~\ref{app:robustness_necessity}
     (Figure~\ref{fig:robustness-abc}c) confirms monotonic degradation as coverage decreases.
     Whether partial coverage (e.g., probes spanning a subspace containing $\range(B_k^\star)$) can yield intermediate
     guarantees is an open question; the lifted operator approach requires invertibility of $\mathcal{K}$, which needs both full-rank $\E[uu^\top]$ and a non-degenerate fourth-moment tensor (Lemma~\ref{lem:K_invertible}).
 Theorems~\ref{thm:restricted_span_minimax_regret}--\ref{thm:two_point_testing_incomplete_coverage}
-  and Experiment~C show that relaxing full coverage causes
+  and Experiment~C in Appendix~\ref{app:robustness_necessity} show that relaxing full coverage causes
   \emph{provably unavoidable} $\Omega(T)$ regret blow-up, indicating that this is not
   an artifact of our analysis but a fundamental information barrier.
   \emph{Unknown noise variance, estimated online} (Assumption~\ref{assum:probe_noise}(ii)):
-  Theorem~\ref{thm:closed_dynamic_regret_general} and Experiment~A show
+  Theorem~\ref{thm:closed_dynamic_regret_general} and Experiment~A in Appendix~\ref{app:robustness_necessity} show
   that misspecification up to $5\times$ the true variance causes $<5\%$
   regret change, because the bias is a scaled identity for Gaussian probes
   and eigenvectors are preserved
   (Proposition~\ref{prop:biased_measurement}).
   \emph{Bounded state--noise coupling} (Assumption~\ref{assum:probe_noise}(iii)):
-  Corollary~\ref{cor:regret_cross_correlation} and Experiment~B show
+  Corollary~\ref{cor:regret_cross_correlation} and Experiment~B in Appendix~\ref{app:robustness_necessity} show
   graceful $O(\epsilon_\times T)$ degradation under bounded
   cross-correlation; even $\epsilon_\times = 1.0$ changes regret by $<1\%$.
   Proposition~\ref{prop:nonid_b} shows that without \emph{any} bound,
