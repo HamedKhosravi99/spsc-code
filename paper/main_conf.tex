@@ -99,7 +99,7 @@
   destroys identifiability, while approximate violations degrade gracefully.
   Building on this characterization, we propose \emph{Single-Play Subspace-Calibrated Optimism} (SPSC), achieving costed dynamic
   regret $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$.
-    Under the natural condition that projected exploitation incurs $\Omega(\varepsilon)$ per-round regret from subspace error $\varepsilon$---a condition satisfied by hard-projection policies including SPSC---a matching $\Omega(c^{1/3}T^{2/3})$ lower bound confirms the probe--subspace tradeoff is tight; an
+    For the class of hard-projection score-maximizing policies---which includes SPSC---a matching unconditional $\Omega(c^{1/3}T^{2/3})$ lower bound confirms the probe--subspace tradeoff is tight for this class; an
   adaptive variant removes the need for oracle segment boundaries. Experiments confirm the predicted phase transition: SPSC achieves regret reductions over ambient-space baselines when $d - r \gg
   T^{1/6}$, and incurs higher cost when $d - r \lesssim T^{1/6}$, matching theory on synthetic and real-data benchmarks.
   \end{abstract}
@@ -206,10 +206,9 @@ not~$r$.
   policies (Theorem~\ref{thm:etc_lower_bound}) confirms the
   probe--subspace tradeoff is fundamental.
   A stronger $\Omega(c^{1/3}T^{2/3})$ lower bound
-  (Theorem~\ref{thm:probe_rate_lb}), under the condition that
-  projected exploitation incurs $\Omega(\varepsilon)$ per-round
-  regret from subspace error $\varepsilon$, matches the upper bound
-  for projected-exploitation policies satisfying this condition
+  (Theorem~\ref{thm:probe_rate_lb}) matches the upper bound
+  unconditionally for the class of hard-projection score-maximizing
+  policies, which includes SPSC
   (Remark~\ref{rem:eps_gap_resolved}).
   An adaptive variant detects change points without oracle boundaries
   and achieves the same leading rate with $O(K)$ overhead.
@@ -747,7 +746,7 @@ Experiments confirm regret reductions over all nonstationary baselines on real d
 
 
 \paragraph{Broader impact and future work.}
-This work is primarily theoretical, applicable to recommendation, pricing, and control. The $\Omega(c^{1/3}T^{2/3})$ lower bound (Theorem~\ref{thm:probe_rate_lb}) matches the upper bound for projected-exploitation policies under a natural per-round regret condition; the remaining open question is whether non-projecting algorithms can achieve $O(\sqrt{cT})$. Other directions include unknown rank $r$ and time-varying transition matrices.
+This work is primarily theoretical, applicable to recommendation, pricing, and control. The $\Omega(c^{1/3}T^{2/3})$ lower bound (Theorem~\ref{thm:probe_rate_lb}) unconditionally matches the upper bound for hard-projection score-maximizing policies; the remaining open question is whether broader policy classes or ambient-space algorithms can achieve $O(\sqrt{cT})$. Other directions include unknown rank $r$ and time-varying transition matrices.
 
 \newpage
 \bibliographystyle{plainnat}
@@ -787,7 +786,7 @@ This work is primarily theoretical, applicable to recommendation, pricing, and c
     \tocsubentry{E.8}{app:coverage_lower_bound}{Lower Bounds: Necessity of Full Coverage}
     \tocsubentry{E.9}{app:probe_cost_lower_bound}{Probe-Cost Lower Bound ($\Omega(\sqrt{cT})$ for ETC)}
     \tocsubentry{E.10}{app:minimax_subspace}{Minimax Optimality of $1/\sqrt{m}$ Recovery Rate}
-    \tocsubentry{E.11}{app:matching_lower_bound}{Matching $\Omega(c^{1/3}T^{2/3})$ Lower Bound}
+    \tocsubentry{E.11}{app:matching_lower_bound}{Matching $\Omega(c^{1/3}T^{2/3})$ Lower Bound for Hard-Projection Exploitation}
     \tocsubentry{E.12}{app:probe_allocation}{Optimal Probe Allocation Across Segments}
   \tocentry{F}{app:all_proofs}{Complete Proofs in Dependency Order}
   \tocentry{G}{app:additional_experiments}{Additional Experiments}
@@ -939,11 +938,10 @@ The probe-side conditions in Assumption~\ref{assum:probe_noise} are stated in th
   Theorem~\ref{thm:etc_lower_bound} (Appendix~\ref{app:probe_cost_lower_bound}) proves an $\Omega(\sqrt{cT})$ minimax lower bound for
    the probe--subspace tradeoff via a Le~Cam two-point argument, applying to all explore-then-commit policies.
   Theorem~\ref{thm:minimax_subspace_recovery} (Appendix~\ref{app:minimax_subspace}) proves the $1/\sqrt{m}$ subspace recovery rate is minimax optimal via Fano's inequality over Grassmannian packings.
-  Building on this, Theorem~\ref{thm:probe_rate_lb} (Appendix~\ref{app:matching_lower_bound}) establishes a matching $\Omega(c^{1/3}T^{2/3})$ lower bound for projected-exploitation policies under the condition that subspace error $\varepsilon$ incurs $\Omega(\varepsilon)$ per-round regret.
-  Hard projection onto a misaligned subspace provides the mechanism for this linear-in-$\varepsilon$ loss; in particular, SPSC's hard-projection exploitation satisfies this condition.
-  Theorem~\ref{thm:probe_rate_lb} thus shows that the $\widetilde{O}(c^{1/3}T^{2/3})$ probe--subspace tradeoff term in Theorem~\ref{thm:closed_dynamic_regret} is tight for this policy class.
+  Building on this, Theorem~\ref{thm:probe_rate_lb} (Appendix~\ref{app:matching_lower_bound}) establishes an unconditional matching $\Omega(c^{1/3}T^{2/3})$ lower bound for hard-projection score-maximizing policies (Definition~\ref{def:hard_projection_policy_class})---a class that includes SPSC---via a fixed two-point lower-bound family satisfying Assumption~\ref{assum:probe_realizability}.
+  The $\widetilde{O}(c^{1/3}T^{2/3})$ probe--subspace tradeoff term in Theorem~\ref{thm:closed_dynamic_regret} is therefore tight for this policy class.
 
-  The only remaining open question is whether an algorithm operating in the full $d$-dimensional ambient space (without projecting onto the estimated subspace) could achieve $O(\varepsilon^2)$ per-round overhead and thus $O(\sqrt{cT})$ total regret.
+  The remaining open question is whether a broader projected-exploitation class, or algorithms operating in the full $d$-dimensional ambient space, can achieve $O(\sqrt{cT})$ total regret.
   Theorem~\ref{thm:regret_allocation} (Appendix~\ref{app:probe_allocation}) further shows that the optimal probe allocation across segments of varying length $\ell_k$ is $m_k^\star = (\gamma \ell_k / (2c))^{2/3}$, matching the allocation used by SPSC.
 
 \paragraph{Dimension scaling.}
@@ -1455,8 +1453,8 @@ Thm.~\ref{thm:minimax_subspace_recovery} \newline (Minimax $1/\sqrt{m}$) &
   Foundation for matching lower bound \\
 
 Thm.~\ref{thm:probe_rate_lb} \newline (Matching $\Omega(c^{1/3}T^{2/3})$) &
-  Conditional matching lower bound for projected-exploitation policies under linear-in-$\varepsilon$ loss &
-  Matches upper bound for this class (Remark~\ref{rem:eps_gap_resolved}) \\
+  Unconditional matching lower bound for hard-projection score-maximizing policies (Def.~\ref{def:hard_projection_policy_class}) &
+  Tight for SPSC's policy class (Remark~\ref{rem:eps_gap_resolved}) \\
 
 Thm.~\ref{thm:regret_allocation} \newline (Optimal allocation) &
   Optimal probe allocation $m_k^\star = (\gamma\ell_k/(2c))^{2/3}$; confirms SPSC's allocation &
@@ -2320,7 +2318,7 @@ Proof in \S\ref{proof:minimax_subspace_recovery}.
 The upper bound from Davis--Kahan (Theorem~\ref{thm:projector_concentration_summary}) gives $\|\widehat{P}_k - P_k^\star\|_{\op} \le C_{\mathrm{sub}}\sqrt{\log(d/\delta)/m_k}$, matching the lower bound up to a $\sqrt{\log d}$ factor.  The Grassmannian packing dimension $r(d-r)$ appearing in the proof reflects the intrinsic dimension of the parameter space.
 \end{remark}
 
-\subsection{\texorpdfstring{Matching $\Omega(c^{1/3}T^{2/3})$ Lower Bound for Projected Exploitation}{Matching Lower Bound for Projected Exploitation}}
+\subsection{\texorpdfstring{Matching $\Omega(c^{1/3}T^{2/3})$ Lower Bound for Hard-Projection Exploitation}{Matching Lower Bound for Hard-Projection Exploitation}}
 \label{app:matching_lower_bound}
 
 \begin{theorem}[Unconditional $\Omega(\sqrt{cT})$ lower bound for all policies]
@@ -2332,75 +2330,83 @@ where the infimum ranges over all admissible policies.
 
 Proof in \S\ref{proof:sqrt_ct_all}.
 
-\begin{theorem}[Information-theoretic $\Omega(c^{1/3}T^{2/3})$ probe-rate lower bound]
-\label{thm:probe_rate_lb}
-Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} with $d \ge 2r$, suppose that any policy committing to a subspace estimate $\widehat{P}$ with $\|\widehat{P} - P^\star\|_{\op} = \varepsilon$ and exploiting in the estimated subspace incurs per-round expected regret at least $\mu\varepsilon$ for a constant $\mu > 0$.  Then there exists $c_4 > 0$ such that for all $T$ sufficiently large,
+\begin{definition}[Hard-projection score-maximizing policy class]
+\label{def:hard_projection_policy_class}
+A policy belongs to the \emph{hard-projection score-maximizing class} $\Pi_{\mathrm{HP}}$ if, after its probe rounds, it forms an estimated rank-$r$ projector $\widehat{P}_t$ and a score vector $\vartheta_t \in \range(\widehat{P}_t)$, and on each exploitation round chooses
 \[
-\inf_\pi \sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge c_4\, c^{1/3} T^{2/3}.
+x_t \in \arg\max_{x \in \cA_t} x^\top \widehat{P}_t \vartheta_t.
 \]
+This includes the idealized hard-projection exploitation rule associated with SPSC.
+\end{definition}
+
+\begin{theorem}[Matching $\Omega(c^{1/3}T^{2/3})$ lower bound for hard-projection score-maximizing policies]
+\label{thm:probe_rate_lb}
+Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} with $d \ge 2r$, there exists a constant $c_4 > 0$ such that for all sufficiently large $T$,
+\[
+\inf_{\pi \in \Pi_{\mathrm{HP}}}
+\sup_{\nu \in \mathcal{M}_{\mathrm{HP}}}
+\E_\nu^\pi\!\left[\DynReg_T^{(c)}\right]
+\ge c_4\, c^{1/3} T^{2/3},
+\]
+where $\Pi_{\mathrm{HP}}$ is the hard-projection score-maximizing class from Definition~\ref{def:hard_projection_policy_class}, and $\mathcal{M}_{\mathrm{HP}}$ is the fixed two-point lower-bound family defined below.
 \end{theorem}
 
 Proof in \S\ref{proof:probe_rate_lb}.
 
-The following lemma shows that the linear-in-$\varepsilon$ loss condition of Theorem~\ref{thm:probe_rate_lb} is genuinely realized by hard-projection scoring on a concrete bounded-action instance.
+\paragraph{Fixed two-point lower-bound family.}
+We work in $d = 2$, $r = 1$.  Let $u := (\cos\alpha, \sin\alpha)$ with $\varepsilon := \sin\alpha \in (0, \varepsilon_0]$ for a sufficiently small absolute constant $\varepsilon_0 > 0$.
+Define two candidate subspace directions $b_1 := e_1$, $b_2 := u$, with projectors $P_1 := b_1 b_1^\top$, $P_2 := b_2 b_2^\top$, so $\|P_1 - P_2\|_{\op} = \sin\alpha = \varepsilon$.
+Define the fixed bounded action set
+\[
+\cA_\varepsilon := \{\pm x_1, \pm x_2\}, \qquad x_1 := R_{\cA}\bigl(\tfrac{1}{2}, 0\bigr), \qquad x_2 := R_{\cA}\bigl(\tfrac{1}{2} - \tfrac{\varepsilon}{4},\, \tfrac{1}{2}\bigr).
+\]
+Let $Q_\varepsilon$ be the uniform distribution on $\cA_\varepsilon$.
+Define two one-segment environments
+\[
+\nu_1:\ \theta_t = w_t b_1, \qquad \nu_2:\ \theta_t = w_t b_2,
+\]
+where $w_t \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \lambda)$, $\varepsilon_t \stackrel{\mathrm{i.i.d.}}{\sim} \mathcal{N}(0, \sigma_\varepsilon^2)$, for a fixed $\lambda \in (0, \lambda_{\min}]$.
+Let $\mathcal{M}_{\mathrm{HP}} := \{\nu_1, \nu_2\}$.
 
-\begin{lemma}[Linear loss for hard-projection scoring]
-\label{lem:hard_projection_linear_loss}
-Let $d=2$, $r=1$, and let the true projector be $P^\star = e_1 e_1^\top$.
-Let the estimated projector be $\widehat{P} = uu^\top$ with $u = (\cos\alpha, \sin\alpha)$ and $\sin\alpha = \varepsilon \in (0, 1/4]$.
-Let $\theta = S_w e_1$ and define the action set $\cA_\varepsilon := \{0,\, x_\varepsilon\}$ where
-\[
-x_\varepsilon := \frac{R_{\cA}}{\sqrt{1+a^2}}(a,\,-1), \qquad a := \tfrac{1}{2}\tan\alpha.
-\]
-Consider the hard-projection scoring rule $x \mapsto x^\top \widehat{P}\theta$.
-Then for all sufficiently small $\varepsilon$: (i) the true best action is $x_\varepsilon$; (ii) the scoring rule selects $0$; and (iii) the per-round regret satisfies
-\[
-\max_{x \in \cA_\varepsilon} x^\top\theta - x_{\mathrm{HP}}^\top\theta \ge c_{\mathrm{hp}}\, R_{\cA}\, S_w\, \varepsilon
-\]
-for an absolute constant $c_{\mathrm{hp}} > 0$.
+\begin{lemma}[The fixed action set satisfies Assumption~\ref{assum:probe_realizability}]
+\label{lem:hp_probe_realizability}
+For all sufficiently small $\varepsilon \in (0, \varepsilon_0]$, there exists $\rho_0 > 0$ independent of $\varepsilon$ such that $\E_{Q_\varepsilon}[uu^\top] \succeq \rho_0 I_2$, $\supp(Q_\varepsilon) \subseteq \cA_\varepsilon$, and $\|u\|_2 \le R_{\cA}$ a.s.
 \end{lemma}
 
-\begin{proof}
-\emph{True reward.}
-Since $\theta = S_w e_1$, the reward of the nonzero arm is
-$x_\varepsilon^\top\theta = R_{\cA} S_w\, a / \sqrt{1+a^2}$.
-With $a = \frac{1}{2}\tan\alpha$ and $\sin\alpha = \varepsilon$, we have $a = \varepsilon/(2\cos\alpha) \asymp \varepsilon$ for small $\varepsilon$, so $x_\varepsilon^\top\theta \asymp R_{\cA} S_w \varepsilon > 0$.
-The true best action is $x_\varepsilon$.
+Proof in \S\ref{proof:hp_probe_realizability}.
 
-\emph{Hard-projection score.}
-Since $\widehat{P} = uu^\top$ and $u^\top\theta = S_w\cos\alpha$:
-\[
-x_\varepsilon^\top \widehat{P}\theta
-= (x_\varepsilon^\top u)(u^\top\theta)
-= \frac{R_{\cA} S_w}{\sqrt{1+a^2}}(a\cos\alpha - \sin\alpha)\cos\alpha.
-\]
-Substituting $a = \frac{1}{2}\tan\alpha$:
-\[
-a\cos\alpha - \sin\alpha = \tfrac{1}{2}\sin\alpha - \sin\alpha = -\tfrac{1}{2}\sin\alpha,
-\]
-so $x_\varepsilon^\top \widehat{P}\theta = -\frac{1}{2}\frac{R_{\cA} S_w}{\sqrt{1+a^2}}\sin\alpha\cos\alpha < 0$.
-Since $0^\top \widehat{P}\theta = 0$, the scoring rule selects $0$.
+\begin{lemma}[Linear exploitation loss on the fixed family]
+\label{lem:hp_linear_loss}
+There exists a constant $c_{\mathrm{lin}} > 0$ such that for all sufficiently small $\varepsilon$:
+under $\nu_1$, a hard-projection score-maximizer using the wrong projector $P_2$ incurs per-round expected regret at least $c_{\mathrm{lin}} R_{\cA} \sqrt{\lambda}\, \varepsilon$;
+under $\nu_2$, a hard-projection score-maximizer using the wrong projector $P_1$ incurs per-round expected regret at least $c_{\mathrm{lin}} R_{\cA} \sqrt{\lambda}\, \varepsilon$.
+\end{lemma}
 
-\emph{Regret.}
-The chosen action has true reward $0$; the optimal action has reward $x_\varepsilon^\top\theta = R_{\cA} S_w\, a/\sqrt{1+a^2} \ge c_{\mathrm{hp}} R_{\cA} S_w \varepsilon$ for a constant $c_{\mathrm{hp}} > 0$ and all sufficiently small $\varepsilon$.
-\end{proof}
+Proof in \S\ref{proof:hp_linear_loss}.
 
-\begin{remark}[Scope of Lemma~\ref{lem:hard_projection_linear_loss}]
-\label{rem:hard_projection_scope}
-Lemma~\ref{lem:hard_projection_linear_loss} shows that the linear-in-$\varepsilon$ loss condition in Theorem~\ref{thm:probe_rate_lb} is genuinely realized by hard-projection scoring on a bounded-action instance.
-It does not by itself prove the minimax lower bound of Theorem~\ref{thm:probe_rate_lb}, because the latter additionally requires coupling this linear-loss mechanism to the subspace-recovery lower bound of Theorem~\ref{thm:minimax_subspace_recovery} over a common lower-bound family.
-\end{remark}
+\begin{lemma}[Probe indistinguishability on the fixed family]
+\label{lem:hp_probe_kl}
+There exists $C_{\mathrm{KL}} > 0$ such that $\KL(\nu_1^{(m)} \| \nu_2^{(m)}) \le C_{\mathrm{KL}}\, m\, \varepsilon^2$.
+Choosing $\varepsilon = \kappa/\sqrt{m}$ with $\kappa > 0$ sufficiently small implies that any procedure identifying the correct environment makes an error with probability at least a fixed constant $c_{\mathrm{err}} > 0$.
+\end{lemma}
+
+Proof in \S\ref{proof:hp_probe_kl}.
 
 \begin{remark}[The $\varepsilon$ vs.\ $\varepsilon^2$ resolution]
 \label{rem:eps_gap_resolved}
-Theorem~\ref{thm:sqrt_ct_all} uses the information-theoretic $\Omega(\varepsilon^2)$ per-round cost, yielding $\Omega(\sqrt{cT})$.
-Theorem~\ref{thm:probe_rate_lb} uses the $\Omega(\varepsilon)$ per-round cost inherent to projected exploitation, yielding $\Omega(c^{1/3}T^{2/3})$, which matches the upper bound in Theorem~\ref{thm:closed_dynamic_regret}.
-Lemma~\ref{lem:hard_projection_linear_loss} provides a concrete construction showing that hard-projection scoring realizes this linear-in-$\varepsilon$ loss on a bounded-action instance.
-Whether an algorithm operating in the full ambient space can achieve $O(\varepsilon^2)$ per-round overhead remains open.
+Theorem~\ref{thm:sqrt_ct_all} uses the information-theoretic $\Omega(\varepsilon^2)$ per-round cost (via $1 - \cos\alpha \sim \alpha^2/2$), yielding $\Omega(\sqrt{cT})$ for all policies.
+Theorem~\ref{thm:probe_rate_lb} exploits the $\Omega(\varepsilon)$ per-round loss that arises specifically for hard-projection score-maximizing policies (Lemma~\ref{lem:hp_linear_loss}), yielding $\Omega(c^{1/3}T^{2/3})$, which matches the upper bound in Theorem~\ref{thm:closed_dynamic_regret}.
+Whether a broader projected-exploitation class, or algorithms operating in the full ambient space, can achieve $O(\sqrt{cT})$ total regret remains open.
 \end{remark}
 
 \begin{remark}[Matching upper bound]
-SPSC achieves $\widetilde{O}(\sqrt{rT}) + \widetilde{O}(c^{1/3}T^{2/3}) + O(V)$ via projected exploitation with $m \asymp (T/c)^{2/3}$ probes per segment.  Theorem~\ref{thm:probe_rate_lb} shows that the $c^{1/3}T^{2/3}$ term is tight for projected-exploitation policies satisfying the linear-in-$\varepsilon$ loss condition.
+SPSC achieves $\widetilde{O}(\sqrt{rT}) + \widetilde{O}(c^{1/3}T^{2/3}) + O(V)$ via projected exploitation with $m \asymp (T/c)^{2/3}$ probes per segment.  Theorem~\ref{thm:probe_rate_lb} shows that the $c^{1/3}T^{2/3}$ term is tight for the hard-projection score-maximizing class.
+\end{remark}
+
+\begin{remark}[Scope of the sharp lower bound]
+\label{rem:sharp_lb_scope}
+Theorem~\ref{thm:probe_rate_lb} fully closes the probe-cost lower bound for the hard-projection score-maximizing class of Definition~\ref{def:hard_projection_policy_class}.
+It does not claim the same unconditional $\Omega(c^{1/3}T^{2/3})$ lower bound for every possible projected-exploitation policy, nor for algorithms that operate directly in the ambient space without committing to a projected score representation.
 \end{remark}
 
 \subsection{Optimal Probe Allocation Across Segments}
@@ -3531,47 +3537,97 @@ cm + \frac{\beta T}{m} \ge 2\sqrt{c\beta T}.
 Setting $c_3 := 2\sqrt{\beta} = c_1\sqrt{S_w L_x}$ completes the proof.
 \end{proof}
 
+\subsubsection{Proof of Lemma~\ref{lem:hp_probe_realizability}}
+\label{proof:hp_probe_realizability}
+
+\begin{proof}
+Since $Q_\varepsilon$ is uniform on $\{\pm x_1, \pm x_2\}$ and $(-x)(-x)^\top = xx^\top$:
+$\E_{Q_\varepsilon}[uu^\top] = \frac{1}{2}x_1 x_1^\top + \frac{1}{2}x_2 x_2^\top$.
+At $\varepsilon = 0$, $x_1 = R_{\cA}(\frac{1}{2}, 0)$ and $x_2 = R_{\cA}(\frac{1}{2}, \frac{1}{2})$, giving
+\[
+\frac{1}{R_{\cA}^2}\E_{Q_0}[uu^\top]
+= \begin{pmatrix} \frac{1}{4} & \frac{1}{8} \\[2pt] \frac{1}{8} & \frac{1}{8} \end{pmatrix},
+\]
+whose minimum eigenvalue is $(3-\sqrt{5})/16 > 0$.
+By continuity of eigenvalues, for all $\varepsilon \in (0, \varepsilon_0]$ with $\varepsilon_0$ sufficiently small, there exists $\rho_0 > 0$ such that $\E_{Q_\varepsilon}[uu^\top] \succeq \rho_0 I_2$.
+Each action has norm $\|x_1\| = R_{\cA}/2 \le R_{\cA}$ and $\|x_2\|^2 = R_{\cA}^2[(1/2 - \varepsilon/4)^2 + 1/4] \le R_{\cA}^2$ for small $\varepsilon$.
+\end{proof}
+
+\subsubsection{Proof of Lemma~\ref{lem:hp_linear_loss}}
+\label{proof:hp_linear_loss}
+
+\begin{proof}
+We prove the first claim (under $\nu_1$ with wrong projector $P_2$); the second is symmetric.
+
+Under $\nu_1$, $\theta = w e_1$ with $w \sim \mathcal{N}(0, \lambda)$.  The true rewards are
+$x_1^\top\theta = R_{\cA} w/2$ and $x_2^\top\theta = R_{\cA}(1/2 - \varepsilon/4)w$.
+Since $1/2 > 1/2 - \varepsilon/4$, for $w > 0$ the true best action is $x_1$, and the optimal reward is $R_{\cA}|w|/2$.
+
+Under wrong projector $P_2 = uu^\top$ with $u = (\cos\alpha, \sin\alpha)$ and $u^\top\theta = w\cos\alpha$, the hard-projection scores are
+$x_i^\top P_2\theta = (x_i^\top u)(u^\top\theta)$.
+Computing:
+\[
+x_1^\top u = \tfrac{R_{\cA}}{2}\cos\alpha, \qquad
+x_2^\top u = R_{\cA}\bigl[(\tfrac{1}{2} - \tfrac{\varepsilon}{4})\cos\alpha + \tfrac{1}{2}\sin\alpha\bigr].
+\]
+The score difference is
+\[
+x_2^\top P_2\theta - x_1^\top P_2\theta
+= R_{\cA}\cos\alpha\bigl(\tfrac{1}{2}\sin\alpha - \tfrac{\varepsilon}{4}\cos\alpha\bigr)w.
+\]
+Since $\sin\alpha = \varepsilon$, the parenthetical factor equals $\varepsilon(\frac{1}{2} - \frac{1}{4}\cos\alpha) \ge \varepsilon/4$ for sufficiently small $\alpha$.
+Hence for $w > 0$, the scorer prefers $x_2$ over $x_1$ (and for $w < 0$, it prefers $-x_2$ over $-x_1$).
+The per-round regret is therefore
+\[
+\frac{R_{\cA}}{2}|w| - R_{\cA}\bigl(\tfrac{1}{2} - \tfrac{\varepsilon}{4}\bigr)|w|
+= \frac{R_{\cA}\varepsilon}{4}|w|.
+\]
+Taking expectation: $\E[\frac{R_{\cA}\varepsilon}{4}|w|] = \frac{R_{\cA}\varepsilon}{4}\sqrt{2\lambda/\pi} \ge c_{\mathrm{lin}} R_{\cA}\sqrt{\lambda}\,\varepsilon$.
+\end{proof}
+
+\subsubsection{Proof of Lemma~\ref{lem:hp_probe_kl}}
+\label{proof:hp_probe_kl}
+
+\begin{proof}
+On a probe round with action $q_t \sim Q_\varepsilon$, under $\nu_j$: $y_t \mid q_t \sim \mathcal{N}(0, \sigma_\varepsilon^2 + \lambda(q_t^\top b_j)^2)$.
+Let $v_j(q) := \sigma_\varepsilon^2 + \lambda(q^\top b_j)^2$.  Then
+$|v_1(q) - v_2(q)| = \lambda|q^\top(P_1 - P_2)q| \le \lambda R_{\cA}^2\varepsilon$.
+For centered Gaussians,
+$\KL(\mathcal{N}(0, v_1) \| \mathcal{N}(0, v_2)) \le (v_1 - v_2)^2/(2\sigma_\varepsilon^4)$.
+Each probe contributes at most $C_0\varepsilon^2$ KL, so $\KL(\nu_1^{(m)} \| \nu_2^{(m)}) \le C_{\mathrm{KL}} m\varepsilon^2$.
+Choosing $\varepsilon = \kappa/\sqrt{m}$ makes the KL bounded by $C_{\mathrm{KL}}\kappa^2$; Le~Cam's method gives error probability $\ge c_{\mathrm{err}} > 0$.
+\end{proof}
+
 \subsubsection{Proof of Theorem~\ref{thm:probe_rate_lb}}
 \label{proof:probe_rate_lb}
 
 \begin{proof}
-The proof follows the same probe-cost tradeoff structure as Theorem~\ref{thm:sqrt_ct_all}, but with the stronger per-round regret scaling that holds for projected-exploitation policies.
+Fix a hard-projection score-maximizing policy $\pi \in \Pi_{\mathrm{HP}}$ using $m$ probe rounds.
 
-\textbf{Per-round cost of subspace error.}
-By hypothesis, when the subspace projector estimate satisfies $\|\widehat{P} - P^\star\|_{\op} = \varepsilon$, each exploitation round incurs expected regret at least $\mu\varepsilon$.  This linear-in-$\varepsilon$ scaling arises because exploitation in the learned subspace requires projecting actions onto $\range(\widehat{P})$, and the projection introduces an $O(\varepsilon)$ per-round bias.  Specifically, for any action $x$ with $\|x\| \le L_x$ and any $\theta_t$ with $\|\theta_t\| \le S_w$:
-\[
-|x^\top(\widehat{P} - P^\star)\theta_t| \le \|x\| \cdot \|\widehat{P} - P^\star\|_{\op} \cdot \|\theta_t\| \le L_x S_w \varepsilon.
-\]
-This bias cannot be eliminated by any exploitation strategy that uses the estimated subspace for dimensionality reduction, because the policy has no access to the signal component in directions $\range(P^\star) \setminus \range(\widehat{P})$.
+\textbf{Probe indistinguishability.}
+By Lemma~\ref{lem:hp_probe_kl}, choosing $\varepsilon = \kappa/\sqrt{m}$ for $\kappa > 0$ sufficiently small ensures that $\pi$ identifies the correct environment in $\mathcal{M}_{\mathrm{HP}}$ with error probability at least $c_{\mathrm{err}} > 0$.
+The action set $\cA_\varepsilon$ satisfies Assumption~\ref{assum:probe_realizability} by Lemma~\ref{lem:hp_probe_realizability}.
 
-\textbf{Substitution of minimax rate.}
-By Theorem~\ref{thm:minimax_subspace_recovery}, after $m$ probes, $\sup_\nu \E_\nu[\|\widehat{P} - P^\star\|_{\op}] \ge c_1/\sqrt{m}$.  The exploitation regret over $T - m$ rounds is therefore at least
+\textbf{Exploitation regret under wrong projection.}
+Whenever $\pi$ exploits with the wrong projector, Lemma~\ref{lem:hp_linear_loss} gives per-round expected regret at least $c_{\mathrm{lin}} R_{\cA}\sqrt{\lambda}\,\varepsilon$.  Over $T - m$ exploitation rounds:
 \[
-\mu \cdot \frac{c_1}{\sqrt{m}} \cdot (T - m).
+\sup_{\nu \in \mathcal{M}_{\mathrm{HP}}} \E_\nu^\pi[\text{exploitation regret}]
+\ge c_{\mathrm{err}}(T - m) c_{\mathrm{lin}} R_{\cA}\sqrt{\lambda}\,\varepsilon.
 \]
 
-\textbf{Optimization over $m$.}
-Setting $\gamma := \mu c_1$, the total costed regret satisfies
+\textbf{Substitution and optimization.}
+Substituting $\varepsilon = \kappa/\sqrt{m}$ and setting $C_1 := c_{\mathrm{err}} c_{\mathrm{lin}} R_{\cA}\sqrt{\lambda}\,\kappa$:
 \[
-\sup_\nu \E_\nu^\pi[\DynReg_T^{(c)}] \ge cm + \frac{\gamma(T - m)}{\sqrt{m}}.
+\sup_{\nu} \E_\nu^\pi[\DynReg_T^{(c)}]
+\ge cm + C_1\frac{T - m}{\sqrt{m}}
+\ge cm + \frac{C_1}{2}\frac{T}{\sqrt{m}}
 \]
-For $m \le T/2$, this is at least $cm + \gamma T / (2\sqrt{m})$.  Taking the derivative with respect to $m$ and setting it to zero:
+for $m \le T/2$.  Setting $c - C_1 T/(4m^{3/2}) = 0$ gives $m^\star = (C_1 T/(4c))^{2/3}$.  Substituting:
 \[
-c - \frac{\gamma T}{4m^{3/2}} = 0
-\quad \Longrightarrow \quad
-m^\star = \left(\frac{\gamma T}{4c}\right)^{2/3}.
+cm^\star + \frac{C_1 T}{2\sqrt{m^\star}} = \frac{3}{2}\left(\frac{C_1}{4}\right)^{2/3} c^{1/3} T^{2/3}.
 \]
-Substituting $m^\star$ back into the lower bound:
-\begin{align}
-cm^\star + \frac{\gamma T}{2\sqrt{m^\star}}
-&= c\left(\frac{\gamma T}{4c}\right)^{2/3} + \frac{\gamma T}{2}\left(\frac{4c}{\gamma T}\right)^{1/3} \notag \\
-&= \frac{(\gamma T)^{2/3}}{(4)^{2/3}\, c^{-1/3}} \cdot c + \frac{\gamma T}{2} \cdot \frac{(4c)^{1/3}}{(\gamma T)^{1/3}} \notag \\
-&= \frac{(\gamma)^{2/3}}{4^{2/3}} c^{1/3} T^{2/3} + \frac{(4)^{1/3}}{2} (\gamma)^{2/3} c^{1/3} T^{2/3} \notag \\
-&= \frac{3}{2}\left(\frac{\gamma}{4}\right)^{2/3} c^{1/3} T^{2/3}. \label{eq:probe_rate_lb_final}
-\end{align}
-It remains to verify $m^\star \le T/2$: since $m^\star = (\gamma T/(4c))^{2/3}$ and $\gamma, c$ are constants, $m^\star = o(T)$ for $T$ sufficiently large.
-
-Setting $c_4 := \frac{3}{2}(\gamma/4)^{2/3} = \frac{3}{2}(\mu c_1/4)^{2/3}$ completes the proof.
+For $m > T/2$, probe cost alone exceeds $cT/2 \ge c_4 c^{1/3}T^{2/3}$ for large $T$.
+Setting $c_4 := \frac{3}{2}(C_1/4)^{2/3}$ completes the proof.
 \end{proof}
 
 \subsubsection{Proof of Theorem~\ref{thm:optimal_allocation}}
