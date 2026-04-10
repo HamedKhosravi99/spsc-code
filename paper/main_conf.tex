@@ -91,8 +91,8 @@
   $\widetilde{O}(d\sqrt{T})$.
   We study the fundamental question of \emph{when and how} a changing $r$-dimensional subspace ($r \ll d$) can be identified from
   single-play scalar feedback $y_t = x_t^\top\theta_t + \varepsilon_t$.
-  Under the standing latent excitation assumptions, we characterize the \emph{probe side identification boundary}: three
-  conditions (sub Gaussian noise with unknown variance estimated online, bounded state noise coupling, and full dimensional
+  Under the standing latent excitation assumptions, we characterize the \emph{probe-side identification boundary}: three
+  conditions (sub-Gaussian noise with unknown variance estimated online, bounded state--noise coupling, and full-dimensional
   probe coverage) are each sufficient and essentially necessary for subspace recovery.
   Under these conditions, each probe yields a quadratic measurement of the predictable second moment $\widetilde{M}_t$ with controlled bias,
   enabling recovery via a lifted matrix operator; complementary impossibility results show that removing \emph{any one} condition
@@ -581,7 +581,7 @@ Proofs are in Appendix~\ref{app:all_proofs} (\S\ref{proof:full_horizon_windowed}
   \end{equation}
   \end{theorem}
 
-  The three terms have clear roles: $\widetilde O(r\sqrt{T})$ is the projected exploitation cost in
+  The three terms have clear roles: $\widetilde O(r\sqrt{T})$ is the projected exploitation cost (vs.\ $\widetilde O(d\sqrt{T})$ in
   ambient space), $\widetilde O(T^{2/3})$ is the probe--subspace tradeoff, and $O(V)$ is the irreducible drift price.
 
   \emph{Window size in theory vs.\ practice.} The choice $W^\star = 1$ minimizes the worst-case bound under an adversarial within-segment variation argument. Under the autocorrelated LDS dynamics of Assumption~\ref{assum:latent_dynamics}, however, the effective local variation is much smaller than the worst case, so larger windows reduce statistical error without inflating the drift term. All experiments use $W \in [100, 400]$; the probe-rate ablation in Appendix~\ref{app:probe_ablation} confirms a U-shaped tradeoff with the optimum near $W = 100$.
@@ -710,7 +710,7 @@ m_{\mathrm{relearn}}
     \end{tabular}
     \end{table}
 
-    \paragraph{Experiment 3: Approximate low rank (Theorem~\ref{thm:closed_dynamic_regret_general}).}
+    \paragraph{Experiment 3: Approximate low-rank (Theorem~\ref{thm:closed_dynamic_regret_general}).}
     On warfarin dose selection (Appendix~\ref{app:warfarin}), SPSC reduces regret by
     $26$ to $32\%$ vs.\ all nonstationary baselines at every tested rank. The data is only \emph{approximately} low rank
   (subspace error
@@ -740,9 +740,9 @@ m_{\mathrm{relearn}}
 \section{Conclusion}
 \label{sec:conclusion}
 
-We characterize the \emph{probe side identification boundary} for recovering a changing low rank subspace from single play
+We characterize the \emph{probe-side identification boundary} for recovering a changing low-rank subspace from single-play
    scalar feedback: under standing latent excitation and stability conditions, three conditions (unknown variance estimated
-  online, bounded state noise coupling, full dimensional coverage) are each necessary, and their joint satisfaction enables
+  online, bounded state--noise coupling, full-dimensional coverage) are each necessary, and their joint satisfaction enables
   quadratic measurements of the predictable second moment with controlled bias.
 Building on this, SPSC achieves $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ costed dynamic regret; an adaptive variant removes oracle segment boundaries.
 Experiments confirm regret reductions over all nonstationary baselines on real data when $d/r$ is large.
@@ -992,7 +992,7 @@ The probe-side conditions in Assumption~\ref{assum:probe_noise} are stated in th
 \label{app:related_table}
 
 \begin{table*}[!htpb]
-\caption{Comparison of our work with related literature. ``Prob.'' indicates whether a probabilistic regret bound is provided; ``CP?'' indicates whether change-point adaptation is addressed.}
+\caption{Comparison of our work with related literature. ``Prob.'' indicates whether the work provides a high-probability regret bound (Y), an expectation-only bound (N), or only probabilistic estimation guarantees rather than regret bounds ($-$); ``CP?'' indicates whether change-point adaptation is addressed.}
 \centering
 \footnotesize
 \setlength{\tabcolsep}{3pt}
@@ -1018,7 +1018,7 @@ The probe-side conditions in Assumption~\ref{assum:probe_noise} are stated in th
 & Y & N & Stationary; probing not budgeted. \\
 \cite{stojanovic2023spectral} & NeurIPS'23 &
 Entry-wise / subspace recovery
-& N/Y & N & Emphasizes estimation; no probe-budget. \\
+& $-$ & N & Estimation guarantees only; no regret bound or probe-budget. \\
 \cite{pmlr-v235-jedra24a} & ICML'24 &
 \makecell[l]{$\tilde O\!\left(r^{5/4}(m+n)^{3/4}\sqrt{T}\right)$}
 & Y & N & Stationary; lacks re-learning. \\
@@ -1047,6 +1047,10 @@ Fixed-confidence sample complexity
 \cite{memmel2024asid} & ICLR'24 &
 Fisher-information exploration
 & Y & N & Control/system ID; not bandits. \\
+\midrule
+\textbf{SPSC (ours)} & --- &
+\makecell[l]{$\widetilde O\!\left(r\sqrt{T}\right) + \widetilde O\!\left(c^{1/3}T^{2/3}\right) + O(V)$}
+& \textbf{Y} & \textbf{Y} & --- \\
 \bottomrule
 \end{tabularx}
 
@@ -1098,7 +1102,7 @@ Nonstationary representation learning
 
 \begin{table}[!htpb]
 \caption{Regret scaling comparison with published baselines.
-SPSC is the only method that simultaneously handles non-stationarity (piecewise-changing subspace),
+SPSC is the only method that simultaneously handles nonstationarity (piecewise-changing subspace),
 unknown subspace (learned online), and explicit probe-cost accounting.}
 \centering
 \small
@@ -1109,9 +1113,9 @@ Algorithm & Reference & Regret scaling & Key difference vs.\ SPSC \\
 LinUCB          & \cite{li2010contextual}       & $O(d\sqrt{T})$        & No subspace exploitation \\
 LowOFUL         & \cite{jun2019bilinear}        & $O(r\sqrt{T})$        & Requires known subspace $B$ \\
 LowESTR         & \cite{lu2021lowrank}              & $O(r\sqrt{T})$        & Stationary; learns $B$ from rewards \\
-VOFUL           & \cite{cesabianchi2023colt}     & $O(\sqrt{rdT})$       & Non-stationary; no explicit probing \\
+VOFUL           & \cite{cesabianchi2023colt}     & $O(\sqrt{rdT})$       & Nonstationary; no explicit probing \\
 \midrule
- SPSC (ours) & This work & $\widetilde O(r\sqrt{T} + c^{1/3}T^{2/3})$ & Non-stationary; learns $B$ via probing \\
+ SPSC (ours) & This work & $\widetilde O(r\sqrt{T} + c^{1/3}T^{2/3})$ & Nonstationary; learns $B$ via probing \\
 \bottomrule
 \end{tabular}
 
@@ -1660,7 +1664,7 @@ Proposition~\ref{prop:nonid_c} shows failure even with known variance and bounde
 
 \paragraph{Structural justification: the role of probing.}
 In a static setting, passive methods can eventually learn the subspace from exploitation data alone.
-However, in our piecewise non-stationary setting, the subspace changes at each change point, invalidating all previously learned structure.
+However, in our piecewise-stationary setting, the subspace changes at each change point, invalidating all previously learned structure.
 Deployed actions chosen for exploitation tend to align with the learner's current (now outdated) estimate, collapsing into a restricted proper subspace $S \subset \R^d$.
 Proposition~\ref{prop:nonid_c} shows that measurements confined to $S$ cannot identify the new subspace.
 Assumption~\ref{assum:probe_realizability} resolves this by guaranteeing full-dimensional probe coverage.
