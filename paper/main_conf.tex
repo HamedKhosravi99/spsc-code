@@ -581,7 +581,7 @@ Proofs are in Appendix~\ref{app:all_proofs} (\S\ref{proof:full_horizon_windowed}
   \end{equation}
   \end{theorem}
 
-  The three terms have clear roles: $\widetilde O(r\sqrt{T})$ is the projected exploitation cost (vs.\ $\widetilde O(d\sqrt{T})$ in
+  The three terms have clear roles: $\widetilde O(r\sqrt{T})$ is the projected exploitation cost in
   ambient space), $\widetilde O(T^{2/3})$ is the probe--subspace tradeoff, and $O(V)$ is the irreducible drift price.
 
   \emph{Window size in theory vs.\ practice.} The choice $W^\star = 1$ minimizes the worst-case bound under an adversarial within-segment variation argument. Under the autocorrelated LDS dynamics of Assumption~\ref{assum:latent_dynamics}, however, the effective local variation is much smaller than the worst case, so larger windows reduce statistical error without inflating the drift term. All experiments use $W \in [100, 400]$; the probe-rate ablation in Appendix~\ref{app:probe_ablation} confirms a U-shaped tradeoff with the optimum near $W = 100$.
