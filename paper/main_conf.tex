@@ -662,7 +662,7 @@ m_{\mathrm{relearn}}
   (Appendix~\ref{app:warfarin}).
   Setup details are in Appendix~\ref{app:synthetic_setup}.
 
-  \paragraph{Choice of baselines.} The primary competitors are nonstationary linear bandits in the ambient $d$-dimensional space (D-LinUCB, SW-LinUCB, Restart-LinUCB), which are the state of the art for the setting SPSC targets: changing reward parameters under bounded scalar feedback. Oracle-LinUCB (with the true subspace) provides a performance ceiling. We do \emph{not} include restarted versions of recent stationary low-rank methods (e.g., \citet{pmlr-v235-jedra24a, pmlr-v235-jang24e}) because they assume richer feedback models (bilinear/full-vector observations) or stationary representations, and a naive restart wrapper would not be apples-to-apples in our single-play scalar-feedback setting; Appendix~\ref{app:related_table} discusses this in detail.
+  \paragraph{Choice of baselines.} The primary competitors are nonstationary linear bandits in the ambient $d$-dimensional space (D-LinUCB, SW-LinUCB, Restart-LinUCB), which are the state of the art for the setting SPSC targets: changing reward parameters under bounded scalar feedback. Oracle-LinUCB (with the true subspace) provides a performance ceiling. We do \emph{not} include restarted versions of recent stationary low-rank methods (e.g., \citet{pmlr-v235-jedra24a, pmlr-v235-jang24e}) because they assume richer feedback models or stationary representations, and a naive restart wrapper would not be apples-to-apples in our single-play scalar-feedback setting; Appendix~\ref{app:related_table} discusses this in detail.
 
   \paragraph{Experiment 1: Phase transition (Theorems~\ref{thm:closed_dynamic_regret},~\ref{thm:ambient_regret}).}
   Figure~\ref{fig:synthetic-phase} shows the SPSC/LinUCB regret ratio over a broad $(d,r)$ grid. The empirical crossover boundary
@@ -721,7 +721,7 @@ m_{\mathrm{relearn}}
     is $3.3$ to $3.6\%$.
     A random subspace ablation (Appendix~\ref{app:warfarin_ablation}) decomposes the source of the gain: roughly half comes
   from
-    dimensionality reduction ($\sqrt{r}$ vs.\ $\sqrt{d}$ confidence radius) and the other half from the learned subspace,
+    dimensionality reduction ($\sqrt{r}$ vs.\ $\sqrt{d}$) and the other half from the learned subspace,
   which
     retains $2$ to $6\times$ more signal variance than random projection.
 
@@ -750,8 +750,6 @@ Experiments confirm regret reductions over all nonstationary baselines on real d
 
 
 
-\paragraph{Broader impact and future work.}
-This work is primarily theoretical, applicable to recommendation, pricing, and control. The $\Omega(c^{1/3}T^{2/3})$ lower bound (Theorem~\ref{thm:probe_rate_lb}) unconditionally matches the upper bound for hard-projection score-maximizing policies; the remaining open question is whether broader policy classes or ambient-space algorithms can achieve $O(\sqrt{cT})$. Other directions include unknown rank $r$ and time-varying transition matrices.
 
 \newpage
 \bibliographystyle{plainnat}
@@ -983,6 +981,9 @@ The probe-side conditions in Assumption~\ref{assum:probe_noise} are stated in th
   (Table~\ref{tab:covertype_main}), confirming that condition~\eqref{eq:regime_condition} is predictive at finite $T$.
   \end{itemize}
   \end{remark}
+
+\paragraph{Broader impact and future work.}
+This work is primarily theoretical, applicable to recommendation, pricing, and control. The $\Omega(c^{1/3}T^{2/3})$ lower bound (Theorem~\ref{thm:probe_rate_lb}) unconditionally matches the upper bound for hard-projection score-maximizing policies; the remaining open question is whether broader policy classes or ambient-space algorithms can achieve $O(\sqrt{cT})$. Other directions include unknown rank $r$ and time-varying transition matrices.
 
 
 %% ============================================================
