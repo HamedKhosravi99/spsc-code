@@ -85,23 +85,26 @@
 %% ============================================================
 
 \begin{abstract}
-  We characterize probe-side conditions under which a changing $r$-dimensional subspace ($r \ll d$, where $d$ is the ambient dimension) is identifiable from
-  single-play scalar feedback $y_t = x_t^\top\theta_t + \varepsilon_t$ under an explicit per-probe cost $c > 0$, and prove
-  matching upper and lower bounds of order
-  $\widetilde{\Theta}(r\sqrt{T} + c^{1/3}T^{2/3})$ within a projected-exploitation policy class---the class containing all known algorithms for this problem.
-  Our first result identifies an identification boundary for the single-play scalar-feedback model: three probe-side conditions
-  (sub-Gaussian noise with online variance estimation, bounded state--noise coupling, and full-dimensional probe coverage) are
-  each individually necessary---with formal impossibility results for every violation
-  (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c})---and jointly sufficient for subspace recovery via a lifted matrix
-  operator (Propositions~\ref{prop:quad}--\ref{prop:lifted_probe_unbiased}).
-  Our second result is \emph{Single-Play Subspace-Calibrated Optimism} (SPSC), which achieves
-  $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ costed dynamic regret under piecewise-stationary
-  low-rank rewards---replacing the ambient $\widetilde{O}(d\sqrt{T})$ dependence with intrinsic rank~$r$---with an
-  adaptive variant that detects change points without oracle boundaries at no asymptotic cost.
-  Our third result is a matching $\Omega(c^{1/3}T^{2/3})$ lower bound within the projected-exploitation class, showing
-  that the probe--subspace tradeoff is sharp in that class.
-  Experiments on synthetic and real-data benchmarks are consistent with the predicted phase-transition boundary $d - r \asymp T^{1/6}$ and show
-  6--38\% regret reductions over ambient-space baselines in the high-dimensional low-rank regime, including clinical dosing.
+  Low-rank structure enables sample-efficient sequential decision-making when the reward parameter
+  $\theta_t \in \R^d$ lies in an $r$-dimensional subspace ($r \ll d$), but existing methods either
+  require a fixed, known representation or pay the full ambient cost $\widetilde{O}(d\sqrt{T})$.
+  When the subspace changes across $K$ segments and the learner receives only a single scalar
+  $y_t = x_t^\top\theta_t + \varepsilon_t$ per round, recovering the active subspace from such
+  projections is a non-trivial identification problem, and each probe round used for subspace
+  sensing incurs an explicit cost $c > 0$.
+  We characterize a sharp identification boundary for this problem: three probe-side conditions
+  (sub-Gaussian noise with online variance estimation, bounded state--noise coupling, and
+  full-dimensional probe coverage) are each individually necessary---with formal impossibility
+  results for every violation (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c})---and jointly
+  sufficient for subspace recovery via a lifted matrix operator.
+  Building on this, we propose \emph{Single-Play Subspace-Calibrated Optimism} (SPSC), which
+  achieves $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ costed dynamic regret---replacing
+  the ambient $d\sqrt{T}$ dependence with intrinsic rank $r$---and prove a matching
+  $\Omega(c^{1/3}T^{2/3})$ lower bound on the probe--subspace tradeoff term within the
+  projected-exploitation policy class, the class containing all known algorithms for this problem.
+  Experiments on synthetic and real-data benchmarks including clinical dosing are consistent with
+  the predicted phase-transition boundary $d - r \asymp T^{1/6}$ and show 6--38\% regret
+  reductions over ambient-space baselines.
   \end{abstract}
 %% ============================================================
 %%  1. INTRODUCTION
@@ -259,26 +262,23 @@ Table~\ref{tab:related_work_main} summarizes the main distinction in the paper b
 
 \paragraph{Low-rank and representation-structured bandits.}
 In the stationary setting $\theta_t = \theta \in \R^d$ with $\rank(\Theta) = r$,
-Recent work achieves tighter rates via explore-then-refine~\citep{kang2022gestt}, two-to-infinity recovery~\citep{pmlr-v235-jedra24a}, optimal experimental design~\citep{pmlr-v235-jang24e}, and spectral methods~\citep{stojanovic2023spectral}. All assume a \emph{fixed} representation $B^\star$---none handle changing segment-wise representations that must be re-identified online.
+recent work~\citep{kang2022gestt, pmlr-v235-jedra24a, pmlr-v235-jang24e, stojanovic2023spectral} achieves tighter rates via explore-then-refine, two-to-infinity recovery, optimal design, and spectral methods. All assume a \emph{fixed} $B^\star$---none handle changing representations that must be re-identified online.
 
 \paragraph{Nonstationary and piecewise-stationary bandits.}
-When the reward parameter $\theta_t$ varies over time, dynamic-regret analyses bound
-$\sum_t (\max_x x^\top\theta_t - x_t^\top\theta_t)$ in terms of the variation budget $V_T := \sum_t \|\theta_{t+1} - \theta_t\|$ or the number of switches $K$.
-Sliding-window LinUCB~\citep{russac2019weighted} and discounted methods~\citep{cheung2019learning} achieve $\widetilde O(d^{2/3}V_T^{1/3}T^{1/3})$; \citet{abbasi2023dynamic} give $\widetilde O(\sqrt{KdT})$ for piecewise-stationary $K$-armed bandits; and \citet{hou2024pslb} study best-arm identification under piecewise stationarity. Their regret scales with $d$, not $r$---because they do not recover or exploit a latent low-rank representation.
+Dynamic-regret analyses bound regret in terms of the variation $V_T$ or the number of switches $K$.
+Sliding-window and discounted methods~\citep{russac2019weighted, cheung2019learning} achieve $\widetilde O(d^{2/3}V_T^{1/3}T^{1/3})$; \citet{abbasi2023dynamic} give $\widetilde O(\sqrt{KdT})$; \citet{hou2024pslb} study piecewise-stationary best-arm identification. All scale with $d$, not $r$---none exploit a latent low-rank representation.
 
 \paragraph{Active information acquisition and probing.}
-In costly-observation bandits, the learner pays $c$ per observed reward:
-\citet{seldin2014paid} study label-efficient prediction, \citet{tucker2023costly} prove $\Omega(c^{1/3}T^{2/3})$ lower bounds for $K$-armed bandits with costly observations, and \citet{elumar2025costly} analyze multi-armed bandits with costly probes.
-Active query models~\citep{sekhari2023contextual} and system-identification methods~\citep{memmel2024asid} also study exploration under cost constraints.
+In costly-observation bandits~\citep{seldin2014paid, tucker2023costly, elumar2025costly}, the learner pays $c$ per observed reward; active query~\citep{sekhari2023contextual} and system-identification~\citep{memmel2024asid} methods also study exploration under cost.
 Our setting differs structurally: probing must support \emph{identification of a changing low-rank subspace} $\range(B_k^\star)$ from single-play scalar feedback $y_t \in \R$, not merely estimation of a fixed parameter.
-The interaction between the probe cost $c|\cTprobe|$ and the subspace estimation rate $O(1/\sqrt{m})$ creates the $\widetilde O(T^{2/3})$ tradeoff term that is absent in stationary low-rank or unstructured nonstationary settings.
+The interaction between probe cost $c|\cTprobe|$ and the subspace estimation rate $O(1/\sqrt{m})$ creates the $\widetilde O(T^{2/3})$ tradeoff absent in stationary low-rank or unstructured nonstationary settings.
 
-\paragraph{The gap this work fills.}
+\paragraph{The setting this work addresses.}
 To the best of our knowledge, no prior work simultaneously achieves:
 (i)~regret scaling with intrinsic rank $r$ rather than ambient dimension $d$;
 (ii)~adaptation to a \emph{changing} subspace without oracle segment boundaries;
 and (iii)~a regret criterion that explicitly accounts for the cost of acquiring subspace information.
-SPSC is the \emph{first algorithm} satisfying all three, and our identification boundary (\S\ref{sec:identification}) is the \emph{first formal characterization} of when (i)--(iii) are simultaneously achievable from single-play scalar feedback.
+SPSC is the first algorithm satisfying all three within the model studied here, and our identification boundary (\S\ref{sec:identification}) provides the first formal characterization---within this model---of when (i)--(iii) are simultaneously achievable from single-play scalar feedback.
 Table~\ref{tab:related_work_main} summarizes the positioning.
 
 
@@ -310,9 +310,7 @@ Within segment $k$, the latent state evolves according to a stable linear dynami
 \end{equation}
 where $A_k \in \R^{r \times r}$ is an unknown segment-specific transition matrix ($k = 1, \ldots, K$) and $\eta_{t-1} \in \R^r$ is a zero-mean innovation term.
 
-\paragraph{Structural conditions.}
-Our assumptions divide into two categories:
-\emph{standard bandit conditions} (Assumptions~\ref{assum:latent_dynamics}--\ref{assum:action_boundedness}, standard stability and boundedness conditions in linear and nonstationary bandit analyses) and \emph{probe-side identification conditions} (Assumptions~\ref{assum:probe_realizability}--\ref{assum:probe_noise}). Within the single-play scalar-feedback model studied here, the latter are necessary for identifiability: Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c} show that dropping any single probe-side condition destroys identifiability, and Theorem~\ref{thm:restricted_span_minimax_regret} shows that violations cause $\Omega(T)$ unavoidable regret for any algorithm. Assumptions~\ref{assum:latent_dynamics}--\ref{assum:action_boundedness} are needed for validity; Assumptions~\ref{assum:probe_realizability}--\ref{assum:probe_noise} are needed for subspace recovery and the sharper $r$-dependent rate.
+Our assumptions comprise \emph{standard bandit conditions} (Assumptions~\ref{assum:latent_dynamics}--\ref{assum:action_boundedness}) and \emph{probe-side identification conditions} (Assumptions~\ref{assum:probe_realizability}--\ref{assum:probe_noise}).
 
 \begin{assumption}[Latent-state stability and excitation]
 \label{assum:latent_dynamics}
@@ -360,14 +358,10 @@ On probe rounds $t\in \cTprobe$, where $x_t = u_t$:
 Within the model studied here, these are probe-side identification requirements, not generic modeling restrictions: each is provably necessary (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}), stated in a form that supports the identifiability argument, and the paper quantifies robustness to approximate violation (Theorem~\ref{thm:closed_dynamic_regret_general}). Their practical scope and formal necessity are discussed in Appendix~\ref{sec:discussion}.
 \begin{remark}[Online variance estimation at no asymptotic cost]
   \label{rem:burnin_free}
-  Dedicating the first $T^{2/3}$ probe rounds to estimating $\sigma_\varepsilon^2$ yields
-  $|\hat\sigma^2 - \sigma_\varepsilon^2| = O(T^{-1/3})$, absorbed into the existing $\widetilde{O}(T^{2/3})$ tradeoff term
-  (Theorem~\ref{thm:closed_dynamic_regret_general}).
-  For isotropic Gaussian probes the bias is a scaled identity $\widetilde{B} \approx \frac{\delta_\sigma}{2}I_d$, shifting
-  eigenvalues uniformly without corrupting eigenvectors (Proposition~\ref{prop:biased_measurement}).
+  Dedicating $T^{2/3}$ initial probes to variance estimation yields
+  $|\hat\sigma^2 - \sigma_\varepsilon^2| = O(T^{-1/3})$, absorbed into the existing $\widetilde{O}(T^{2/3})$ term
+  (Theorem~\ref{thm:closed_dynamic_regret_general}). For Gaussian probes the bias is a scaled identity, preserving eigenvectors (Proposition~\ref{prop:biased_measurement}; Appendix~\ref{app:concentration}).
   \end{remark}
-
-The concentration analysis requires bounded noise; the standard truncation argument is in Appendix~\ref{app:concentration}(Remark~\ref{rem:truncation}).
 
 
 
@@ -382,7 +376,7 @@ Performance is measured by the \emph{costed dynamic regret}
 where $c > 0$ is a known per-probe cost.
 The first term measures control loss relative to the instantaneous best action; the second prices information acquisition.
 
-\paragraph{Predictable second moment.} The central inferential target is the predictable second moment $\widetilde{M}_t := \E[\theta_t \theta_t^\top \mid \cH_{t-1}] = B_k^\star \E[w_t w_t^\top \mid \cH_{t-1}] (B_k^\star)^\top, \qquad t \in \cI_k.$ Its importance is that $\widetilde{M}_t$ encodes the active low-dimensional subspace through its range. At the segment level, define the probe-time average $\bar{M}_k^{\mathrm{probe}} := \frac{1}{m_k} \sum_{t \in \cT_k} \widetilde{M}_t.$ Here $\cT_k := \cTprobe \cap \cI_k$ denotes the probe rounds within segment $k$ and $m_k := |\cT_k|$ is their count. When the latent probe-time covariance has full rank $r$, this quantity identifies the active segment subspace.
+\paragraph{Predictable second moment.} The central inferential target is $\widetilde{M}_t := \E[\theta_t \theta_t^\top \mid \cH_{t-1}] = B_k^\star \E[w_t w_t^\top \mid \cH_{t-1}] (B_k^\star)^\top$ for $t \in \cI_k$, whose range encodes the active subspace. The probe-time average $\bar{M}_k^{\mathrm{probe}} := m_k^{-1} \sum_{t \in \cT_k} \widetilde{M}_t$ (where $\cT_k := \cTprobe \cap \cI_k$, $m_k := |\cT_k|$) identifies the segment subspace when the latent covariance has rank $r$.
 
 \begin{lemma}[Predictable probe-time excitation]\label{lem:probe_excitation}
 Under Assumption~\ref{assum:latent_dynamics}, for each segment $k$, $\lambda_r(\bar S_k^{\mathrm{probe}})\ge \lambda_{\min} > 0$ almost surely, where $\bar S_k^{\mathrm{probe}} := \frac{1}{m_k}\sum_{t\in \cT_k}\E[w_t w_t^\top \mid \cH_{t-1}]$. (The proof is given in Appendix~\ref{app:all_proofs} (\S\ref{proof:probe_excitation}).)
@@ -392,7 +386,7 @@ Under Assumption~\ref{assum:latent_dynamics}, for each segment $k$, $\lambda_r(\
 \begin{lemma}[Invertibility of the probe operator]\label{lem:K_invertible}
 Under Assumption~\ref{assum:probe_realizability}, if additionally the fourth-moment tensor of $Q$ is positive definite on $\R_{\mathrm{sym}}^{d\times d}$ (which holds, in particular, for the isotropic Gaussian and sphere probe distributions used throughout this paper), then the operator $\mathcal K(M):=\E[(u^\top M u)\,uu^\top], \qquad u\sim Q,$ is invertible on $\R_{\mathrm{sym}}^{d\times d}$, with $\|\mathcal K^{-1}\|_{\op} \le C_{\mathcal K}(\rho, L, d)$.
 \end{lemma}
-Here $C_{\mathcal K}(\rho, L, d)$ denotes an explicit constant depending on the probe covariance lower bound $\rho$, the probe norm bound $L$, and the ambient dimension $d$; for isotropic Gaussian probes $u \sim \mathcal{N}(0, I_d)$ truncated to $\|u\| \le L$, $C_{\mathcal K} \le 1$ (see Remark~\ref{rem:probe_design} in the appendix). The proof is given in Appendix~\ref{app:all_proofs} (\S\ref{proof:K_invertible}).
+For isotropic Gaussian probes, $C_{\mathcal K} \le 1$ (Remark~\ref{rem:probe_design}). Proof in Appendix~\ref{app:all_proofs} (\S\ref{proof:K_invertible}).
 %% ============================================================
 %%  4. IDENTIFICATION
 %% ============================================================
@@ -484,12 +478,7 @@ where $\beta_t^{(r,W)} = \sigma_\varepsilon\sqrt{r\log(1 + WR_{\cA}^2/(\lambda r
 
 The key benefit is that $\beta_t^{(r,W)}$ scales with $\sqrt{r}$ not $\sqrt{d}$, yielding per-segment regret depending on intrinsic rank. Algorithm~\ref{alg:single_play_control_rdim} summarizes the procedure.
 
-\begin{remark}[Known segment boundaries and reset justification]
-\label{rem:reset_justification}
-Algorithm~\ref{alg:single_play_control_rdim} assumes known segment boundaries $\{\tau_k\}_{k=1}^K$.
-The reset of the probe accumulator at each $\tau_k$ is essential: because $B_k^\star$ may change across segments, pre-change probe data would contaminate $\widehat M_k$ and thereby destroy the unbiasedness guaranteed by Proposition~\ref{prop:lifted_probe_unbiased}.
-The data-driven extension is Algorithm~\ref{alg:adaptive_reset_control_main} in Appendix~\ref{app:projected_exploitation}.
-\end{remark}
+Algorithm~\ref{alg:single_play_control_rdim} assumes known segment boundaries; the reset justification is in Appendix~\ref{app:projected_exploitation} (Remark~\ref{rem:reset_justification}).
 
 
 \paragraph{Computational cost.}
@@ -502,15 +491,10 @@ Algorithm~\ref{alg:adaptive_reset_control_main}
 (Appendix~\ref{app:projected_exploitation}) extends
 Algorithm~\ref{alg:single_play_control_rdim} to unknown boundaries via
 the detector statistic
-\begin{equation}
-S_t := \|\widehat{M}_t^{\mathrm{recent}} -
-\widehat{M}_t^{\mathrm{past}}\|_{\op},
-\label{eq:detector_stat}
-\end{equation}
-triggering subspace re-estimation when $S_t$ exceeds threshold $b$
-(Eq.~\eqref{eq:detector_threshold_main}).
-Theorem~\ref{thm:adaptive_regret} guarantees the same leading rate with
-$O(K)$ overhead.
+$S_t := \|\widehat{M}_t^{\mathrm{recent}} - \widehat{M}_t^{\mathrm{past}}\|_{\op}$\hfill\refstepcounter{equation}(\theequation)\label{eq:detector_stat}
+
+\noindent triggering re-estimation when $S_t$ exceeds threshold~$b$
+(Theorem~\ref{thm:adaptive_regret}).
 %% ============================================================
 %%  6. MAIN REGRET RESULTS
 %% ============================================================
@@ -528,6 +512,7 @@ $O(K)$ overhead.
 
 
   Let $\ell_k := |\cI_k|$ denote the length of segment $k$, so $\sum_{k=1}^K \ell_k = T$.
+  Let $E_k := \cI_k \setminus \cT_k$ denote the exploitation rounds within segment $k$, and $n_k := |E_k| = \ell_k - m_k$.
   Let $V := \sum_{k=1}^K V_k$ denote the total within-segment variation, where $V_k := \sum_{s\in E_k,\,s+1\in
   E_k}\|\theta_{s+1}-\theta_s\|_2$.
 
@@ -553,12 +538,17 @@ $O(K)$ overhead.
     \begin{theorem}[Full-horizon windowed dynamic regret]
     \label{thm:full_horizon_windowed}
     Under the hypotheses of Theorem~\ref{thm:segment_windowed_projected} (Appendix~\ref{app:supporting_regret}) on every segment,
-  with
-    probability at least $1-\delta$, $\DynReg_T^{(c)}$ decomposes into probe cost ($\propto \sum_k m_k$), projected statistical
-  regret
-    ($\propto \sum_k \beta_k^{(r,W)}\sqrt{rn_k}$), subspace mismatch ($\propto \sum_k \varepsilon_k n_k$), and drift ($\propto
-  W\sum_k
-    V_k$). The full bound is in Appendix~\ref{app:all_proofs}, \S\ref{proof:full_horizon_windowed}.
+    with probability at least $1-\delta$,
+    \begin{align*}
+    \DynReg_T^{(c)} &\le
+      \sum_{k=1}^K \bigl[
+        (2R_{\cA}S_w + c)\,m_k
+        + 2\beta_k^{(r,W)}\sqrt{2rL_W\, n_k}
+        + 2R_{\cA}S_w\,\varepsilon_k\, n_k
+      \bigr]
+      + 2R_{\cA} W V.
+    \end{align*}
+    Full derivation in Appendix~\ref{app:all_proofs}, \S\ref{proof:full_horizon_windowed}.
     \end{theorem}
 
 
@@ -594,9 +584,9 @@ $O(K)$ overhead.
 
   \begin{proof}[Proof sketch]
   The bound decomposes into three components.
-  \emph{(i)~Projected exploitation $\widetilde{O}(r\sqrt{T})$:} After subspace recovery, SPSC runs windowed ridge-UCB in $\R^r$ with confidence radius $\beta^{(r,W)} \propto \sqrt{r}$ (vs.\ $\sqrt{d}$ for ambient methods). The elliptical potential lemma applied in $r$ dimensions gives $\widetilde{O}(r\sqrt{T})$ statistical regret.
-  \emph{(ii)~Tradeoff $\widetilde{O}(T^{2/3})$:} Optimizing probe count $m_k$ balances probe cost $cm_k$ against subspace error $O(m_k^{-1/2})$; the optimum $m_k^\star \propto \ell_k^{2/3}$ yields $T^{2/3}$. Within the projected-exploitation class, Theorem~\ref{thm:probe_rate_lb} establishes a matching lower bound at the same rate.
-  \emph{(iii)~Drift $O(V)$:} Within-segment parameter variation contributes linearly and is irreducible. Full proof in Appendix~\ref{app:all_proofs}, \S\ref{proof:closed_dynamic_regret}.
+  \emph{(i)~Projected exploitation $\widetilde{O}(r\sqrt{T})$:} SPSC runs windowed ridge-UCB in $\R^r$ with confidence radius $\beta^{(r,W)} \propto \sqrt{r}$; the elliptical potential lemma in $r$ dimensions gives $\widetilde{O}(r\sqrt{T})$.
+  \emph{(ii)~Tradeoff $\widetilde{O}(T^{2/3})$:} Optimizing $m_k$ balances probe cost $cm_k$ against subspace error $O(m_k^{-1/2})$; the optimum $m_k^\star \propto \ell_k^{2/3}$ yields $T^{2/3}$, matched by Theorem~\ref{thm:probe_rate_lb} within $\Pi_{\mathrm{HP}}$.
+  \emph{(iii)~Drift $O(V)$:} Within-segment parameter variation contributes linearly and is irreducible.
   \end{proof}
 
   (The worst-case choice $W^\star\!=\!1$ is conservative; under autocorrelated LDS dynamics larger windows reduce variance without inflating drift, so experiments use $W\!\in\![100,400]$; see the ablation in Appendix~\ref{app:probe_ablation}.)
@@ -608,6 +598,9 @@ $O(K)$ overhead.
   $\tau_k = 2R_X\sqrt{\log(2d/\delta)/m_k}$
   recovers $\hat r_k = r$ with probability at least $1-\delta$ whenever the
   population eigengap exceeds $4\tau_k$.
+  In practice, the learner applies thresholding to the \emph{sample} eigenvalues of $\widehat{M}_k$
+  using the computable threshold $2\tau_k$; Weyl's inequality guarantees that when the population gap
+  exceeds $4\tau_k$, the sample gap exceeds $2\tau_k$ with the stated probability.
   On this event, Theorem~\ref{thm:closed_dynamic_regret} applies unchanged.
   Overestimation ($\hat r > r$) costs a factor $\hat r/r$ in the statistical
   term only; underestimation adds a penalty proportional to signal energy in the
@@ -632,46 +625,14 @@ $O(K)$ overhead.
 
   \begin{theorem}[Adaptive costed dynamic regret]
   \label{thm:adaptive_regret}
-  Suppose Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} hold and every true change satisfies $\Delta_k \ge
-  \Delta_{\mathrm{det}} = 2b$.
-  Run the adaptive algorithm with probe rate $\mu$, window counts $n_r = n_p = n$, threshold
-\begin{equation}
-\begin{aligned}
-b :=\;& \Delta_{\mathrm{within}}
-+ 2R_X\sqrt{\frac{\log\!\bigl(4dT/\delta_{\mathrm{FA}}\bigr)}{n_r}}
-+ 2R_X\sqrt{\frac{\log\!\bigl(4dT/\delta_{\mathrm{FA}}\bigr)}{n_p}}, \\
-m_{\mathrm{relearn}}
-:=\;& \left\lceil
-\frac{64 R_X^2 \log\!\bigl(2dK/\delta\bigr)}{\lambda_{\min}^2}
-\right\rceil .
-\end{aligned}
-\label{eq:detector_threshold_main}
-\end{equation}
-  Let \(\hat K\) be the total number of resets and \(F_T\) the number of false alarms.
-  With probability at least \(1-\delta\),
-  \begin{equation}
-  \begin{aligned}
-  \DynReg_T^{(c)} \le\;&
-  \underbrace{
-  2\beta^{(r,1)}\sqrt{2rL_1 \hat K T}
-  + \frac{3}{2^{2/3}}A^{1/3}B^{2/3}\hat K^{1/3}T^{2/3}
-  + 2R_{\cA} V + A\hat K
-  }_{\text{oracle-equivalent term}}
-  \\[0.5em]
-  &\quad
-  + \underbrace{
-  2R_{\cA}S_w \, K \, D_{\max}
-  }_{\text{delay penalty}}
-  \;+\;
-  \underbrace{
-  (2R_{\cA}S_w + c)\, m_{\mathrm{relearn}}\, (K + F_T)
-  }_{\text{recovery cost}} .
-  \end{aligned}
-  \label{eq:adaptive_regret_bound}
-  \end{equation}
-  where $D_{\max} = (2n/\mu) + \tau_{\mathrm{burn}}$ and $F_T = 0$ with probability at least $1 - \delta/2$.
-  For fixed $K$, the adaptive algorithm achieves the same leading rate $\widetilde O(r\sqrt{T}) + \widetilde O(T^{2/3}) + O(V)$ with
-  $O(K)$ lower-order overhead.
+  Suppose Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} hold and every true subspace change
+  exceeds a detectable threshold $\Delta_k \ge \Delta_{\mathrm{det}}$.
+  Then the adaptive variant (Algorithm~\ref{alg:adaptive_reset_control_main}) achieves the same
+  leading rate $\widetilde O(r\sqrt{T}) + \widetilde O(T^{2/3}) + O(V)$ with $O(K)$ lower-order overhead,
+  and false alarms occur with probability at most $\delta/2$.
+  The full bound with explicit threshold, relearning budget, and decomposition into
+  oracle-equivalent, delay-penalty, and recovery-cost terms is in
+  Appendix~\ref{app:all_proofs}, \S\ref{proof:adaptive_regret}.
   \end{theorem}
 
   \paragraph{Lower bounds.}
@@ -739,12 +700,9 @@ m_{\mathrm{relearn}}
         \centering
         \includegraphics[width=0.84\textwidth]{experiment1_synthetic_phase.png}
         \caption{\textbf{Phase-transition boundary
-        (Theorems~\ref{thm:closed_dynamic_regret} and~\ref{thm:ambient_regret}).}
-        \textbf{(a)}~SPSC/LinUCB cumulative regret ratio over the $(d,r)$ grid.
-        The empirical crossover boundary closely tracks $d{-}r = T^{1/6}$ (dashed) at finite $T{=}5{,}000$, consistent with
-        Eq.~\eqref{eq:regime_condition}.
-        \textbf{(b)}~Ratio vs.\ $d$ (log-scale) for each latent rank~$r$;
-        empirical curves track the $\sqrt{r/d}$ theoretical prediction (dotted).}
+        (Theorems~\ref{thm:closed_dynamic_regret},~\ref{thm:ambient_regret}).}
+        Empirical crossover tracks $d{-}r = T^{1/6}$ (dashed) at $T{=}5{,}000$;
+        per-rank curves follow $\sqrt{r/d}$ (dotted).}
         \label{fig:synthetic-phase}
     \end{figure}
 
@@ -788,21 +746,17 @@ m_{\mathrm{relearn}}
     from dimensionality reduction ($\sqrt{r}$ vs.\ $\sqrt{d}$) and the other half from the learned subspace,
     which retains $2$ to $6\times$ more signal variance than random projection.
 
-  \paragraph{Experiment 4: Identification boundary probes.}
-  Three ablations
-  (Appendix~\ref{app:robustness_necessity}) probe the necessity and robustness of each identification condition: $5\times$ variance
-  misspecification $\to$ ${<}5\%$ regret change; $\epsilon_\times{=}1$ $\to$ ${<}1\%$
-  regret change; restricted coverage $\to$ $\Omega(T)$ blow-up, consistent with the lower bound in
-  Theorem~\ref{thm:restricted_span_minimax_regret}. The first two conditions degrade
-  gracefully as predicted by Theorem~\ref{thm:closed_dynamic_regret_general}.
-
-  \paragraph{Experiment 5: Probe-rate tradeoff (Theorem~\ref{thm:probe_rate_lb}).}
-  Sweeping the probe period over $\{5,\ldots,300\}$ produces a U-shaped regret curve
-  (Figure~\ref{fig:probe-ablation}, Appendix~\ref{app:probe_ablation}):
-  sparse probing yields poor subspace estimates; excessive probing wastes exploitation rounds.
-  The optimum at period ${\approx}20$--$30$ is consistent with the $m_k^\star \propto \ell_k^{2/3}$ allocation
-  predicted by Theorem~\ref{thm:closed_dynamic_regret}, and the monotone relationship between
-  late-segment subspace error and regret directly links SPSC's gains to subspace recovery quality.
+  \paragraph{Experiments 4--5: Identification boundary and probe-rate tradeoff
+  (Theorems~\ref{thm:closed_dynamic_regret_general},~\ref{thm:restricted_span_minimax_regret},~\ref{thm:probe_rate_lb}).}
+  Three ablations (Appendix~\ref{app:robustness_necessity}) probe identification conditions:
+  $5\times$ variance misspecification $\to$ ${<}5\%$ regret change;
+  $\epsilon_\times{=}1$ $\to$ ${<}1\%$; restricted coverage $\to$ $\Omega(T)$ blow-up,
+  consistent with the lower bound in Theorem~\ref{thm:restricted_span_minimax_regret}.
+  The first two degrade gracefully as predicted by Theorem~\ref{thm:closed_dynamic_regret_general}.
+  Separately, sweeping probe period over $\{5,\ldots,300\}$ produces a U-shaped regret curve
+  (Figure~\ref{fig:probe-ablation}, Appendix~\ref{app:probe_ablation}),
+  with optimum at period ${\approx}20$--$30$ consistent with $m_k^\star \propto \ell_k^{2/3}$;
+  late-segment subspace error correlates monotonically with regret, directly linking SPSC's gains to recovery quality.
 
 \vspace{-2pt}
 \section{Conclusion}
@@ -1864,6 +1818,13 @@ The remaining gap to the $\widetilde O(c^{1/3}T^{2/3})$ upper bound is precisely
 %% ------ D.5  Projected Exploitation Analysis ------
 \subsection{Projected Exploitation in the Learned Subspace}
 \label{app:projected_exploitation}
+
+\begin{remark}[Known segment boundaries and reset justification]
+\label{rem:reset_justification}
+Algorithm~\ref{alg:single_play_control_rdim} assumes known segment boundaries $\{\tau_k\}_{k=1}^K$.
+The reset of the probe accumulator at each $\tau_k$ is essential: because $B_k^\star$ may change across segments, pre-change probe data would contaminate $\widehat M_k$ and thereby destroy the unbiasedness guaranteed by Proposition~\ref{prop:lifted_probe_unbiased}.
+The data-driven extension is Algorithm~\ref{alg:adaptive_reset_control_main}.
+\end{remark}
 
 \subsubsection{Technical Lemmas}
 
@@ -3317,6 +3278,46 @@ Hence the detector fires at or before $t^\star$, with delay $D_k \le D_{\max}$. 
 
 \subsubsection{Proof of Theorem~\ref{thm:adaptive_regret}}
 \label{proof:adaptive_regret}
+
+\noindent\textbf{Theorem~\ref{thm:adaptive_regret}} (full formal statement)\textbf{.}
+\textit{Suppose Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} hold and every true change satisfies $\Delta_k \ge
+\Delta_{\mathrm{det}} = 2b$.
+Run the adaptive algorithm with probe rate $\mu$, window counts $n_r = n_p = n$, threshold}
+\begin{equation}
+\begin{aligned}
+b :=\;& \Delta_{\mathrm{within}}
++ 2R_X\sqrt{\frac{\log\!\bigl(4dT/\delta_{\mathrm{FA}}\bigr)}{n_r}}
++ 2R_X\sqrt{\frac{\log\!\bigl(4dT/\delta_{\mathrm{FA}}\bigr)}{n_p}}, \\
+m_{\mathrm{relearn}}
+:=\;& \left\lceil
+\frac{64 R_X^2 \log\!\bigl(2dK/\delta\bigr)}{\lambda_{\min}^2}
+\right\rceil .
+\end{aligned}
+\label{eq:detector_threshold_main}
+\end{equation}
+\textit{Let $\hat K$ be the total number of resets and $F_T$ the number of false alarms.
+With probability at least $1-\delta$,}
+\begin{equation}
+\begin{aligned}
+\DynReg_T^{(c)} \le\;&
+\underbrace{
+2\beta^{(r,1)}\sqrt{2rL_1 \hat K T}
++ \frac{3}{2^{2/3}}A^{1/3}B^{2/3}\hat K^{1/3}T^{2/3}
++ 2R_{\cA} V + A\hat K
+}_{\text{oracle-equivalent term}}
+\\[0.5em]
+&\quad
++ \underbrace{
+2R_{\cA}S_w \, K \, D_{\max}
+}_{\text{delay penalty}}
+\;+\;
+\underbrace{
+(2R_{\cA}S_w + c)\, m_{\mathrm{relearn}}\, (K + F_T)
+}_{\text{recovery cost}} .
+\end{aligned}
+\label{eq:adaptive_regret_bound}
+\end{equation}
+\textit{where $D_{\max} = (2n/\mu) + \tau_{\mathrm{burn}}$ and $F_T = 0$ with probability at least $1 - \delta/2$.}
 
 \begin{proof}
 We partition the time horizon into three types of rounds for each true segment and bound the regret contribution of each type.
