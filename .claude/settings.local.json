@@ -6,7 +6,12 @@
       "Bash(grep -oP '\\\\\\\\label\\\\{[^}]+\\\\}' main_conf.tex)",
       "Bash(grep:*)",
       "Bash(cat)",
-      "Read(//tmp/**)"
+      "Read(//tmp/**)",
+      "Bash(awk '/^\\\\\\\\section\\\\{/{print NR\": \"$0}' \"/c/Users/hamed/Documents/GitHub/lowrank-bandits/paper/main_conf.tex\")",
+      "Bash(awk '/^\\\\\\\\begin\\\\{\\(theorem|proposition|lemma|remark|corollary|definition|assumption|equation|align|figure|table\\)/{print NR\": \"$0}' \"/c/Users/hamed/Documents/GitHub/lowrank-bandits/paper/main_conf.tex\")",
+      "Bash(awk ':*)",
+      "Bash(pdflatex -interaction=nonstopmode main_conf.tex)",
+      "Bash(bibtex main_conf)"
     ]
   }
 }

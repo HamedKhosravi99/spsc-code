@@ -154,26 +154,14 @@ build a well-conditioned design matrix, so regret scales with $d$,
 not~$r$.
   \begin{enumerate}[nosep,leftmargin=2em]
   \item \textbf{Identification from scalar feedback.}
-  The observation $y_t = x_t^\top B_k^\star w_t + \varepsilon_t$ is
-  a scalar projection of a rank-$r$ signal.
-  Recovering the $r$-dimensional column space $\range(B_k^\star)$
-  from such projections requires extracting second-order information:
-  the predictable second moment
-  $\widetilde{M}_t := \E[\theta_t\theta_t^\top \mid \cH_{t-1}]$
-  (the conditional covariance of the reward parameter given the
-  learner's history $\cH_{t-1}$) satisfies
-  $\range(\widetilde{M}_t) \subseteq \range(B_k^\star)$, but a
-  single observation $y_t$ does not directly reveal $\widetilde{M}_t$.
+  Each $y_t = x_t^\top B_k^\star w_t + \varepsilon_t$ is a scalar projection of a rank-$r$ signal.
+  Recovering $\range(B_k^\star)$ requires second-order information: the predictable second moment
+  $\widetilde{M}_t := \E[\theta_t\theta_t^\top \mid \cH_{t-1}]$ satisfies
+  $\range(\widetilde{M}_t) \subseteq \range(B_k^\star)$, but a single observation does not directly reveal $\widetilde{M}_t$.
   \item \textbf{Probe--subspace cost tradeoff.}
-  Probing with random isotropic actions $u_t$ drawn from a known
-  distribution $Q$ (satisfying $\E[u_tu_t^\top] \succeq \rho I_d$
-  for a constant $\rho > 0$, ensuring coverage in every direction)
-  enables subspace recovery, but probing is priced explicitly: each probe round incurs cost $c$.
-  With $m$ probes per segment, the subspace estimation error is
-  $\varepsilon = O(1/\sqrt{m})$ and the exploitation regret from
-  mismatch is $O(\varepsilon T)$, while the probe cost is $O(cm)$.
-  The optimal allocation $m^\star = \Theta(T^{2/3})$ balances these exactly,
-  yielding a $\widetilde{O}(T^{2/3})$ tradeoff term that Theorem~\ref{thm:probe_rate_lb} proves is unavoidable for all projected-exploitation policies.
+  Probing with isotropic actions enables subspace recovery, but each probe round incurs cost $c$.
+  With $m$ probes, subspace error is $O(1/\sqrt{m})$ and exploitation regret from mismatch is $O(\varepsilon T)$; the probe cost is $O(cm)$.
+  Balancing yields $m^\star = \Theta(T^{2/3})$ and a $\widetilde{O}(T^{2/3})$ tradeoff that Theorem~\ref{thm:probe_rate_lb} proves unavoidable for projected-exploitation policies.
   \end{enumerate}
 
   We resolve both difficulties simultaneously. Under three structural
@@ -215,41 +203,24 @@ not~$r$.
   \paragraph{Contributions.}
 
   \begin{enumerate}[leftmargin=1.5em, itemsep=2pt]
-  \item \textbf{Identification boundary for single-play scalar feedback.}
-  We characterize necessary-and-sufficient probe-side conditions for recovering a
-  changing $r$-dimensional subspace from single-play scalar feedback within the model studied here:
-  three conditions are each individually necessary
-  (with formal impossibility for every violation) and jointly sufficient
-  for subspace recovery via a lifted matrix operator (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c},
-  Propositions~\ref{prop:quad}--\ref{prop:lifted_probe_unbiased}).
+  \item \textbf{Identification boundary.}
+  Necessary-and-sufficient probe-side conditions for subspace recovery from single-play scalar feedback: three conditions each individually necessary, jointly sufficient via a lifted matrix operator
+  (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}, \ref{prop:quad}--\ref{prop:lifted_probe_unbiased}).
 
-  \item \textbf{Projected-exploitation upper bound with intrinsic-rank dependence.}
-  SPSC achieves $\widetilde{O}(r\sqrt{T})$ costed dynamic
-  regret under piecewise-stationary low-rank rewards---replacing the ambient
-  $\widetilde{O}(d\sqrt{T})$ dependence with intrinsic rank $r$---with an adaptive
-  variant that detects change points without oracle boundaries at no asymptotic cost
+  \item \textbf{Intrinsic-rank upper bound.}
+  SPSC achieves $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ costed dynamic regret, with an adaptive variant removing oracle boundaries
   (Theorems~\ref{thm:closed_dynamic_regret},~\ref{thm:adaptive_regret}).
 
-  \item \textbf{Matching lower bound within the projected-exploitation class.}
-  Within the projected-exploitation class---containing SPSC and
-  all known algorithms for this problem---we prove a matching $\Omega(c^{1/3}T^{2/3})$ lower bound, showing that the probe--subspace
-  tradeoff is sharp in that class
+  \item \textbf{Matching lower bound.}
+  $\Omega(c^{1/3}T^{2/3})$ within the projected-exploitation class, showing the tradeoff is sharp
   (Theorem~\ref{thm:probe_rate_lb}).
 
-  \item \textbf{Robustness under misspecification.}
-  The leading rate $\widetilde{O}(r\sqrt{T} + T^{2/3})$ is preserved under
-  $T^{-1/3}$-level probe misspecification (Theorem~\ref{thm:closed_dynamic_regret_general}),
-  and the crossover condition $d - r > C\,T^{1/6}$ provides a practical rule-of-thumb
-  for finite-$T$ performance
-  (\S\ref{sec:experiments}).
+  \item \textbf{Robustness.}
+  Leading rate preserved under $T^{-1/3}$-level probe misspecification (Theorem~\ref{thm:closed_dynamic_regret_general}); crossover $d - r > C\,T^{1/6}$ gives a finite-$T$ rule-of-thumb (\S\ref{sec:experiments}).
 
   \item \textbf{Theorem-relevant experiments.}
-  Experiments probe the predicted phase-transition boundary, the $T^{2/3}$
-  tradeoff, and the identification boundary conditions on synthetic
-  and real-data benchmarks including clinical dosing, with 6--38\% regret reductions
-  over ambient-space baselines (\S\ref{sec:experiments}).
+  Phase-transition boundary, $T^{2/3}$ tradeoff, and identification conditions tested on synthetic and clinical benchmarks, with 6--38\% regret reductions (\S\ref{sec:experiments}).
   \end{enumerate}
-
 
 %%  2. RELATED WORK
 %% ============================================================
@@ -363,9 +334,6 @@ Within the model studied here, these are probe-side identification requirements,
   (Theorem~\ref{thm:closed_dynamic_regret_general}). For Gaussian probes the bias is a scaled identity, preserving eigenvectors (Proposition~\ref{prop:biased_measurement}; Appendix~\ref{app:concentration}).
   \end{remark}
 
-
-
-
 \paragraph{Costed dynamic regret.}
 Let $\cTprobe \subseteq \{1, \ldots, T\}$ denote the set of probe rounds (on which $x_t = u_t \sim Q$).
 Performance is measured by the \emph{costed dynamic regret}
@@ -381,7 +349,6 @@ The first term measures control loss relative to the instantaneous best action; 
 \begin{lemma}[Predictable probe-time excitation]\label{lem:probe_excitation}
 Under Assumption~\ref{assum:latent_dynamics}, for each segment $k$, $\lambda_r(\bar S_k^{\mathrm{probe}})\ge \lambda_{\min} > 0$ almost surely, where $\bar S_k^{\mathrm{probe}} := \frac{1}{m_k}\sum_{t\in \cT_k}\E[w_t w_t^\top \mid \cH_{t-1}]$. (The proof is given in Appendix~\ref{app:all_proofs} (\S\ref{proof:probe_excitation}).)
 \end{lemma}
-
 
 \begin{lemma}[Invertibility of the probe operator]\label{lem:K_invertible}
 Under Assumption~\ref{assum:probe_realizability}, if additionally the fourth-moment tensor of $Q$ is positive definite on $\R_{\mathrm{sym}}^{d\times d}$ (which holds, in particular, for the isotropic Gaussian and sphere probe distributions used throughout this paper), then the operator $\mathcal K(M):=\E[(u^\top M u)\,uu^\top], \qquad u\sim Q,$ is invertible on $\R_{\mathrm{sym}}^{d\times d}$, with $\|\mathcal K^{-1}\|_{\op} \le C_{\mathcal K}(\rho, L, d)$.
@@ -425,9 +392,7 @@ Equivalently, the segment projector $P_k^\star := B_k^\star (B_k^\star)^\top$ is
 The proof is given in Appendix~\ref{app:all_proofs} (\S\ref{proof:subspace_identification}).
 \end{proposition}
 
-
-
-\paragraph{Lifted operator and subspace recovery.} The preceding results show that probe rounds identify the relevant quadratic form. To turn this into a usable matrix estimator, we invert the probe moment operator. Under Lemma~\ref{lem:K_invertible}, define the \emph{lifted probe sample} $G_t := \mathcal K^{-1}(s_t u_tu_t^\top).$ When $Q$ is the isotropic Gaussian $\mathcal{N}(0, I_d)$ (or its bounded truncation), the fourth-moment structure gives an explicit closed form: $\mathcal K^{-1}(N) = \tfrac{1}{2}N - \tfrac{\tr(N)}{2(d+2)}\,I_d$, so each lifted sample $G_t = \frac{1}{2}s_t u_t u_t^\top - \frac{s_t \|u_t\|^2}{2(d+2)}I_d$ is computable in $O(d^2)$ operations ($N \in \R_{\mathrm{sym}}^{d\times d}.$)
+\paragraph{Lifted operator and subspace recovery.} To turn quadratic measurements into a matrix estimator, we invert the probe moment operator $\mathcal{K}$ (Lemma~\ref{lem:K_invertible}), defining the lifted probe sample $G_t := \mathcal K^{-1}(s_t u_tu_t^\top)$, which has closed form for Gaussian probes (Appendix~\ref{app:concentration}).
 
 \begin{proposition}[Lifted probe sample]
 \label{prop:lifted_probe_unbiased}
@@ -438,33 +403,21 @@ When $\delta_\sigma = 0$ and $\epsilon_\times = 0$, the estimator is exactly unb
 The proof is given in Appendix~\ref{app:all_proofs} (\S\ref{proof:lifted_probe_unbiased}).
 \end{proposition}
 
-The empirical segment-level estimator $\widehat M_k := \frac{1}{m_k}\sum_{t\in\cT_k} G_t$ estimates $\bar M_k^{\mathrm{probe}}$ with bias at most $|\delta_\sigma|\,C_{\mathcal K}\,L^2 + 2\,C_{\mathcal K}\,L^3\,\epsilon_\times$. Let $\widehat U_k$ contain the top $r$ eigenvectors of $\widehat M_k$, and define $\widehat P_k := \widehat U_k \widehat U_k^\top$.
-For isotropic Gaussian probes, the variance-misspecification bias is a scaled identity $\widetilde B \approx \frac{\delta_\sigma}{2}I_d$ (Proposition~\ref{prop:biased_measurement}), which shifts eigenvalues uniformly without corrupting eigenvectors, so subspace recovery is robust to variance estimation error.
+The segment-level estimator $\widehat M_k := m_k^{-1}\sum_{t\in\cT_k} G_t$ yields the projected basis $\widehat P_k := \widehat U_k \widehat U_k^\top$ from the top-$r$ eigenvectors of $\widehat M_k$. For Gaussian probes, the variance-misspecification bias is a scaled identity preserving eigenvectors, so subspace recovery is robust (Appendix~\ref{app:concentration}).
 
 \begin{remark}[Identification boundary: necessity and scope]
   \label{rem:necessity_compact}
-  Each probe-side condition is provably necessary within our model (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}):
-  \emph{(i)~Noise variance} is unknown and estimated online; burn-in cost $O(T^{2/3})$ is absorbed into the existing tradeoff term
-  (Remark~\ref{rem:burnin_free}). Empirically, $5\times$ misspecification causes $<5\%$ regret change.
-  \emph{(ii)~State--noise coupling} is bounded ($\epsilon_\times$), not required to be zero; the penalty $O(\epsilon_\times T/\lambda_{\min})$ is explicit in Theorem~\ref{thm:closed_dynamic_regret_general}. Even $\epsilon_\times{=}1$ changes regret by $<1\%$ empirically.
-  \emph{(iii)~Full-dimensional probe coverage} is strong in locked-action or safety-constrained systems, and the present paper does not claim otherwise. Within the single-play scalar-feedback model and the ambient comparator studied here, Theorem~\ref{thm:restricted_span_minimax_regret} shows that without coverage in every reward-relevant direction, sublinear costed dynamic regret is impossible over the model class. We therefore view action-constrained systems as outside the present scope.
-  Whether partial coverage can support intermediate guarantees when the comparator is correspondingly restricted is an important open question.
+  Each probe-side condition is provably necessary (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}):
+  \emph{(i)} unknown noise variance---burn-in $O(T^{2/3})$ absorbed (Remark~\ref{rem:burnin_free});
+  \emph{(ii)} bounded state--noise coupling---penalty explicit in Theorem~\ref{thm:closed_dynamic_regret_general};
+  \emph{(iii)} full-dimensional coverage---necessary for sublinear regret (Theorem~\ref{thm:restricted_span_minimax_regret}).
+  Scope and robustness are detailed in Appendix~\ref{sec:discussion}.
   \end{remark}
-
-
-
 
 
 %% ============================================================
 %%  5. ALGORITHM
 %% ============================================================
-
-
-
-
-
-
-
 
 \section{Algorithm}
 \label{sec:algorithm}
@@ -480,11 +433,8 @@ The key benefit is that $\beta_t^{(r,W)}$ scales with $\sqrt{r}$ not $\sqrt{d}$,
 
 Algorithm~\ref{alg:single_play_control_rdim} assumes known segment boundaries; the reset justification is in Appendix~\ref{app:projected_exploitation} (Remark~\ref{rem:reset_justification}).
 
-
 \paragraph{Computational cost.}
 Per-round cost is $O(dr|\cA_t| + r^2)$ vs.\ $O(d^2|\cA_t|)$ for ambient LinUCB; full analysis in Appendix~\ref{app:projected_exploitation}.
-
-
 
 \paragraph{Adaptive-reset variant.}
 Algorithm~\ref{alg:adaptive_reset_control_main}
@@ -516,24 +466,15 @@ $S_t := \|\widehat{M}_t^{\mathrm{recent}} - \widehat{M}_t^{\mathrm{past}}\|_{\op
   Let $V := \sum_{k=1}^K V_k$ denote the total within-segment variation, where $V_k := \sum_{s\in E_k,\,s+1\in
   E_k}\|\theta_{s+1}-\theta_s\|_2$.
 
-  We assume the segmentwise projector estimation error obeys
-  \begin{equation}
-  \varepsilon_k \le C_{\mathrm{sub}} \sqrt{\frac{\log(d/\delta)}{m_k}},
-  \qquad k=1,\dots,K,
-  \label{eq:eps_k_rate}
-  \end{equation}
-  where $C_{\mathrm{sub}} = 8R_X/\lambda_{\min}$ is the explicit constant from Theorem~\ref{thm:projector_concentration_summary}
-  (Appendix~\ref{app:concentration}), and $R_X := C_{\mathcal K}\,L^2\,R_s + S_w^2$, $R_s := (LS_w + L_\varepsilon)^2 +
-  \sigma_\varepsilon^2$.
+  The segmentwise projector estimation error obeys
+  $\varepsilon_k \le C_{\mathrm{sub}} \sqrt{\log(d/\delta)/m_k}$
+  \hfill\refstepcounter{equation}(\theequation)\label{eq:eps_k_rate}
 
-  The statistical confidence radius is
-  \begin{equation}
-  \beta_t^{(r,W)} := \sigma_\varepsilon
-  \sqrt{r \log\!\left(1+\frac{W R_{\cA}^2}{\lambda r}\right) + 2\log(1/\delta)} + \sqrt{\lambda}S_w.
-  \label{eq:beta_rW}
-  \end{equation}
-  The correction coefficient is $\gamma_t := \Gamma_k + V_{k,t}(W)$, where $\Gamma_k := S_w \varepsilon_k$ is the subspace-mismatch
-  level and $V_{k,t}(W) := \sum_{s\in E_k,\, t-W \le s < t}\|\theta_{s+1}-\theta_s\|_2$ is the local variation.
+  \noindent where $C_{\mathrm{sub}}$, $R_X$ are explicit constants from Theorem~\ref{thm:projector_concentration_summary} (Appendix~\ref{app:concentration}).
+  The confidence radius is $\beta_t^{(r,W)} := \sigma_\varepsilon\sqrt{r \log(1+WR_{\cA}^2/(\lambda r)) + 2\log(1/\delta)} + \sqrt{\lambda}S_w$
+  \hfill\refstepcounter{equation}(\theequation)\label{eq:beta_rW}
+
+  \noindent and the correction coefficient is $\gamma_t := S_w\varepsilon_k + V_{k,t}(W)$, absorbing subspace mismatch and local drift.
 
     \begin{theorem}[Full-horizon windowed dynamic regret]
     \label{thm:full_horizon_windowed}
@@ -597,14 +538,8 @@ $S_t := \|\widehat{M}_t^{\mathrm{recent}} - \widehat{M}_t^{\mathrm{past}}\|_{\op
   $\hat r_k := \max\{j : \lambda_j(\widehat M_k) > 2\tau_k\}$ with
   $\tau_k = 2R_X\sqrt{\log(2d/\delta)/m_k}$
   recovers $\hat r_k = r$ with probability at least $1-\delta$ whenever the
-  population eigengap exceeds $4\tau_k$.
-  In practice, the learner applies thresholding to the \emph{sample} eigenvalues of $\widehat{M}_k$
-  using the computable threshold $2\tau_k$; Weyl's inequality guarantees that when the population gap
-  exceeds $4\tau_k$, the sample gap exceeds $2\tau_k$ with the stated probability.
-  On this event, Theorem~\ref{thm:closed_dynamic_regret} applies unchanged.
-  Overestimation ($\hat r > r$) costs a factor $\hat r/r$ in the statistical
-  term only; underestimation adds a penalty proportional to signal energy in the
-  missed directions. Full analysis in Appendix~\ref{sec:discussion}.
+  population eigengap exceeds $4\tau_k$ (via Weyl's inequality).
+  On this event, Theorem~\ref{thm:closed_dynamic_regret} applies unchanged; misspecification costs are in Appendix~\ref{sec:discussion}.
   \end{corollary}
 
   \begin{theorem}[General regret bound under approximate probe conditions]
@@ -636,13 +571,8 @@ $S_t := \|\widehat{M}_t^{\mathrm{recent}} - \widehat{M}_t^{\mathrm{past}}\|_{\op
   \end{theorem}
 
   \paragraph{Lower bounds.}
-  Two lower bounds establish that the probe--subspace tradeoff is fundamental.
-  First, Theorem~\ref{thm:etc_lower_bound}
-  (Appendix~\ref{app:probe_cost_lower_bound}) proves $\Omega(\sqrt{cT})$ for
-  all explore-then-commit policies via a Le~Cam two-point argument,
-  establishing the tradeoff as an information-theoretic barrier.
-  The following sharper result applies within the class of algorithms that
-  commit to an estimated subspace:
+  Theorem~\ref{thm:etc_lower_bound} (Appendix~\ref{app:probe_cost_lower_bound}) proves $\Omega(\sqrt{cT})$ for all explore-then-commit policies.
+  The following sharper result applies within the class that commits to an estimated subspace:
 
   \begin{definition}[Hard-projection score-maximizing class]
   \label{def:hard_projection_policy_class}
@@ -672,11 +602,7 @@ $S_t := \|\widehat{M}_t^{\mathrm{recent}} - \widehat{M}_t^{\mathrm{past}}\|_{\op
   Full proof in Appendix~\ref{app:matching_lower_bound}.
   \end{theorem}
 
-  The two lower bounds have complementary scopes: $\Omega(\sqrt{cT})$ holds
-  unconditionally for ETC policies, while $\Omega(c^{1/3}T^{2/3})$ is
-  specific to the projected-exploitation class.
-  The gap opens a precise question (Remark~\ref{rem:eps_gap_resolved}):
-  can non-projecting algorithms achieve $O(\sqrt{cT})$?
+  The gap between $\Omega(\sqrt{cT})$ (unconditional) and $\Omega(c^{1/3}T^{2/3})$ (projected-exploitation) opens a precise question (Remark~\ref{rem:eps_gap_resolved}): can non-projecting algorithms achieve $O(\sqrt{cT})$?
 
 %% ============================================================
 %%  7. EXPERIMENTS
@@ -768,14 +694,7 @@ Within the projected-exploitation class, Theorem~\ref{thm:probe_rate_lb} provide
 An adaptive variant removes oracle segment boundaries without changing the leading rate.
 Empirically, the observed crossover behavior and 6--38\% regret reductions are consistent with the theorem's predicted regime separation.
 
-\paragraph{Limitations and open problems.}
-Three directions remain open.
-\emph{(i)~Non-projecting algorithms:} Whether algorithms that operate in the full $d$-dimensional ambient space can achieve $O(\sqrt{cT})$ total regret by exploiting $O(\varepsilon^2)$ per-round subspace misalignment cost (vs.\ the $O(\varepsilon)$ cost inherent to projection) is the principal open question identified by the gap between Theorems~\ref{thm:etc_lower_bound} and~\ref{thm:probe_rate_lb}.
-\emph{(ii)~Unknown rank:} The eigenvalue thresholding rule (Eq.~\eqref{eq:rank_selection}) provably recovers the true rank when the eigengap is large; the case of a gradually decaying spectrum without a clear gap requires new techniques.
-\emph{(iii)~Time-varying dynamics:} Extending SPSC to segment-varying transition matrices $A_k$ that are themselves nonstationary would broaden applicability to rapidly changing systems.
-
-
-
+Limitations and open problems---including closing the gap between projecting and non-projecting lower bounds, unknown rank with gradual spectral decay, and time-varying dynamics---are discussed in Appendix~\ref{sec:discussion}.
 
 
 \newpage
@@ -1703,6 +1622,11 @@ The quantitative necessity of full-dimensional coverage is formalized in \S\ref{
 %% ------ D.3  Concentration Inequalities for Subspace Recovery ------
 \subsection{Concentration Inequalities for Subspace Recovery}
 \label{app:concentration}
+
+\paragraph{Lifted operator closed form.}
+When $Q$ is the isotropic Gaussian $\mathcal{N}(0, I_d)$ (or its bounded truncation), the fourth-moment structure gives $\mathcal K^{-1}(N) = \tfrac{1}{2}N - \tfrac{\tr(N)}{2(d+2)}\,I_d$, so each lifted sample $G_t = \frac{1}{2}s_t u_t u_t^\top - \frac{s_t \|u_t\|^2}{2(d+2)}I_d$ is computable in $O(d^2)$ operations ($N \in \R_{\mathrm{sym}}^{d\times d}$).
+The empirical segment-level estimator $\widehat M_k := \frac{1}{m_k}\sum_{t\in\cT_k} G_t$ estimates $\bar M_k^{\mathrm{probe}}$ with bias at most $|\delta_\sigma|\,C_{\mathcal K}\,L^2 + 2\,C_{\mathcal K}\,L^3\,\epsilon_\times$. Let $\widehat U_k$ contain the top $r$ eigenvectors of $\widehat M_k$, and define $\widehat P_k := \widehat U_k \widehat U_k^\top$.
+For isotropic Gaussian probes, the variance-misspecification bias is a scaled identity $\widetilde B \approx \frac{\delta_\sigma}{2}I_d$ (Proposition~\ref{prop:biased_measurement}), which shifts eigenvalues uniformly without corrupting eigenvectors, so subspace recovery is robust to variance estimation error.
 
 During segment $k$, the learner computes $\widehat{M}_k = \frac{1}{m_k} \sum_{t \in \cT_k} G_t$.
 From Proposition~\ref{prop:lifted_probe_unbiased}, $X_t := G_t - \widetilde{M}_t$ is a martingale difference sequence with $\E[X_t \mid \cH_{t-1}] = 0$.
