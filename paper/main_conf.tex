@@ -85,26 +85,23 @@
 %% ============================================================
 
 \begin{abstract}
-  Low-rank structure enables sample-efficient sequential decision-making when the reward parameter
-  $\theta_t \in \R^d$ lies in an $r$-dimensional subspace ($r \ll d$), but existing methods either
-  require a fixed, known representation or pay the full ambient cost $\widetilde{O}(d\sqrt{T})$.
-  When the subspace changes across $K$ segments and the learner receives only a single scalar
-  $y_t = x_t^\top\theta_t + \varepsilon_t$ per round, recovering the active subspace from such
-  projections is a non-trivial identification problem, and each probe round used for subspace
-  sensing incurs an explicit cost $c > 0$.
-  We characterize a sharp identification boundary for this problem: three probe-side conditions
-  (sub-Gaussian noise with online variance estimation, bounded state--noise coupling, and
-  full-dimensional probe coverage) are each individually necessary---with formal impossibility
-  results for every violation (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c})---and jointly
-  sufficient for subspace recovery via a lifted matrix operator.
-  Building on this, we propose \emph{Single-Play Subspace-Calibrated Optimism} (SPSC), which
-  achieves $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ costed dynamic regret---replacing
-  the ambient $d\sqrt{T}$ dependence with intrinsic rank $r$---and prove a matching
-  $\Omega(c^{1/3}T^{2/3})$ lower bound on the probe--subspace tradeoff term within the
-  projected-exploitation policy class, the class containing all known algorithms for this problem.
-  Experiments on synthetic and real-data benchmarks including clinical dosing are consistent with
-  the predicted phase-transition boundary $d - r \asymp T^{1/6}$ and show 6--38\% regret
-  reductions over ambient-space baselines.
+  Existing low-rank bandit methods assume a fixed representation, while nonstationary methods
+  pay the full ambient cost $\widetilde{O}(d\sqrt{T})$.
+  We study when a changing $r$-dimensional subspace ($r \ll d$) is identifiable from
+  single-play scalar feedback $y_t = x_t^\top\theta_t + \varepsilon_t$ under explicit probe cost $c > 0$.
+  Our main result is a sharp probe-side identification boundary in the model studied here:
+  three structural conditions---sub-Gaussian noise with online variance estimation, bounded
+  state--noise coupling, and full-dimensional probe coverage---are each individually necessary
+  (with formal impossibility for every violation) and jointly sufficient for subspace recovery
+  via a lifted matrix operator.
+  Building on this characterization, we propose SPSC and prove a costed dynamic regret bound
+  of $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$, replacing the ambient $d\sqrt{T}$
+  dependence with intrinsic rank~$r$.
+  Within the projected-exploitation class---containing SPSC and all known algorithms for this
+  problem---we prove a matching $\Omega(c^{1/3}T^{2/3})$ lower bound, clarifying the cost of
+  projection-based control under subspace uncertainty.
+  Experiments on synthetic and clinical benchmarks support the predicted
+  phase-transition boundary $d - r \asymp T^{1/6}$ and show 6--38\% regret reductions.
   \end{abstract}
 %% ============================================================
 %%  1. INTRODUCTION
@@ -122,6 +119,11 @@
   handle changing parameters but pay the full ambient cost
   $\widetilde{O}(d\sqrt{T})$, where $T$ is the time horizon.
   No existing method achieves both.
+
+  This paper addresses two logically separate questions.
+  First, under single-play scalar feedback, when is a changing low-rank subspace identifiable at all?
+  Second, when it is identifiable, what costed dynamic regret is achievable when subspace information must be acquired through priced probes?
+  Our main conceptual contribution is that the first question admits a sharp probe-side characterization in the model studied here, and the algorithmic and lower-bound results follow from that characterization.
 
   Consider a learner who, at each round $t = 1, \ldots, T$, selects
   an action $x_t$ from a given action set $\cA_t \subset \R^d$ and
@@ -164,7 +166,7 @@ not~$r$.
   Balancing yields $m^\star = \Theta(T^{2/3})$ and a $\widetilde{O}(T^{2/3})$ tradeoff that Theorem~\ref{thm:probe_rate_lb} proves unavoidable for projected-exploitation policies.
   \end{enumerate}
 
-  We resolve both difficulties simultaneously. Under three structural
+  We resolve both difficulties through a sharp identification boundary. Under three structural
   conditions---sub-Gaussian noise, bounded state--noise coupling
   ($\|\E[\varepsilon_t\theta_t \mid \cH_{t-1}, u_t]\|_2 \le
   \epsilon_\times$ for a known bound $\epsilon_\times \ge 0$), and
@@ -174,14 +176,15 @@ not~$r$.
   $\widetilde{M}_t$, and inverting the probe moment operator
   $\mathcal{K}$ lifts these scalar measurements into matrix-valued
   estimates from which the top-$r$ eigenspace recovers
-  $\range(B_k^\star)$. These conditions constitute an
-  \emph{identification boundary}: each is individually necessary,
-  no two jointly sufficient
+  $\range(B_k^\star)$. These conditions are not generic modeling
+  conveniences; they are the probe-side conditions under which
+  identifiability is possible in this observation model.
+  Each is individually necessary, no two jointly sufficient
   (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}), and
   approximate violations degrade gracefully
   (Theorem~\ref{thm:closed_dynamic_regret_general}).
 
-  \emph{Single-Play Subspace-Calibrated Optimism} (SPSC) interleaves probing with
+  As an algorithmic consequence of this characterization, \emph{Single-Play Subspace-Calibrated Optimism} (SPSC) interleaves probing with
   projected UCB exploitation in the learned $r$-dimensional subspace.
   For $K$ stationary segments with total within-segment drift
   $V := \sum_k \sum_{t \in \cI_k} \|\theta_{t+1} - \theta_t\|_2$,
@@ -191,35 +194,30 @@ not~$r$.
   + \widetilde{O}(T^{2/3}) + O(V),
   \]
   replacing the ambient $d\sqrt{T}$ dependence with intrinsic rank $r$.
-  An $\Omega(\sqrt{cT})$ lower bound for explore-then-commit
-  policies (Theorem~\ref{thm:etc_lower_bound}) establishes the
-  probe--subspace tradeoff as an information-theoretic barrier.
-  Within the projected-exploitation class---containing SPSC and all known algorithms for this problem---a matching $\Omega(c^{1/3}T^{2/3})$ lower bound
-  (Theorem~\ref{thm:probe_rate_lb}) shows the tradeoff is sharp in that class
+  We first analyze the oracle-boundary version to isolate the statistical mechanism, then show that the same leading rate survives removal of oracle boundaries via an adaptive reset scheme (Theorem~\ref{thm:adaptive_regret}).
+  Two lower bounds clarify the cost of priced information acquisition:
+  $\Omega(\sqrt{cT})$ holds for all admissible policies (Theorem~\ref{thm:etc_lower_bound}), and within the projected-exploitation class---containing SPSC and all known algorithms for this problem---a matching $\Omega(c^{1/3}T^{2/3})$ lower bound
+  (Theorem~\ref{thm:probe_rate_lb}) shows the $T^{2/3}$ tradeoff is sharp in that class.
+  Whether non-projecting algorithms can improve on this tradeoff is a precise open question isolated by our analysis
   (Remark~\ref{rem:eps_gap_resolved}).
-  An adaptive variant detects change points without oracle boundaries
-  and achieves the same leading rate with $O(K)$ overhead.
 
   \paragraph{Contributions.}
 
   \begin{enumerate}[leftmargin=1.5em, itemsep=2pt]
-  \item \textbf{Identification boundary.}
-  Necessary-and-sufficient probe-side conditions for subspace recovery from single-play scalar feedback: three conditions each individually necessary, jointly sufficient via a lifted matrix operator
+  \item \textbf{Identification boundary (foundational contribution).}
+  We characterize when a changing low-rank subspace is identifiable from single-play scalar feedback in the model studied here: three probe-side conditions are each individually necessary and jointly sufficient
   (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}, \ref{prop:quad}--\ref{prop:lifted_probe_unbiased}).
 
-  \item \textbf{Intrinsic-rank upper bound.}
-  SPSC achieves $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ costed dynamic regret, with an adaptive variant removing oracle boundaries
+  \item \textbf{Algorithmic consequence.}
+  This identification result yields intrinsic-rank costed dynamic regret $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ via SPSC, with an adaptive variant removing oracle boundaries
   (Theorems~\ref{thm:closed_dynamic_regret},~\ref{thm:adaptive_regret}).
 
-  \item \textbf{Matching lower bound.}
-  $\Omega(c^{1/3}T^{2/3})$ within the projected-exploitation class, showing the tradeoff is sharp
+  \item \textbf{Sharp scoped lower bound.}
+  Within the projected-exploitation class, a matching $\Omega(c^{1/3}T^{2/3})$ lower bound clarifies the cost of projection-based control under subspace uncertainty
   (Theorem~\ref{thm:probe_rate_lb}).
 
-  \item \textbf{Robustness.}
-  Leading rate preserved under $T^{-1/3}$-level probe misspecification (Theorem~\ref{thm:closed_dynamic_regret_general}); crossover $d - r > C\,T^{1/6}$ gives a finite-$T$ rule-of-thumb (\S\ref{sec:experiments}).
-
-  \item \textbf{Theorem-relevant experiments.}
-  Phase-transition boundary, $T^{2/3}$ tradeoff, and identification conditions tested on synthetic and clinical benchmarks, with 6--38\% regret reductions (\S\ref{sec:experiments}).
+  \item \textbf{Robustness and regime prediction.}
+  Leading rate preserved under $T^{-1/3}$-level probe misspecification (Theorem~\ref{thm:closed_dynamic_regret_general}); crossover $d - r > C\,T^{1/6}$ gives a finite-$T$ rule-of-thumb supported by experiments (\S\ref{sec:experiments}).
   \end{enumerate}
 
 %%  2. RELATED WORK
@@ -326,7 +324,7 @@ On probe rounds $t\in \cTprobe$, where $x_t = u_t$:
 \end{enumerate}
 \end{assumption}
 
-Within the model studied here, these are probe-side identification requirements, not generic modeling restrictions: each is provably necessary (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}), stated in a form that supports the identifiability argument, and the paper quantifies robustness to approximate violation (Theorem~\ref{thm:closed_dynamic_regret_general}). Their practical scope and formal necessity are discussed in Appendix~\ref{sec:discussion}.
+Assumptions~\ref{assum:probe_realizability}--\ref{assum:probe_noise} are not generic modeling conveniences; they are the probe-side conditions under which identifiability is possible in the single-play scalar-feedback model studied here. Removing any one changes the information structure of the problem rather than merely weakening constants: each is provably necessary (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}), and the paper quantifies robustness to approximate violation (Theorem~\ref{thm:closed_dynamic_regret_general}). Their practical scope and formal necessity are discussed in Appendix~\ref{sec:discussion}.
 \begin{remark}[Online variance estimation at no asymptotic cost]
   \label{rem:burnin_free}
   Dedicating $T^{2/3}$ initial probes to variance estimation yields
@@ -360,9 +358,9 @@ For isotropic Gaussian probes, $C_{\mathcal K} \le 1$ (Remark~\ref{rem:probe_des
 \section{Identification from Single-Play Probes}
 \label{sec:identification}
 
-This section establishes the identification pipeline underlying the algorithm.
+This section establishes the identification boundary---the foundational contribution of the paper.
 We first show that single-play probe rewards reveal quadratic information about the predictable second moment.
-We then lift these quadratic observations into matrix-valued estimates whose leading eigenspace recovers the active subspace.
+We then lift these quadratic observations into matrix-valued estimates whose leading eigenspace recovers the active subspace; the regret results in \S\ref{sec:theory} are consequences of this characterization.
 
 Define the centered probe statistic $s_t := y_t^2 - \hat\sigma^2$, where $\hat\sigma^2$ is the algorithm's estimate of $\sigma_\varepsilon^2$.
 Under Assumption~\ref{assum:probe_noise}:
@@ -506,7 +504,7 @@ $S_t := \|\widehat{M}_t^{\mathrm{recent}} - \widehat{M}_t^{\mathrm{past}}\|_{\op
   \end{equation}
   with probability at least $1-\delta$. The three terms represent:
   \emph{projected exploitation} (vs.\ ambient $\widetilde O(d\sqrt{T})$),
-  the \emph{probe--subspace tradeoff} (matched within the projected-exploitation class by Theorem~\ref{thm:probe_rate_lb}),
+  the \emph{probe--subspace tradeoff} (sharp within the projected-exploitation class; Theorem~\ref{thm:probe_rate_lb}),
   and the \emph{irreducible drift price}.
   The full closed-form bound with explicit constants is:
   let $A := 2R_{\cA} S_w + c$, $B := 2 C_{\mathrm{sub}} S_w R_{\cA} \sqrt{\log(d/\delta)}$,
@@ -571,7 +569,8 @@ $S_t := \|\widehat{M}_t^{\mathrm{recent}} - \widehat{M}_t^{\mathrm{past}}\|_{\op
   \end{theorem}
 
   \paragraph{Lower bounds.}
-  Theorem~\ref{thm:etc_lower_bound} (Appendix~\ref{app:probe_cost_lower_bound}) proves $\Omega(\sqrt{cT})$ for all explore-then-commit policies.
+  Two lower bounds clarify the cost of projection-based control under subspace uncertainty.
+  Theorem~\ref{thm:etc_lower_bound} (Appendix~\ref{app:probe_cost_lower_bound}) proves $\Omega(\sqrt{cT})$ for all admissible policies, establishing an information-theoretic barrier.
   The following sharper result applies within the class that commits to an estimated subspace:
 
   \begin{definition}[Hard-projection score-maximizing class]
@@ -602,7 +601,7 @@ $S_t := \|\widehat{M}_t^{\mathrm{recent}} - \widehat{M}_t^{\mathrm{past}}\|_{\op
   Full proof in Appendix~\ref{app:matching_lower_bound}.
   \end{theorem}
 
-  The gap between $\Omega(\sqrt{cT})$ (unconditional) and $\Omega(c^{1/3}T^{2/3})$ (projected-exploitation) opens a precise question (Remark~\ref{rem:eps_gap_resolved}): can non-projecting algorithms achieve $O(\sqrt{cT})$?
+  The gap between $\Omega(\sqrt{cT})$ (all admissible policies) and $\Omega(c^{1/3}T^{2/3})$ (projected-exploitation) isolates a precise open question (Remark~\ref{rem:eps_gap_resolved}): hard-projection policies pay $\Omega(\varepsilon)$ per-round subspace-misalignment cost, while non-projecting policies may pay only $\Omega(\varepsilon^2)$; whether the latter can achieve $O(\sqrt{cT})$ total regret remains open.
 
 %% ============================================================
 %%  7. EXPERIMENTS
@@ -688,13 +687,11 @@ $S_t := \|\widehat{M}_t^{\mathrm{recent}} - \widehat{M}_t^{\mathrm{past}}\|_{\op
 \section{Conclusion}
 \label{sec:conclusion}
 
-We characterize probe-side conditions under which a changing low-rank subspace is identifiable from single-play
-   scalar feedback, and show that these conditions yield a rank-dependent costed dynamic regret upper bound of order $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ for SPSC.
-Within the projected-exploitation class, Theorem~\ref{thm:probe_rate_lb} provides a matching $\Omega(c^{1/3}T^{2/3})$ lower bound, so the probe--subspace tradeoff is sharp in that class.
-An adaptive variant removes oracle segment boundaries without changing the leading rate.
-Empirically, the observed crossover behavior and 6--38\% regret reductions are consistent with the theorem's predicted regime separation.
-
-Limitations and open problems---including closing the gap between projecting and non-projecting lower bounds, unknown rank with gradual spectral decay, and time-varying dynamics---are discussed in Appendix~\ref{sec:discussion}.
+This paper resolves the probe-side identifiability question for changing low-rank structure under single-play scalar feedback: three structural conditions are each individually necessary and jointly sufficient, and the algorithmic and lower-bound results follow from that characterization.
+The identification boundary yields a costed dynamic regret of $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ for SPSC, with an adaptive variant that removes oracle boundaries at the same leading rate.
+Within the projected-exploitation class, the $T^{2/3}$ probe--subspace tradeoff is sharp (Theorem~\ref{thm:probe_rate_lb}); whether non-projecting algorithms can improve on this tradeoff is a precise open question isolated by our analysis.
+Empirically, the 6--38\% regret reductions and observed crossover at $d - r \asymp T^{1/6}$ are consistent with the theorems' predictions.
+Further limitations and open problems are discussed in Appendix~\ref{sec:discussion}.
 
 
 \newpage
