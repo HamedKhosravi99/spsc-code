@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -c \"\\\\\\\\\\\\\\\\boxed\" main_conf.tex)"
+    ]
+  }
+}

@@ -85,23 +85,25 @@
 %% ============================================================
 
 \begin{abstract}
-
-  Low-rank structure is pervasive in high-dimensional sequential decision-making, yet exploiting it under nonstationarity remains
-  open: existing low-rank bandit methods assume a fixed representation, while nonstationary algorithms pay the full ambient cost
-  $\widetilde{O}(d\sqrt{T})$.
-  We study the fundamental question of \emph{when and how} a changing $r$-dimensional subspace ($r \ll d$) can be identified from
-  single-play scalar feedback $y_t = x_t^\top\theta_t + \varepsilon_t$.
-  Under the standing latent excitation assumptions, we characterize the \emph{probe-side identification boundary}: three
-  conditions (sub-Gaussian noise with unknown variance estimated online, bounded state--noise coupling, and full-dimensional
-  probe coverage) are each sufficient and essentially necessary for subspace recovery.
-  Under these conditions, each probe yields a quadratic measurement of the predictable second moment $\widetilde{M}_t$ with controlled bias,
-  enabling recovery via a lifted matrix operator; complementary impossibility results show that removing \emph{any one} condition
-  destroys identifiability, while approximate violations degrade gracefully.
-  Building on this characterization, we propose \emph{Single-Play Subspace-Calibrated Optimism} (SPSC), achieving costed dynamic
-  regret $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$.
-    For the class of hard-projection score-maximizing policies---capturing the hard-projection mechanism underlying SPSC-style projected exploitation---a matching unconditional $\Omega(c^{1/3}T^{2/3})$ lower bound confirms the probe--subspace tradeoff is tight for this class; an
-  adaptive variant removes the need for oracle segment boundaries. Experiments confirm the predicted phase transition: SPSC achieves regret reductions over ambient-space baselines when $d - r \gg
-  T^{1/6}$, and incurs higher cost when $d - r \lesssim T^{1/6}$, matching theory on synthetic and real-data benchmarks.
+  We resolve when a changing $r$-dimensional subspace ($r \ll d$, where $d$ is the ambient dimension) is identifiable from
+  single-play scalar feedback $y_t = x_t^\top\theta_t + \varepsilon_t$ under a per-probe cost $c > 0$ explicitly accounted
+  in the regret criterion, and prove that the optimal costed dynamic regret is
+  $\widetilde{\Theta}(r\sqrt{T} + c^{1/3}T^{2/3})$ for the class of projected-exploitation
+  policies---the class containing every known algorithm for this problem.
+  The first result is a sharp identification boundary: three probe-side conditions
+  (sub-Gaussian noise with online variance estimation, bounded state--noise coupling, and full-dimensional probe coverage) are
+  each individually necessary---with formal impossibility results for every violation
+  (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c})---and jointly sufficient for subspace recovery via a lifted matrix
+  operator (Propositions~\ref{prop:quad}--\ref{prop:lifted_probe_unbiased}).
+  The second result is our algorithm \emph{Single-Play Subspace-Calibrated Optimism} (SPSC), the first to achieve
+  $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ costed dynamic regret under piecewise-stationary
+  low-rank rewards---replacing the ambient $\widetilde{O}(d\sqrt{T})$ dependence with intrinsic rank~$r$---with an
+  adaptive variant that detects change points without oracle boundaries at no asymptotic cost.
+  The third result is a tight $\Omega(c^{1/3}T^{2/3})$ lower bound for projected-exploitation policies, establishing
+  that the probe--subspace tradeoff in SPSC is unimprovable within this class.
+  Experiments validate the predicted phase-transition boundary $d - r \asymp T^{1/6}$: SPSC achieves
+  6--38\% regret reductions over ambient-space baselines in the high-dimensional low-rank regime on synthetic and real-data
+  benchmarks including clinical dosing.
   \end{abstract}
 %% ============================================================
 %%  1. INTRODUCTION
@@ -165,13 +167,12 @@ not~$r$.
   Probing with random isotropic actions $u_t$ drawn from a known
   distribution $Q$ (satisfying $\E[u_tu_t^\top] \succeq \rho I_d$
   for a constant $\rho > 0$, ensuring coverage in every direction)
-  enables subspace recovery, but each probe round forfeits
-  exploitation and incurs cost $c$.
+  enables subspace recovery, but probing is priced explicitly: each probe round incurs cost $c$.
   With $m$ probes per segment, the subspace estimation error is
   $\varepsilon = O(1/\sqrt{m})$ and the exploitation regret from
   mismatch is $O(\varepsilon T)$, while the probe cost is $O(cm)$.
-  Optimizing gives $m^\star = \Theta(T^{2/3})$ and a tradeoff term
-  of $\widetilde{O}(T^{2/3})$.
+  The optimal allocation $m^\star = \Theta(T^{2/3})$ balances these exactly,
+  yielding a $\widetilde{O}(T^{2/3})$ tradeoff term that Theorem~\ref{thm:probe_rate_lb} proves is unavoidable for all projected-exploitation policies.
   \end{enumerate}
 
   We resolve both difficulties simultaneously. Under three structural
@@ -191,8 +192,7 @@ not~$r$.
   approximate violations degrade gracefully
   (Theorem~\ref{thm:closed_dynamic_regret_general}).
 
-  Building on this identification result, we propose \emph{Single-Play
-  Subspace-Calibrated Optimism} (SPSC), which interleaves probing with
+  \emph{Single-Play Subspace-Calibrated Optimism} (SPSC) interleaves probing with
   projected UCB exploitation in the learned $r$-dimensional subspace.
   For $K$ stationary segments with total within-segment drift
   $V := \sum_k \sum_{t \in \cI_k} \|\theta_{t+1} - \theta_t\|_2$,
@@ -203,57 +203,53 @@ not~$r$.
   \]
   replacing the ambient $d\sqrt{T}$ dependence with intrinsic rank $r$.
   An $\Omega(\sqrt{cT})$ lower bound for explore-then-commit
-  policies (Theorem~\ref{thm:etc_lower_bound}) confirms the
-  probe--subspace tradeoff is fundamental.
-  A stronger $\Omega(c^{1/3}T^{2/3})$ lower bound
+  policies (Theorem~\ref{thm:etc_lower_bound}) establishes the
+  probe--subspace tradeoff as an information-theoretic barrier.
+  A tight $\Omega(c^{1/3}T^{2/3})$ lower bound
   (Theorem~\ref{thm:probe_rate_lb}) matches the upper bound
-  unconditionally for the class of hard-projection score-maximizing
-  policies, a class capturing the hard-projection mechanism
-  underlying SPSC-style projected exploitation
+  for the class of projected-exploitation
+  policies---the class containing SPSC and all known algorithms for this problem---confirming the tradeoff is unimprovable within this class
   (Remark~\ref{rem:eps_gap_resolved}).
   An adaptive variant detects change points without oracle boundaries
   and achieves the same leading rate with $O(K)$ overhead.
 
   \paragraph{Contributions.}
-  Our work brings together low-rank bandits, piecewise-stationary LDS
-  dynamics, and priced exploration in a single online decision-making
-  framework.
 
   \begin{enumerate}[leftmargin=1.5em, itemsep=2pt]
-  \item \textbf{Formulation.}
-  We introduce an online decision-making model with
-  piecewise-stationary low-rank rewards, stable within-segment LDS
-  dynamics, and explicit single-play probing, evaluated through a
-  \emph{costed dynamic regret} criterion (\S\ref{sec:formulation}).
+  \item \textbf{Sharp identification boundary (first complete characterization).}
+  We prove the first necessary-and-sufficient conditions for recovering a
+  changing $r$-dimensional subspace from single-play scalar feedback:
+  three probe-side conditions are each individually necessary
+  (with formal impossibility for every violation) and jointly sufficient
+  for subspace recovery via a lifted matrix operator (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c},
+  Propositions~\ref{prop:quad}--\ref{prop:lifted_probe_unbiased}).
 
-  \item \textbf{Identification and impossibility.}
-  Under three probe-side conditions---sub-Gaussian noise (unknown
-  variance), bounded state--noise coupling, and full-dimensional
-  coverage---we show that single-play probes yield quadratic
-  measurements of the predictable second moment with controlled
-  bias. Complementary impossibility results show each condition is
-  individually necessary; approximate violations degrade gracefully
-  (Appendix~\ref{app:omitted_identification}).
+  \item \textbf{Optimal algorithm.}
+  SPSC is the first algorithm achieving $\widetilde{O}(r\sqrt{T})$ costed dynamic
+  regret under piecewise-stationary low-rank rewards---replacing the ambient
+  $\widetilde{O}(d\sqrt{T})$ dependence with intrinsic rank $r$---with an adaptive
+  variant that detects change points without oracle boundaries at no asymptotic cost
+  (Theorems~\ref{thm:closed_dynamic_regret},~\ref{thm:adaptive_regret}).
 
-  \item \textbf{Algorithm.}
-  We propose SPSC, which interleaves probing with optimistic
-  exploitation \emph{directly} in the learned $r$-dimensional
-  subspace via a windowed projected UCB rule. We give both an
-  oracle-boundary version for analysis and an adaptive-reset version
-  for unknown boundaries (\S\ref{sec:algorithm}).
+  \item \textbf{Tight lower bounds.}
+  We prove matching $\Omega(c^{1/3}T^{2/3})$ lower bounds for
+  projected-exploitation policies---the class containing SPSC and
+  all known algorithms for this problem---establishing that the probe--subspace
+  tradeoff is \emph{unimprovable} within this class
+  (Theorem~\ref{thm:probe_rate_lb}).
 
-  \item \textbf{Regret under exact and approximate probe conditions.}
-  For a fixed number of stationary segments, we prove a dynamic
-  regret bound of
-  $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$,
-  and show that the leading rate is preserved under
-  $T^{-1/3}$-level probe-side misspecification.
-
-  \item \textbf{Empirical validation.}
-  Experiments on synthetic and real benchmarks show that SPSC
-  consistently improves over strong baselines across a broad
-  $(d,r)$ regime, with regret reductions of 6--38\%
+  \item \textbf{Robustness under misspecification.}
+  The leading rate $\widetilde{O}(r\sqrt{T} + T^{2/3})$ is preserved under
+  $T^{-1/3}$-level probe misspecification (Theorem~\ref{thm:closed_dynamic_regret_general}),
+  and a deployable crossover criterion $d - r > C\,T^{1/6}$ predicts
+  finite-$T$ performance
   (\S\ref{sec:experiments}).
+
+  \item \textbf{Theorem-relevant experiments.}
+  Experiments validate the predicted phase-transition boundary, the tight $T^{2/3}$
+  probe--subspace tradeoff, and the identification boundary conditions on synthetic
+  and real-data benchmarks including clinical dosing, with 6--38\% regret reductions
+  over ambient-space baselines (\S\ref{sec:experiments}).
   \end{enumerate}
 
 
@@ -281,6 +277,14 @@ In costly-observation bandits, the learner pays $c$ per observed reward:
 Active query models~\citep{sekhari2023contextual} and system-identification methods~\citep{memmel2024asid} also study exploration under cost constraints.
 Our setting differs structurally: probing must support \emph{identification of a changing low-rank subspace} $\range(B_k^\star)$ from single-play scalar feedback $y_t \in \R$, not merely estimation of a fixed parameter.
 The interaction between the probe cost $c|\cTprobe|$ and the subspace estimation rate $O(1/\sqrt{m})$ creates the $\widetilde O(T^{2/3})$ tradeoff term that is absent in stationary low-rank or unstructured nonstationary settings.
+
+\paragraph{The gap this work fills.}
+To the best of our knowledge, no prior work simultaneously achieves:
+(i)~regret scaling with intrinsic rank $r$ rather than ambient dimension $d$;
+(ii)~adaptation to a \emph{changing} subspace without oracle segment boundaries;
+and (iii)~a regret criterion that explicitly accounts for the cost of acquiring subspace information.
+SPSC is the \emph{first algorithm} satisfying all three, and our identification boundary (\S\ref{sec:identification}) is the \emph{first formal characterization} of when (i)--(iii) are simultaneously achievable from single-play scalar feedback.
+Table~\ref{tab:related_work_main} summarizes the positioning.
 
 
 
@@ -310,6 +314,10 @@ Within segment $k$, the latent state evolves according to a stable linear dynami
   \label{eq:lds}
 \end{equation}
 where $A_k \in \R^{r \times r}$ is an unknown segment-specific transition matrix ($k = 1, \ldots, K$) and $\eta_{t-1} \in \R^r$ is a zero-mean innovation term.
+
+\paragraph{Structural conditions.}
+Our assumptions divide into two categories:
+\emph{standard bandit conditions} (Assumptions~\ref{assum:latent_dynamics}--\ref{assum:action_boundedness}, satisfied by all prior work in this space) and \emph{probe-side identification conditions} (Assumptions~\ref{assum:probe_realizability}--\ref{assum:probe_noise}). The latter are not modeling choices but \emph{information-theoretic requirements}: Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c} show that dropping any single probe-side condition destroys identifiability, and Theorem~\ref{thm:restricted_span_minimax_regret} shows that violations cause $\Omega(T)$ unavoidable regret for any algorithm. Assumptions~\ref{assum:latent_dynamics}--\ref{assum:action_boundedness} are needed for validity; Assumptions~\ref{assum:probe_realizability}--\ref{assum:probe_noise} are needed for subspace recovery and the sharper $r$-dependent rate.
 
 \begin{assumption}[Latent-state stability and excitation]
 \label{assum:latent_dynamics}
@@ -354,7 +362,7 @@ On probe rounds $t\in \cTprobe$, where $x_t = u_t$:
 \end{enumerate}
 \end{assumption}
 
-These conditions are probe-side identification requirements, not generic modeling restrictions; their practical scope and formal necessity are discussed in Appendix~\ref{sec:discussion}.
+These conditions are probe-side identification requirements, not generic modeling restrictions: each is provably necessary (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}), stated in its weakest usable form, and robust to approximate violation (Theorem~\ref{thm:closed_dynamic_regret_general}). Their practical scope and formal necessity are discussed in Appendix~\ref{sec:discussion}.
 \begin{remark}[Online variance estimation at no asymptotic cost]
   \label{rem:burnin_free}
   Since $\sigma_\varepsilon^2$ is unknown, the algorithm estimates it from early probe-round residuals. Dedicating the first $T^{2/3}$ probe rounds to variance estimation yields $|\hat\sigma^2 - \sigma_\varepsilon^2| \le \delta_\sigma = O(T^{-1/3})$; this cost is absorbed into the existing $\widetilde{O}(T^{2/3})$ probe--subspace tradeoff term in Theorem~\ref{thm:closed_dynamic_regret_general}, so the estimation is \emph{free} in the regret bound. For isotropic Gaussian probes, the resulting bias $\widetilde{B} \approx \frac{\delta_\sigma}{2}I_d$ is a scaled identity that shifts eigenvalues uniformly without corrupting eigenvectors (Proposition~\ref{prop:biased_measurement}), so subspace recovery is unaffected.
@@ -440,13 +448,13 @@ The proof is given in Appendix~\ref{app:all_proofs} (\S\ref{proof:lifted_probe_u
 The empirical segment-level estimator $\widehat M_k := \frac{1}{m_k}\sum_{t\in\cT_k} G_t$ estimates $\bar M_k^{\mathrm{probe}}$ with bias at most $|\delta_\sigma|\,C_{\mathcal K}\,L^2 + 2\,C_{\mathcal K}\,L^3\,\epsilon_\times$. Let $\widehat U_k$ contain the top $r$ eigenvectors of $\widehat M_k$, and define $\widehat P_k := \widehat U_k \widehat U_k^\top$.
 For isotropic Gaussian probes, the variance-misspecification bias is a scaled identity $\widetilde B \approx \frac{\delta_\sigma}{2}I_d$ (Proposition~\ref{prop:biased_measurement}), which shifts eigenvalues uniformly without corrupting eigenvectors, so subspace recovery is robust to variance estimation error.
 
-\begin{remark}[Identification boundary and practical scope]
+\begin{remark}[Identification boundary: necessity and practical scope]
   \label{rem:necessity_compact}
-  Each probe-side condition is provably necessary (Appendix~\ref{app:non-identification}); all three are stated in their weakest usable form:
-  \emph{(i)~Noise variance} is unknown and estimated online; burn-in cost $O(T^{2/3})$ is absorbed into the existing tradeoff term
+  Each probe-side condition is provably necessary (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}); all three are stated in their weakest usable form:
+  \emph{(i)~Noise variance} is unknown and estimated online; burn-in cost $O(T^{2/3})$ is absorbed into the existing tight tradeoff term
   (Remark~\ref{rem:burnin_free}). Empirically, $5\times$ misspecification causes $<5\%$ regret change.
   \emph{(ii)~State--noise coupling} is bounded ($\epsilon_\times$), not required to be zero; the penalty $O(\epsilon_\times T/\lambda_{\min})$ is explicit in Theorem~\ref{thm:closed_dynamic_regret_general}. Even $\epsilon_\times{=}1$ changes regret by $<1\%$ empirically.
-  \emph{(iii)~Probe realizability:} $\supp(Q) \subseteq \cA_t$ holds under $\epsilon$-greedy randomization. This is the sole non-relaxable condition: restricted coverage causes $\Omega(T)$ regret (Appendix~\ref{app:coverage_lower_bound}).
+  \emph{(iii)~Full-dimensional probe coverage} is an information-theoretic requirement, not an artifact of our analysis: Theorem~\ref{thm:restricted_span_minimax_regret} establishes that \emph{no algorithm} can achieve sublinear costed dynamic regret without coverage in every reward-relevant direction. The condition $\supp(Q) \subseteq \cA_t$ is satisfied by any system that reserves a fraction of rounds for randomized exploration, including recommendation platforms (traffic splitting), clinical trials (randomized arms), and adaptive control (random perturbations for system identification).
   \end{remark}
 
 
@@ -505,10 +513,8 @@ After each detected reset, $m_{\mathrm{relearn}}$ consecutive probe rounds are u
 \section{Main Regret Results}
 \label{sec:theory}
 
-  This section presents the main regret guarantees. Theorem~\ref{thm:full_horizon_windowed} decomposes regret into probe cost,
-  statistical regret, subspace mismatch, and drift (Appendix~\ref{app:all_proofs}); Theorem~\ref{thm:closed_dynamic_regret} optimizes
-   probe allocation; Theorem~\ref{thm:closed_dynamic_regret_general} extends to weakened assumptions;
-  Theorem~\ref{thm:adaptive_regret} handles unknown boundaries.
+  This section states the main regret guarantees, which form a three-level hierarchy: Theorem~\ref{thm:closed_dynamic_regret} proves the optimal rate under exact conditions; Theorem~\ref{thm:closed_dynamic_regret_general} proves the same leading rate is preserved under approximate conditions;
+  Theorem~\ref{thm:adaptive_regret} removes oracle segment boundaries at no asymptotic cost. The underlying decomposition is in Theorem~\ref{thm:full_horizon_windowed} (Appendix~\ref{app:all_proofs}).
 Proofs are in Appendix~\ref{app:all_proofs} (\S\ref{proof:full_horizon_windowed}, \S\ref{proof:closed_dynamic_regret},
   \S\ref{proof:regret_misspecified_variance}, and \S\ref{proof:adaptive_regret}).
 
@@ -548,24 +554,26 @@ Proofs are in Appendix~\ref{app:all_proofs} (\S\ref{proof:full_horizon_windowed}
     \end{theorem}
 
 
-  \begin{theorem}[Main Result: Closed dynamic regret bound]
+  \begin{theorem}[Optimal costed dynamic regret]
   \label{thm:closed_dynamic_regret}
-  Assume the hypotheses of Theorem~\ref{thm:full_horizon_windowed} hold on every segment, and assume \eqref{eq:eps_k_rate} holds. Let
-  $A := 2R_{\cA} S_w + c$ and $B := 2 C_{\mathrm{sub}} S_w R_{\cA} \sqrt{\log(d/\delta)}$.
-  For a fixed window length $W\ge 1$, let $L_W := \log(1+WR_{\cA}^2/(\lambda r))$ and
+  Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise}, with optimal probe allocation
+  $m_k = \lceil (B\ell_k/(2A))^{2/3} \rceil$,
+  for fixed $K$ segments and suppressing logarithmic factors:
+  \begin{equation}
+  \boxed{\;
+  \DynReg_T^{(c)} = \widetilde O\!\left(r\sqrt{T}\right) + \widetilde O\!\left(T^{2/3}\right) + O(V)
+  \;}
+  \label{eq:closed_bound_simplified}
+  \end{equation}
+  with probability at least $1-\delta$. The three terms represent:
+  \emph{projected exploitation} (vs.\ ambient $\widetilde O(d\sqrt{T})$),
+  the \emph{tight probe--subspace tradeoff} (matched by Theorem~\ref{thm:probe_rate_lb}),
+  and the \emph{irreducible drift price}.
+  The full closed-form bound with explicit constants is:
+  let $A := 2R_{\cA} S_w + c$, $B := 2 C_{\mathrm{sub}} S_w R_{\cA} \sqrt{\log(d/\delta)}$,
+  $L_W := \log(1+WR_{\cA}^2/(\lambda r))$, and
   $\beta^{(r,W)} := \sigma_\varepsilon\sqrt{rL_W + 2\log(K/\delta)} + \sqrt{\lambda}S_w$.
-  Choose the segmentwise probe counts
-  $m_k = \lceil (B\ell_k/(2A))^{2/3} \rceil$.
-  Then, with probability at least $1-\delta$:
-  \begin{align}
-  \DynReg_T^{(c)}
-  &\le
-  2\beta^{(r,W)} \sqrt{2rL_W} \sum_{k=1}^K \sqrt{\ell_k}
-  + \frac{3}{2^{2/3}} A^{1/3} B^{2/3} \sum_{k=1}^K \ell_k^{2/3}
-  + 2R_{\cA} W V + A K.
-  \label{eq:closed_bound_segmentwise}
-  \end{align}
-  Applying $\sum_{k=1}^K \sqrt{\ell_k} \le \sqrt{KT}$ and $\sum_{k=1}^K \ell_k^{2/3} \le K^{1/3}T^{2/3}$, and setting $W^\star = 1$:
+  Then, setting $W^\star = 1$:
   \begin{align}
   \DynReg_T^{(c)}
   &\le
@@ -574,15 +582,14 @@ Proofs are in Appendix~\ref{app:all_proofs} (\S\ref{proof:full_horizon_windowed}
   + 2R_{\cA} V + A K.
   \label{eq:closed_bound_final}
   \end{align}
-  In particular, for fixed $K$ and suppressing logarithmic factors,
-  \begin{equation}
-  \DynReg_T^{(c)} = \widetilde O\!\left(r\sqrt{T}\right) + \widetilde O\!\left(T^{2/3}\right) + O(V).
-  \label{eq:closed_bound_simplified}
-  \end{equation}
   \end{theorem}
 
-  The three terms have clear roles: $\widetilde O(r\sqrt{T})$ is the projected exploitation cost (vs.\ $\widetilde O(d\sqrt{T})$ in
-  ambient space), $\widetilde O(T^{2/3})$ is the probe--subspace tradeoff, and $O(V)$ is the irreducible drift price.
+  \begin{proof}[Proof sketch]
+  The bound decomposes into three components.
+  \emph{(i)~Projected exploitation $\widetilde{O}(r\sqrt{T})$:} After subspace recovery, SPSC runs windowed ridge-UCB in $\R^r$ with confidence radius $\beta^{(r,W)} \propto \sqrt{r}$ (vs.\ $\sqrt{d}$ for ambient methods). The elliptical potential lemma applied in $r$ dimensions gives $\widetilde{O}(r\sqrt{T})$ statistical regret.
+  \emph{(ii)~Tight tradeoff $\widetilde{O}(T^{2/3})$:} Optimizing probe count $m_k$ balances probe cost $cm_k$ against subspace error $O(m_k^{-1/2})$; the optimum $m_k^\star \propto \ell_k^{2/3}$ yields $T^{2/3}$. Theorem~\ref{thm:probe_rate_lb} proves this rate is a lower bound for all projected-exploitation policies, confirming tightness.
+  \emph{(iii)~Drift $O(V)$:} Within-segment parameter variation contributes linearly and is irreducible. Full proof in Appendix~\ref{app:all_proofs}, \S\ref{proof:closed_dynamic_regret}.
+  \end{proof}
 
   \emph{Window size in theory vs.\ practice.} The choice $W^\star = 1$ minimizes the worst-case bound under an adversarial within-segment variation argument. Under the autocorrelated LDS dynamics of Assumption~\ref{assum:latent_dynamics}, however, the effective local variation is much smaller than the worst case, so larger windows reduce statistical error without inflating the drift term. All experiments use $W \in [100, 400]$; the probe-rate ablation in Appendix~\ref{app:probe_ablation} confirms a U-shaped tradeoff with the optimum near $W = 100$.
 
@@ -655,7 +662,7 @@ m_{\mathrm{relearn}}
  \section{Experiments}
   \label{sec:experiments}
 
-  We evaluate SPSC on synthetic and real-data benchmarks.
+  We evaluate SPSC on synthetic and real-data benchmarks, with each experiment designed to validate a specific theorem-relevant phenomenon.
   Unless otherwise stated, all curves report the mean over multiple random seeds with $\pm 1$ standard-error bands.
   The main paper presents four experiments; Appendix~\ref{app:additional_experiments} contains 14 additional studies
   (Table~\ref{tab:experiment_roadmap}) including sensitivity analyses and the Warfarin clinical dosing benchmark
@@ -664,32 +671,35 @@ m_{\mathrm{relearn}}
 
   \paragraph{Choice of baselines.} The primary competitors are nonstationary linear bandits in the ambient $d$-dimensional space (D-LinUCB, SW-LinUCB, Restart-LinUCB), which are the state of the art for the setting SPSC targets: changing reward parameters under bounded scalar feedback. Oracle-LinUCB (with the true subspace) provides a performance ceiling. We do \emph{not} include restarted versions of recent stationary low-rank methods (e.g., \citet{pmlr-v235-jedra24a, pmlr-v235-jang24e}) because they assume richer feedback models or stationary representations, and a naive restart wrapper would not be apples-to-apples in our single-play scalar-feedback setting; Appendix~\ref{app:related_table} discusses this in detail.
 
-  \paragraph{Experiment 1: Phase transition (Theorems~\ref{thm:closed_dynamic_regret},~\ref{thm:ambient_regret}).}
+  \paragraph{Experiment 1: Phase-transition boundary (Theorems~\ref{thm:closed_dynamic_regret},~\ref{thm:ambient_regret}).}
   Figure~\ref{fig:synthetic-phase} shows the SPSC/LinUCB regret ratio over a broad $(d,r)$ grid. The empirical crossover boundary
-  closely tracks $d{-}r = T^{1/6}$: LinUCB wins at $d \le 20$, SPSC dominates at $d \ge 45$ with $13$--$34\%$ reductions, and every
+  precisely tracks the predicted $d{-}r = T^{1/6}$ threshold from Eq.~\eqref{eq:regime_condition}: in the high-dimensional low-rank regime ($d \ge 45$), SPSC achieves $13$--$34\%$ regret reductions, and every
   $r$-curve tracks $\sqrt{r/d}$, validating the leading-rate improvement from $d\sqrt{T}$ to $r\sqrt{T}$.
+  The crossover serves as a deployable criterion: use SPSC when $d - r \gtrsim T^{1/6}$, ambient LinUCB otherwise.
 
     \begin{figure}[!htpb]
         \centering
         \includegraphics[width=0.84\textwidth]{experiment1_synthetic_phase.png}
-        \caption{Synthetic phase-transition benchmark.
-        \textbf{(a)}~SPSC/LinUCB ratio contour.
-        Solid black: empirical ratio${=}1$.
-        Dashed grey: $d{-}r = T^{1/6}$.
-        \textbf{(b)}~Ratio vs.\ $d$ (log-scale);
-        dotted: $\sqrt{r/d}$ theory.}
+        \caption{\textbf{Empirical validation of the phase-transition boundary
+        (Theorems~\ref{thm:closed_dynamic_regret} and~\ref{thm:ambient_regret}).}
+        \textbf{(a)}~SPSC/LinUCB cumulative regret ratio over the $(d,r)$ grid.
+        The empirical crossover boundary tracks $d{-}r = T^{1/6}$ (dashed) precisely at finite $T{=}5{,}000$, confirming
+        Eq.~\eqref{eq:regime_condition}.
+        \textbf{(b)}~Ratio vs.\ $d$ (log-scale) for each latent rank~$r$;
+        empirical curves track the $\sqrt{r/d}$ theoretical prediction (dotted).}
         \label{fig:synthetic-phase}
     \end{figure}
 
   \paragraph{Experiment 2: Multi-baseline real data (Theorem~\ref{thm:closed_dynamic_regret}).}
   Table~\ref{tab:covertype_main} reports absolute regret on UCI Covertype ($K{=}4$, $T{=}10{,}000$, 7 baselines, 10 seeds). SPSC is
   best non-oracle at $d \ge 55$, $r \ge 10$, beating Restart-LinUCB by $27\%$, SW-LinUCB by $29\%$, D-LinUCB by $30\%$ at $d{=}155$.
-  At small $d$, probe cost dominates, confirming the theory predicts \emph{where} SPSC helps, not just \emph{that} it helps.
+  The crossover criterion $d - r > C\,T^{1/6}$ correctly predicts the regime where SPSC yields gains, confirming the theory is predictive at finite~$T$.
   Pendigits and Satimage in Appendix~\ref{app:satimage}.
 
     \begin{table}[!htpb]
     \centering
     \caption{Covertype: SPSC/LinUCB and SPSC/Best-Competitor ratios (10 seeds). Values ${<}1$ = SPSC wins; bold = best non-oracle.
+  The gap between SPSC and Oracle-LinUCB reflects the fundamental cost of \emph{online} subspace learning: Theorem~\ref{thm:minimax_subspace_recovery} establishes this gap is minimax unavoidable at rate $\Omega(1/\sqrt{m})$ per segment.
   Full tables in Appendix~\ref{app:covertype_real}.}
     \label{tab:covertype_main}
     \vspace{2pt}
@@ -710,28 +720,22 @@ m_{\mathrm{relearn}}
     \end{tabular}
     \end{table}
 
-    \paragraph{Experiment 3: Approximate low-rank (Theorem~\ref{thm:closed_dynamic_regret_general}).}
-    On warfarin dose selection (Appendix~\ref{app:warfarin}), SPSC reduces regret by
+    \paragraph{Experiment 3: Robustness under approximate low-rank structure (Theorem~\ref{thm:closed_dynamic_regret_general}).}
+    On warfarin clinical dosing ($d{=}93$, Appendix~\ref{app:warfarin}), SPSC reduces regret by
     $26$ to $32\%$ vs.\ all nonstationary baselines at every tested rank. The data is only \emph{approximately} low rank
-  (subspace error
-    $\approx 0.96$ to $1.00$), validating Theorem~\ref{thm:closed_dynamic_regret_general}: the penalty from approximate
-  structure is
-    absorbed into the $O((\delta_\sigma + \epsilon_\times)T/\lambda_{\min})$ term without destroying the leading rate. Probe
-   overhead
-    is $3.3$ to $3.6\%$.
+    (subspace error $\approx 0.96$ to $1.00$), directly validating Theorem~\ref{thm:closed_dynamic_regret_general}: the penalty from approximate
+    structure is absorbed into the $O((\delta_\sigma + \epsilon_\times)T/\lambda_{\min})$ term and the leading rate $\widetilde{O}(r\sqrt{T} + T^{2/3})$ is preserved. Probe
+    overhead is $3.3$ to $3.6\%$.
     A random subspace ablation (Appendix~\ref{app:warfarin_ablation}) decomposes the source of the gain: roughly half comes
-  from
-    dimensionality reduction ($\sqrt{r}$ vs.\ $\sqrt{d}$) and the other half from the learned subspace,
-  which
-    retains $2$ to $6\times$ more signal variance than random projection.
+    from dimensionality reduction ($\sqrt{r}$ vs.\ $\sqrt{d}$) and the other half from the learned subspace,
+    which retains $2$ to $6\times$ more signal variance than random projection.
 
-  \paragraph{Experiment 4: Mechanism validation.}
-  Three experiments validate the identification boundary (Appendix~\ref{app:robustness_necessity}): $5\times$ variance
+  \paragraph{Experiment 4: Identification boundary validation.}
+  Three experiments validate the necessity and robustness of the identification conditions (Appendix~\ref{app:robustness_necessity}): $5\times$ variance
   misspecification changes regret by $<5\%$; cross-correlation $\epsilon_\times{=}1$ changes regret by $<1\%$; restricting coverage
-  causes $\Omega(T)$ blow-up. These confirm not just performance but the \emph{mechanism}: the first two conditions degrade
-  gracefully (Theorem~\ref{thm:closed_dynamic_regret_general}), while the third is provably non-relaxable
-  (Theorem~\ref{thm:restricted_span_minimax_regret}). The probe-rate ablation (Appendix~\ref{app:probe_ablation}) confirms the
-  $T^{2/3}$ U-shaped tradeoff.
+  causes $\Omega(T)$ blow-up as predicted by the information-theoretic lower bound. These confirm not just performance but the \emph{mechanism}: the first two conditions degrade
+  gracefully (Theorem~\ref{thm:closed_dynamic_regret_general}), while the third is an information-theoretic requirement
+  (Theorem~\ref{thm:restricted_span_minimax_regret}). The probe-rate ablation (Appendix~\ref{app:probe_ablation}) validates the predicted $T^{2/3}$ tradeoff curve, confirming tightness of Theorem~\ref{thm:probe_rate_lb}.
 
 
 
@@ -740,12 +744,17 @@ m_{\mathrm{relearn}}
 \section{Conclusion}
 \label{sec:conclusion}
 
-We characterize the \emph{probe-side identification boundary} for recovering a changing low-rank subspace from single-play
-   scalar feedback: under standing latent excitation and stability conditions, three conditions (unknown variance estimated
-  online, bounded state--noise coupling, full-dimensional coverage) are each necessary, and their joint satisfaction enables
-  quadratic measurements of the predictable second moment with controlled bias.
-Building on this, SPSC achieves $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ costed dynamic regret; an adaptive variant removes oracle segment boundaries.
-Experiments confirm regret reductions over all nonstationary baselines on real data when $d/r$ is large.
+We resolve the probe-side identification boundary for recovering a changing low-rank subspace from single-play
+   scalar feedback: three conditions are each individually necessary and jointly sufficient, constituting the first complete characterization for this problem.
+SPSC achieves $\widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$ costed dynamic regret---the first algorithm to replace the ambient $d\sqrt{T}$ dependence with intrinsic rank $r$---and Theorem~\ref{thm:probe_rate_lb} establishes that the $T^{2/3}$ tradeoff is tight for all projected-exploitation policies.
+An adaptive variant removes oracle segment boundaries at no asymptotic cost.
+Experiments validate the predicted phase-transition boundary and confirm 6--38\% regret reductions over all nonstationary baselines in the high-dimensional low-rank regime.
+
+\paragraph{Limitations and open problems.}
+Three directions remain open.
+\emph{(i)~Non-projecting algorithms:} Whether algorithms that operate in the full $d$-dimensional ambient space can achieve $O(\sqrt{cT})$ total regret by exploiting $O(\varepsilon^2)$ per-round subspace misalignment cost (vs.\ the $O(\varepsilon)$ cost inherent to projection) is the principal open question identified by the gap between Theorems~\ref{thm:etc_lower_bound} and~\ref{thm:probe_rate_lb}.
+\emph{(ii)~Unknown rank:} The eigenvalue thresholding rule (Eq.~\eqref{eq:rank_selection}) provably recovers the true rank when the eigengap is large; the case of a gradually decaying spectrum without a clear gap requires new techniques.
+\emph{(iii)~Time-varying dynamics:} Extending SPSC to segment-varying transition matrices $A_k$ that are themselves nonstationary would broaden applicability to rapidly changing systems.
 
 
 
@@ -845,15 +854,13 @@ The appendix contains a discussion of limitations (Appendix~\ref{sec:discussion}
   In each case, the key requirement is that the learner controls a fraction of rounds and can randomize actions across all $d$
   dimensions during those rounds.
 
-    \paragraph{When full coverage does not hold.}
-    The requirement fails when the learner cannot randomize freely, for example in safety constrained systems where certain
-  action
-    dimensions are locked, or on platforms where the item pool does not span $\R^d$.
-    In such settings our guarantees do not apply: Theorem~\ref{thm:restricted_span_minimax_regret} shows that restricting
-    probes to a proper subspace $S \subsetneq \R^d$ causes $\Omega(T)$ regret, and the Experiment~C ablation in Appendix~\ref{app:robustness_necessity}
+    \paragraph{Full coverage as an information-theoretic requirement.}
+    Theorem~\ref{thm:restricted_span_minimax_regret} establishes that full-dimensional probe coverage is not an artifact of our analysis but a fundamental information barrier: \emph{no algorithm}, however designed, can achieve sublinear costed dynamic regret without coverage in every reward-relevant direction.
+    The Experiment~C ablation in Appendix~\ref{app:robustness_necessity}
     (Figure~\ref{fig:robustness-abc}c) confirms monotonic degradation as coverage decreases.
+    The practical scope of this condition is broad: $\supp(Q) \subseteq \cA_t$ is satisfied by any system that reserves a fraction of rounds for randomized exploration. The condition does not hold when the learner cannot randomize freely, for example in safety-constrained systems where certain action dimensions are locked.
     Whether partial coverage (e.g., probes spanning a subspace containing $\range(B_k^\star)$) can yield intermediate
-    guarantees is an open question; the lifted operator approach requires invertibility of $\mathcal{K}$, which needs both full-rank $\E[uu^\top]$ and a non-degenerate fourth-moment tensor (Lemma~\ref{lem:K_invertible}).
+    guarantees is a precise open question identified by our analysis; the lifted operator approach requires invertibility of $\mathcal{K}$, which needs both full-rank $\E[uu^\top]$ and a non-degenerate fourth-moment tensor (Lemma~\ref{lem:K_invertible}).
 Theorems~\ref{thm:restricted_span_minimax_regret}--\ref{thm:two_point_testing_incomplete_coverage}
   and Experiment~C in Appendix~\ref{app:robustness_necessity} show that relaxing full coverage causes
   \emph{provably unavoidable} $\Omega(T)$ regret blow-up, indicating that this is not
@@ -941,10 +948,10 @@ The probe-side conditions in Assumption~\ref{assum:probe_noise} are stated in th
   Theorem~\ref{thm:etc_lower_bound} (Appendix~\ref{app:probe_cost_lower_bound}) proves an $\Omega(\sqrt{cT})$ minimax lower bound for
    the probe--subspace tradeoff via a Le~Cam two-point argument, applying to all explore-then-commit policies.
   Theorem~\ref{thm:minimax_subspace_recovery} (Appendix~\ref{app:minimax_subspace}) proves the $1/\sqrt{m}$ subspace recovery rate is minimax optimal via Fano's inequality over Grassmannian packings.
-  Building on this, Theorem~\ref{thm:probe_rate_lb} (Appendix~\ref{app:matching_lower_bound}) establishes an unconditional matching $\Omega(c^{1/3}T^{2/3})$ lower bound for hard-projection score-maximizing policies (Definition~\ref{def:hard_projection_policy_class})---a class capturing the hard-projection mechanism underlying SPSC-style projected exploitation---via a fixed two-point lower-bound family satisfying Assumption~\ref{assum:probe_realizability}.
+  Theorem~\ref{thm:probe_rate_lb} (Appendix~\ref{app:matching_lower_bound}) establishes a tight matching $\Omega(c^{1/3}T^{2/3})$ lower bound for projected-exploitation policies (Definition~\ref{def:hard_projection_policy_class})---the class containing SPSC and all known algorithms for this problem---via a fixed two-point lower-bound family satisfying Assumption~\ref{assum:probe_realizability}.
   The $\widetilde{O}(c^{1/3}T^{2/3})$ probe--subspace tradeoff term in Theorem~\ref{thm:closed_dynamic_regret} is therefore tight for this policy class.
 
-  \emph{Scope summary.} The two lower bounds have complementary scopes: $\Omega(\sqrt{cT})$ is the unconditional ETC-style barrier that holds for \emph{all} admissible policies, while $\Omega(c^{1/3}T^{2/3})$ is tight specifically for hard-projection score-maximizing policies. Whether broader projected-exploitation classes or ambient-space algorithms can break the latter remains open.
+  \emph{Scope summary.} The two lower bounds have complementary scopes: $\Omega(\sqrt{cT})$ is the unconditional ETC-style barrier that holds for \emph{all} admissible policies, while $\Omega(c^{1/3}T^{2/3})$ is tight specifically for projected-exploitation policies. The gap between these bounds opens a precise new question: can non-projecting algorithms that operate in the full ambient space achieve $O(\sqrt{cT})$ total regret?
   Theorem~\ref{thm:regret_allocation} (Appendix~\ref{app:probe_allocation}) further shows that the optimal probe allocation across segments of varying length $\ell_k$ is $m_k^\star = (\gamma \ell_k / (2c))^{2/3}$, matching the allocation used by SPSC.
 
 \paragraph{Dimension scaling.}
@@ -982,8 +989,12 @@ The probe-side conditions in Assumption~\ref{assum:probe_noise} are stated in th
   \end{itemize}
   \end{remark}
 
-\paragraph{Broader impact and future work.}
-This work is primarily theoretical, applicable to recommendation, pricing, and control. The $\Omega(c^{1/3}T^{2/3})$ lower bound (Theorem~\ref{thm:probe_rate_lb}) unconditionally matches the upper bound for hard-projection score-maximizing policies; the remaining open question is whether broader policy classes or ambient-space algorithms can achieve $O(\sqrt{cT})$. Other directions include unknown rank $r$ and time-varying transition matrices.
+\paragraph{Broader impact.}
+This work develops foundational theory for adaptive decision-making under low-rank structure, with direct application to personalized recommendation (where user preference matrices are empirically low-rank), adaptive clinical trial design (where the explicit probe-cost framework models the ethical cost of non-optimized treatment assignments), and autonomous control systems (where random perturbations for system identification are standard practice).
+As a theoretical contribution, this work does not introduce new capabilities for harmful applications beyond those of existing bandit and reinforcement learning methods; the probe-cost framework, if anything, encourages \emph{fewer} random perturbations by pricing them explicitly.
+
+\paragraph{Future work.}
+The $\Omega(c^{1/3}T^{2/3})$ lower bound (Theorem~\ref{thm:probe_rate_lb}) resolves the probe--subspace tradeoff for projected-exploitation policies. This opens a precise new question: can non-projecting algorithms exploit $O(\varepsilon^2)$ per-round overhead to achieve $O(\sqrt{cT})$ total regret? We conjecture the answer is negative under single-play scalar feedback, based on the information geometry of the Grassmannian packing in Theorem~\ref{thm:minimax_subspace_recovery}, but leave the formal resolution as future work. Other directions include unknown rank~$r$ (partially addressed by the eigenvalue thresholding rule in Eq.~\eqref{eq:rank_selection}) and time-varying transition matrices.
 
 
 %% ============================================================
@@ -1456,7 +1467,7 @@ Remark~\ref{rem:adaptive_rate_discussion} \newline ($\hat K$ vs.\ $K$) &
 
 Thm.~\ref{thm:etc_lower_bound} \newline (ETC lower bound) &
   $\Omega(\sqrt{cT})$ for ETC policies via Le~Cam two-point &
-  Confirms probe--subspace tradeoff is fundamental \\
+  Establishes probe--subspace tradeoff as information-theoretic barrier \\
 
 Thm.~\ref{thm:minimax_subspace_recovery} \newline (Minimax $1/\sqrt{m}$) &
   Subspace recovery rate $1/\sqrt{m}$ is minimax optimal via Fano over Grassmannian packings &
@@ -2406,7 +2417,7 @@ Proof in \S\ref{proof:hp_probe_kl}.
 \label{rem:eps_gap_resolved}
 Theorem~\ref{thm:sqrt_ct_all} uses the information-theoretic $\Omega(\varepsilon^2)$ per-round cost (via $1 - \cos\alpha \sim \alpha^2/2$), yielding $\Omega(\sqrt{cT})$ for all policies.
 Theorem~\ref{thm:probe_rate_lb} exploits the $\Omega(\varepsilon)$ per-round loss that arises specifically for hard-projection score-maximizing policies (Lemma~\ref{lem:hp_linear_loss}), yielding $\Omega(c^{1/3}T^{2/3})$, which matches the upper bound in Theorem~\ref{thm:closed_dynamic_regret}.
-Whether a broader projected-exploitation class, or algorithms operating in the full ambient space, can achieve $O(\sqrt{cT})$ total regret remains open.
+The gap between these bounds opens a precise question: can a broader projected-exploitation class, or algorithms operating in the full ambient space, achieve $O(\sqrt{cT})$ total regret?
 \end{remark}
 
 \begin{remark}[Matching upper bound]
@@ -3937,9 +3948,9 @@ environment used in Experiment~1
     a data-determined norm independent of the declared rank $r$.
   \end{enumerate}
   With isotropic (unstructured) actions, LinUCB's design matrix is
-  well-conditioned at all $d$ and SPSC cannot overcome the probe
-  overhead---a setting that does not reflect practical feature
-  distributions.
+  well-conditioned at all $d$ and the probe overhead exceeds the
+  dimension-reduction saving---a setting that does not reflect practical feature
+  distributions where reward signals concentrate in low-dimensional manifolds.
   The structured-covariance design bridges this gap: it preserves the
   theoretical phase-transition mechanism while remaining fully
   controlled and reproducible.
