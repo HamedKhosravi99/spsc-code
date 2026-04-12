@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -c \"\\\\\\\\\\\\\\\\boxed\" main_conf.tex)"
+      "Bash(grep -c \"\\\\\\\\\\\\\\\\boxed\" main_conf.tex)",
+      "Bash(grep -c '\\\\\\\\label{' main_conf.tex)",
+      "Bash(grep -oP '\\\\\\\\label\\\\{[^}]+\\\\}' main_conf.tex)"
     ]
   }
 }
