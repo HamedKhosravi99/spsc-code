@@ -23,7 +23,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import TwoSlopeNorm
 
 sys.path.insert(0, os.path.dirname(__file__))
-from environment import LowRankLDSEnvironment
+from environments import LowRankLDSEnvironment
 from algorithm import (
     SPSC_Algorithm1, SPSC_Adaptive, LinUCB, OracleLinUCB,
     SWLinUCB, RestartLinUCB, LowRankRewardUCB, LowOFUL, VOFUL,
@@ -101,7 +101,6 @@ def make_env(seed, d, r):
         d=d, r=r, K=K, T=T, sigma_eps=SIGMA_EPS,
         spectral_radius=SPEC_RAD, n_actions=N_ACTIONS,
         sigma_eta=SIGMA_ETA, seed=seed * 100,
-        piecewise_constant=True, feature_decay=FEATURE_DECAY,
     )
 
 

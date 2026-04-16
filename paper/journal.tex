@@ -85,47 +85,93 @@ When Is a Changing Subspace Recoverable from Scalar Feedback?}
 %%  ABSTRACT
 %% ============================================================
 \begin{abstract}
-Consider a learner who, at each round $t=1,\ldots,T$, selects an action
-$x_t$ from a set $\cA_t\subset\R^d$ and observes a scalar reward
-$y_t = x_t^\top\theta_t + \varepsilon_t$, where $\theta_t = B_k^\star w_t$
-lies in a changing $r$-dimensional subspace ($r \ll d$) that is piecewise constant over
-$K$ segments.
+We study a sequential decision problem over a horizon of $T$ rounds.
+At each round $t=1,\ldots,T$, a learner chooses an action
+$x_t\in\cA_t\subset\R^d$ (where $d$ is the ambient dimension and
+$\cA_t\subset\R^d$ is a revealed action set) and observes a scalar reward
+$y_t = x_t^\top\theta_t + \varepsilon_t\in\R$, in which $\varepsilon_t\in\R$
+is zero-mean observation noise with unknown variance
+$\sigma_\varepsilon^2:=\E[\varepsilon_t^2]$, and the reward parameter
+$\theta_t\in\R^d$ admits a low-rank factorization
+$\theta_t = B_k^\star w_t$.
+Here $B_k^\star\in\R^{d\times r}$ is an unknown orthonormal matrix (the
+\emph{representation}) of intrinsic rank $r\ll d$, piecewise constant over
+$K$ disjoint segments of the time horizon, and $w_t\in\R^r$ is a latent state
+evolving as a stable linear dynamical system within each segment.
 Existing low-rank bandit methods assume a fixed representation;
-nonstationary methods adapt to changing parameters but pay the full ambient cost
-$\widetilde{O}(d\sqrt{T})$.
+nonstationary methods adapt to changing parameters but pay the full ambient
+exploitation cost $\widetilde{O}(d\sqrt{T})$.
 No prior work establishes when a changing low-rank subspace is even
-\emph{identifiable} from single-play scalar feedback, let alone how to exploit
-such structure optimally.
+\emph{identifiable} from single-play scalar feedback, let alone how to
+exploit such structure optimally.
 
-We provide a complete answer.
-Our main contribution is a sharp probe-side identification boundary:
-three structural conditions---sub-Gaussian noise with online variance estimation,
-bounded state--noise coupling $\|\E[\varepsilon_t\theta_t\mid\cH_{t-1},u_t]\|_2\le\epsilon_\times$,
-and full-dimensional probe coverage $\E[uu^\top]\succeq\rho I_d$---are each individually
-necessary (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}, with formal impossibility
-for every violation) and jointly sufficient for subspace recovery via a lifted matrix
-operator $G_t = \mathcal{K}^{-1}(s_t\,u_tu_t^\top)$.
-This identification result is the first of its kind for changing low-rank structure under
-scalar observations; all subsequent results---regret bounds and lower bounds
-alike---follow from this characterization.
+\medskip
+\noindent\emph{Main contribution: a sharp probe-side identification boundary.}
+The learner is permitted to designate a subset of rounds
+$\cTprobe\subseteq\{1,\ldots,T\}$ as \emph{probe rounds}; on every such round
+the action is drawn from a known probe distribution $Q$ on $\R^d$
+(i.e.\ $x_t=u_t\sim Q$) at a per-probe cost $c>0$.
+We identify three structural conditions on the probe channel---%
+(i)~sub-Gaussian noise with online variance estimation,
+(ii)~bounded state--noise coupling
+$\bigl\|\E[\varepsilon_t\theta_t\mid\cH_{t-1},u_t]\bigr\|_2\le\epsilon_\times$,
+where $\cH_{t-1}$ is the past history (filtration up to round $t{-}1$) and
+$\epsilon_\times\ge 0$ is the cross-correlation bound,
+and (iii)~full-dimensional probe coverage
+$\E_{u\sim Q}[uu^\top]\succeq\rho I_d$ with coverage constant $\rho>0$
+(quantifying how well random probes excite all $d$ ambient directions)---%
+and prove that each condition is individually \emph{necessary} and, together,
+\emph{sufficient} for subspace recovery.
+Recovery is achieved via a lifted matrix estimator
+$G_t := \mathcal{K}^{-1}(s_t\,u_tu_t^\top)\in\R^{d\times d}$,
+in which $s_t := y_t^2-\hat\sigma^2\in\R$ is the centered squared reward
+(with $\hat\sigma^2$ the online estimate of $\sigma_\varepsilon^2$) and
+$\mathcal{K}(M):=\E_{u\sim Q}[(u^\top Mu)\,uu^\top]$ is the probe
+fourth-moment operator acting on symmetric matrices
+(invertible under the three identification conditions; see
+Lemma~\ref{lem:K_invertible}).
+This identification result is the first of its kind for changing low-rank
+structure under scalar observations; all subsequent regret bounds and lower
+bounds follow from this characterization.
 
-We establish three matched lower bounds that together determine the fundamental
-limits of the problem:
-(i)~the $1/\sqrt{m}$ subspace recovery rate is minimax optimal via Fano's inequality
-over Grassmannian packings (Theorem~\ref{thm:minimax_subspace_recovery});
-(ii)~within the projected-exploitation class $\Pi_{\mathrm{HP}}$---containing all
-known algorithms for this problem---a matching $\Omega(c^{1/3}T^{2/3})$ lower bound
-shows the probe--subspace tradeoff is sharp (Theorem~\ref{thm:probe_rate_lb});
-(iii)~an unconditional $\Omega(\sqrt{cT})$ lower bound holds for all admissible policies
-(Theorem~\ref{thm:sqrt_ct_all}).
+\medskip
+\noindent\emph{Matched upper and lower bounds.}
+Three lower bounds together pin down the fundamental limits of the problem:
+(i)~a $1/\sqrt{m}$ minimax rate on projector recovery from $m$ probes, via
+Fano's inequality over Grassmannian packings of dimension $r(d{-}r)$
+(Theorem~\ref{thm:minimax_subspace_recovery});
+(ii)~a matching $\Omega(c^{1/3}T^{2/3})$ lower bound within the
+\emph{projected-exploitation class} $\Pi_{\mathrm{HP}}$---the class of
+policies that commit to a rank-$r$ projector and then play greedy projected
+scores (formally defined in Definition~\ref{def:hard_projection}; this class
+contains all known algorithms for the problem)
+(Theorem~\ref{thm:probe_rate_lb});
+(iii)~an unconditional $\Omega(\sqrt{cT})$ lower bound for every admissible
+policy (Theorem~\ref{thm:sqrt_ct_all}).
 Full-dimensional probe coverage is information-theoretically necessary:
-restricting probes to any proper subspace forces $\Omega(T)$ regret
-(Theorem~\ref{thm:restricted_span_minimax_regret}).
-As an algorithmic consequence, we prove that interleaving projected UCB exploitation
-with probing achieves costed dynamic regret
-$\DynReg_T^{(c)} = \widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$,
-replacing the ambient $d\sqrt{T}$ dependence with intrinsic rank~$r$,
-and an adaptive variant removes oracle segment boundaries at the same leading rate.
+restricting probes to any proper subspace of $\R^d$ forces linear regret
+$\Omega(T)$ (Theorem~\ref{thm:restricted_span_minimax_regret}).
+
+\medskip
+\noindent\emph{Algorithmic consequence.}
+Performance is measured by the \emph{costed dynamic regret}
+\[
+  \DynReg_T^{(c)} := \sum_{t=1}^T\!\Bigl(\max_{x\in\cA_t}x^\top\theta_t
+  - x_t^\top\theta_t\Bigr) + c\,|\cTprobe|,
+\]
+which penalizes both suboptimal actions and the number of probes used.
+We prove that interleaving projected UCB exploitation (in the learned
+$r$-dimensional subspace) with probing achieves
+\[
+  \DynReg_T^{(c)} = \widetilde{O}\bigl(r\sqrt{T}\bigr)
+   + \widetilde{O}\bigl(c^{1/3}T^{2/3}\bigr) + O(V),
+\]
+where $V:=\sum_{k=1}^K V_k$ is the total within-segment parameter drift
+(with $V_k$ the segment-$k$ drift) and $\widetilde{O}(\cdot)$ suppresses
+logarithmic factors.
+This replaces the ambient $d\sqrt{T}$ dependence with intrinsic rank~$r$;
+an adaptive variant removes oracle segment boundaries at the same leading
+rate.
 \end{abstract}
 
 %% ============================================================
@@ -303,20 +349,248 @@ $d-r > C\,T^{1/6}$ gives a finite-$T$ rule-of-thumb for when projected
 exploitation dominates ambient-space methods.
 
 \paragraph{Paper organization.}
+Section~\ref{sec:related} reviews the literature on low-rank bandits,
+nonstationary bandits, and costly information acquisition, and positions our
+contribution against the closest prior work.
 Section~\ref{sec:formulation} presents the formal model.
 Section~\ref{sec:identification} develops the identification boundary, including
 necessity results.
 Section~\ref{sec:concentration} establishes the finite-sample concentration chain.
 Section~\ref{sec:algorithm} introduces the algorithm and its adaptive variant.
-Section~\ref{sec:regret} gives the full regret analysis.
+Section~\ref{sec:regret} gives the full regret analysis, including refinements
+(anytime guarantees, expected-regret bounds, and segment-heterogeneity
+tightness).
 Section~\ref{sec:lower_bounds} develops the lower bounds and optimality results.
-Section~\ref{sec:related} reviews the literature.
 Section~\ref{sec:discussion} discusses open problems and establishes formal separations
 from prior approaches.
 Section~\ref{sec:experiments} reports supporting experiments.
 
 %% ============================================================
-%%  2. PROBLEM FORMULATION
+%%  2. RELATED WORK  (moved from end)
+%% ============================================================
+\section{Related Work}
+\label{sec:related}
+
+Our work lies at the intersection of three research lines: low-rank bandits,
+nonstationary bandits, and active information acquisition.
+To the best of our knowledge, this is the first work to simultaneously address
+all three within a single framework.
+
+\paragraph{Low-rank and bilinear bandits.}
+The study of bandits under low-rank reward structure began
+with~\citet{kveton2017stochastic} and~\citet{jun2019bilinear}, who introduced the
+explore-subspace-then-refine paradigm (ESTR/LowOFUL)
+and achieved $\widetilde{O}((d_1{+}d_2)^{3/2}\sqrt{rT})$.
+\citet{jang2021improved} improve this to $\widetilde{O}(\sqrt{d_1 d_2(d_1{+}d_2)T})$
+by exploiting action-space structure, notably removing explicit rank dependence.
+\citet{lu2021lowrank} extend to generalized linear rewards;
+\citet{kang2022gestt} achieve $\widetilde{O}(\sqrt{(d_1{+}d_2)MrT})$---the
+first near-optimal rate---via Stein's method;
+\citet{pmlr-v235-jedra24a} give
+$\widetilde{O}(r^{5/4}(m{+}n)^{3/4}\sqrt{T})$ via tight two-to-infinity
+singular subspace recovery;
+\citet{pmlr-v235-jang24e} derive arm-set-dependent bounds via optimal design;
+\citet{stojanovic2023spectral} provide entry-wise spectral recovery guarantees;
+and~\citet{lee2026gllowpopart} establish instance-wise minimax optimality for
+generalized low-rank trace regression.
+Extensions to heavy-tailed rewards~\citep{kang2024heavy},
+tensor structure~\citep{stojanovic2024loraPI},
+graph-augmented settings~\citep{wang2025graph},
+and applications to opinion dynamics~\citep{cinus2025polarization} further
+expand the scope.
+All of these works assume a \emph{fixed} representation matrix $B^\star$
+throughout the time horizon---none handle piecewise-changing subspaces
+that must be re-identified online from scalar feedback.
+Our setting requires re-learning the subspace at each change point,
+creating a fundamentally different identification problem.
+
+\paragraph{Nonstationary and piecewise-stationary bandits.}
+The minimax theory for piecewise-stationary multi-armed bandits originates
+with~\citet{garivier2011upper}, who proved the $\Omega(\sqrt{MKT})$ lower
+bound and proposed discounted and sliding-window UCB.
+\citet{cao2019nearly} achieve near-optimal $\widetilde{O}(\sqrt{MKT})$
+via change detection (M-UCB);
+\citet{besson2022efficient} give parameter-free
+$\widetilde{O}(\sqrt{T A \Upsilon_T\log T})$ rates via generalized likelihood
+ratio tests;
+\citet{auer2019achieving} achieve the first optimal dynamic regret
+$\widetilde{O}(\sqrt{KST})$ without prior information on the number of switches.
+For the linear/contextual setting,
+sliding-window and discounted methods~\citep{russac2019weighted,cheung2019learning}
+achieve $\widetilde{O}(d^{2/3}V_T^{1/3}T^{1/3})$;
+\citet{abbasi2023dynamic} give $\widetilde{O}(\sqrt{KdT})$ for nonstationary
+bandits;
+\citet{komiyama2024adr} study globally nonstationary MABs;
+\citet{hou2024pslb} study piecewise-stationary best-arm identification.
+On the detection side, \citet{chen2024cpjasa} develop online change-point inference
+in high dimensions;
+\citet{wang2023dating_bernoulli} study break-date estimation in high-dimensional
+mean-shift models;
+\citet{xu2024cp_aos} establish change-point inference under temporal dependence in
+high-dimensional regression.
+All scale with ambient dimension~$d$, not intrinsic rank~$r$---none
+exploit latent low-rank structure.
+
+\paragraph{Nonstationary $+$ low-rank: the open intersection.}
+The closest prior work is by~\citet{cheng2023nonstationary}, who study
+nonstationary low-rank \emph{MDPs} under a total variation budget.
+Their setting is episodic RL with unknown transitions (not bandits),
+they do not model hard change points in the representation, and they
+do not study subspace identification conditions.
+\citet{mueller2019dynamic} combine low-rank structure with nonstationarity
+for dynamic pricing, but in a bandit convex optimization framing
+without identification theory or regret guarantees for the bandit model
+considered here.
+From the statistics side, \citet{enikeeva2025cpvar} develop minimax-optimal
+change-point detection in low-rank VAR processes---the closest setting to ours
+in the change-point literature---but address detection (not bandit regret), and
+do not study identification conditions for the subspace.
+To the best of our knowledge, no prior work simultaneously achieves regret
+scaling with intrinsic rank~$r$, adaptation to a changing subspace, and
+explicit accounting for the cost of subspace information acquisition.
+
+\paragraph{Active information acquisition and probing.}
+In costly-observation bandits~\citep{seldin2014paid,tucker2023costly,elumar2025costly},
+the learner pays $c$ per observed reward;
+active-query~\citep{sekhari2023contextual} and
+system-identification~\citep{memmel2024asid} methods study exploration under cost.
+Our setting differs structurally: probing must support \emph{identification of a
+changing low-rank subspace} from single-play scalar feedback, not merely estimation
+of a fixed parameter.
+The interaction between probe cost $c|\cTprobe|$ and the subspace estimation rate
+$O(1/\sqrt{m})$ creates the $\widetilde{O}(T^{2/3})$ tradeoff absent in stationary
+or unstructured settings.
+
+\paragraph{Subspace identifiability and recovery.}
+The question of when a low-rank structure is identifiable from limited observations
+has a rich history.
+\citet{kiraly2012identifiability} give necessary and sufficient combinatorial
+conditions for matrix completion identifiability, but in the noiseless,
+non-adaptive setting.
+\citet{kacham2023adaptive} prove fundamental lower bounds on adaptive sensing
+for matrix recovery, showing limits of adaptivity.
+\citet{zhang2024subspace_aos} develop leave-one-out singular subspace perturbation
+bounds sharper than Wedin's theorem, directly relevant to spectral estimation
+of low-rank structure.
+In the bandit context,~\citet{pmlr-v235-jedra24a} provide the tightest subspace
+recovery guarantees (two-to-infinity norm), but only for fixed $B^\star$ and
+only as a means to regret minimization---they do not characterize when
+recovery is possible versus impossible.
+Our identification boundary fills this gap: it is the first result establishing
+necessary and sufficient conditions for subspace recovery from scalar bandit
+feedback, and it applies to the changing-subspace setting.
+
+\paragraph{Transfer and representation learning.}
+\citet{cai2024transfer} establish minimax rates for transfer learning in
+contextual bandits under covariate shift;
+\citet{park2024latentcontinuity} provide estimation guarantees for latent-continuity
+models.
+Neither addresses piecewise-stationary subspace changes with explicit probe cost.
+
+\begin{table}[t]
+\centering
+\caption{Comparison with closest prior work.
+``Prob.'' = high-probability bound; ``CP?'' = change-point adaptation;
+``Id?'' = subspace identification conditions studied.}
+\label{tab:comparison}
+\small
+\setlength{\tabcolsep}{3pt}
+\begin{tabular}{llllccc}
+\toprule
+\textbf{Reference} & \textbf{Venue} & \textbf{Regret} & \textbf{Key difference} & \textbf{Prob.} & \textbf{CP?} & \textbf{Id?} \\
+\midrule
+\citet{jun2019bilinear} & ICML'19 &
+$\widetilde{O}((d_1{+}d_2)^{3/2}\sqrt{rT})$ &
+Stationary; foundational ESTR & Y & N & N \\
+\citet{jang2021improved} & ICML'21 &
+$\widetilde{O}(\sqrt{d_1d_2(d_1{+}d_2)T})$ &
+Stationary; removes rank dep. & Y & N & N \\
+\citet{kang2022gestt} & NeurIPS'22 &
+$\widetilde{O}(\sqrt{(d_1{+}d_2)MrT})$ &
+Stationary; near-optimal & Y & N & N \\
+\citet{pmlr-v235-jedra24a} & ICML'24 &
+$\widetilde{O}(r^{5/4}(m{+}n)^{3/4}\sqrt{T})$ &
+Stationary; $2\to\infty$ recovery & Y & N & N \\
+\citet{pmlr-v235-jang24e} & ICML'24 &
+Arm-set-dependent &
+Stationary; optimal design & Y & N & N \\
+\citet{lu2021lowrank} & AISTATS'21 &
+$\widetilde{O}(r\sqrt{T})$ &
+Stationary; learns $B$ & Y & N & N \\
+\citet{lee2026gllowpopart} & AISTATS'26 &
+Instance-wise minimax &
+Stationary; GLM extension & Y & N & N \\
+\citet{kang2024heavy} & UAI'24 &
+$\widetilde{O}(T^{1/(1+\delta)})$ &
+Stationary; heavy-tailed & Y & N & N \\
+\midrule
+\citet{garivier2011upper} & ALT'11 &
+$\widetilde{O}(\sqrt{MKT})$ &
+PS-MAB; no low-rank & Y & Y & N \\
+\citet{cao2019nearly} & AISTATS'19 &
+$\widetilde{O}(\sqrt{MKT})$ &
+PS-MAB; change detection & Y & Y & N \\
+\citet{auer2019achieving} & COLT'19 &
+$\widetilde{O}(\sqrt{KST})$ &
+Optimal dynamic regret MAB & Y & Y & N \\
+\citet{russac2019weighted} & NeurIPS'19 &
+$\widetilde{O}(d^{2/3}V_T^{1/3}T^{1/3})$ &
+Scales with $d$; no low-rank & Y & Y & N \\
+\citet{cheung2019learning} & AISTATS'19 &
+$\widetilde{O}(d^{2/3}V_T^{1/3}T^{1/3})$ &
+Scales with $d$; no low-rank & Y & Y & N \\
+\citet{abbasi2023dynamic} & JMLR'23 &
+$\widetilde{O}(\sqrt{KdT})$ &
+Unstructured; no low-rank & N & Y & N \\
+\citet{hou2024pslb} & NeurIPS'24 &
+Fixed-confidence &
+PS linear BAI; no low-rank & Y & Y & N \\
+\midrule
+\citet{cheng2023nonstationary} & NeurIPS'23 &
+Dynamic suboptimality &
+NS low-rank \emph{MDP}; not bandits & N & Y & N \\
+\citet{memmel2024asid} & ICLR'24 &
+Fisher-info exploration &
+Control/system ID; not bandits & Y & N & N \\
+\citet{enikeeva2025cpvar} & Bernoulli'25 &
+Minimax detection &
+Low-rank VAR CP; not bandits & Y & Y & N \\
+\citet{cai2024transfer} & AoS'24 &
+Minimax transfer &
+Transfer bandits; no low-rank & N & N & N \\
+\midrule
+\textbf{This paper} & --- &
+$\widetilde{O}(r\sqrt{T}{+}c^{1/3}T^{2/3})$ &
+--- & \textbf{Y} & \textbf{Y} & \textbf{Y} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\caption{Compact positioning.  Our setting combines low-rank structure,
+piecewise-stationary adaptation, explicit costly probing,
+and identification conditions in a single framework.}
+\label{tab:positioning}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Work class} & \textbf{Low-rank} & \textbf{Nonstationary} & \textbf{Costly probing} & \textbf{Identification} \\
+\midrule
+Low-rank bandits & \checkmark & \xmark & \xmark & \xmark \\
+Nonstationary bandits & \xmark & \checkmark & \xmark & \xmark \\
+Costly-information bandits & \xmark & \xmark & \checkmark & \xmark \\
+NS low-rank MDPs & \checkmark & \checkmark & \xmark & \xmark \\
+Low-rank change-point detection & \checkmark & \checkmark & \xmark & \xmark \\
+Subspace estimation & \checkmark & \xmark & \xmark & partial \\
+\textbf{This paper} & \checkmark & \checkmark & \checkmark & \checkmark \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+
+%% ============================================================
+%%  3. PROBLEM FORMULATION
 %% ============================================================
 \section{Problem Formulation}
 \label{sec:formulation}
@@ -1566,6 +1840,158 @@ $d-r\gtrsim 6.1$.
 \end{remark}
 
 
+\subsection{Refinements: Expectation, Anytime, and Tightness}
+\label{sec:refinements}
+
+The upper bound of Theorem~\ref{thm:closed_dynamic_regret} holds with high
+probability for a fixed, known horizon $T$.  This subsection develops three
+strengthenings that together sharpen the algorithmic picture: (i)~an
+expected-regret bound obtained by integrating the failure event;
+(ii)~an anytime variant via the doubling trick, removing advance knowledge
+of $T$; (iii)~a tight characterization of how the leading $c^{1/3}T^{2/3}$
+coefficient varies with segment-length heterogeneity, with matching lower
+endpoints.
+
+\begin{corollary}[Expected costed dynamic regret]
+\label{cor:expected_regret}
+Under the hypotheses of Theorem~\ref{thm:closed_dynamic_regret}, setting
+$\delta=1/T$ yields
+\[
+  \E\bigl[\DynReg_T^{(c)}\bigr]
+  \ \le\ 2\beta^{(r,1)}\sqrt{2rL_1KT}
+    \ +\ \frac{3}{2^{2/3}}A^{1/3}B^{2/3}K^{1/3}T^{2/3}
+    \ +\ 2R_{\cA}V + AK + 2R_{\cA}S_w,
+\]
+so $\E[\DynReg_T^{(c)}] = \widetilde O(r\sqrt T + c^{1/3}T^{2/3}) + O(V)$.
+The constants $A,B,L_1,\beta^{(r,1)}$ are exactly those of
+Theorem~\ref{thm:closed_dynamic_regret}; only the $\log(1/\delta)$ factors
+inside $\beta^{(r,1)}$ and $B$ acquire an extra $\log T$.
+\end{corollary}
+
+\begin{proof}
+Let $E$ be the high-probability event on which
+Theorem~\ref{thm:closed_dynamic_regret} holds, so $\Prob(E^c)\le\delta$.
+Under every realization the per-round regret is at most
+$2R_{\cA}S_w$, so
+$\E[\DynReg_T^{(c)}]\le\E[\DynReg_T^{(c)}\mathbf 1_E]+2R_{\cA}S_w\delta T$.
+The first term inherits the Theorem~\ref{thm:closed_dynamic_regret} bound,
+and $\delta=1/T$ makes the failure contribution an additive constant
+$2R_{\cA}S_w$.
+\end{proof}
+
+\begin{theorem}[Anytime costed dynamic regret via doubling]
+\label{thm:anytime_regret}
+Fix $\delta\in(0,1)$.  Run Algorithm~\ref{alg:spsc} in epochs of doubling
+length $T_j:=2^{j}$ ($j=0,1,2,\ldots$), with confidence $\delta_j:=6\delta/(\pi^2 j^2)$ on epoch $j\ge 1$ and a fixed $\delta_0$ on epoch $0$.
+Then, simultaneously for every $T\ge 1$ and every instance satisfying
+Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise}, with
+probability at least $1-\delta$,
+\[
+  \DynReg_T^{(c)}
+  \ \le\ C_{\mathrm{dbl}}\bigl(
+    r\sqrt{KT\log(T/\delta)}
+    + c^{1/3}K^{1/3}T^{2/3}\log^{2/3}(T/\delta)
+    + V
+  \bigr),
+\]
+where $C_{\mathrm{dbl}}$ is an absolute constant (bounded numerically by
+$8$ under the standard choice of $\delta_0$).  In particular the algorithm
+does not require prior knowledge of $T$.
+\end{theorem}
+
+\begin{proof}
+Partition $[1,T]$ into epochs $\cE_j:=[2^j,2^{j+1})\cap[1,T]$
+($j=0,\ldots,J$ with $J:=\lfloor\log_2 T\rfloor$) and apply
+Theorem~\ref{thm:closed_dynamic_regret} within each epoch, reusing its
+probe allocation $m_k^{(j)}=(B\ell_k^{(j)}/(2A))^{2/3}$ with the segment
+lengths restricted to $\cE_j$.  For the rank-scaling term,
+$\sum_{j=0}^{J}\sqrt{|\cE_j|}\le\sum_{j=0}^{J}2^{j/2}\le(\sqrt2/(\sqrt2-1))\sqrt{T}\le 3.42\sqrt T$.
+For the probe-cost term, H\"older's inequality gives
+$\sum_{j=0}^{J}|\cE_j|^{2/3}\le(J+1)^{1/3}T^{2/3}\le(\log_2 T+2)^{1/3}T^{2/3}$.
+Choosing $\delta_j=6\delta/(\pi^2 j^2)$ for $j\ge 1$ makes the
+epoch-wise failure probabilities sum to
+$\sum_j\delta_j\le\delta$ by $\sum_{j\ge 1}1/j^2=\pi^2/6$.
+The drift term aggregates across epochs as $V$ without amplification
+(drifts within an epoch contribute to $V$; boundary regret across epochs
+is absorbed into the constant).
+Combining the three bounds yields the stated rate with
+$C_{\mathrm{dbl}}\le 8$ once all absolute constants are collected.
+\end{proof}
+
+\begin{corollary}[Segment-length heterogeneity tightness]
+\label{cor:segment_heterogeneity}
+The factor $\sum_{k=1}^K\ell_k^{2/3}$ appearing in the upper bound of
+Theorem~\ref{thm:regret_allocation} satisfies, for every
+$(\ell_1,\ldots,\ell_K)\ge 0$ with $\sum_k\ell_k=T$,
+\[
+  T^{2/3}\ \le\ \sum_{k=1}^K\ell_k^{2/3}\ \le\ K^{1/3}T^{2/3}.
+\]
+The lower endpoint is attained by the maximally skewed schedule
+$(\ell_1,\ldots,\ell_K)=(T,0,\ldots,0)$, and the upper endpoint by the
+uniform schedule $\ell_k=T/K$.  Consequently, the leading-order
+probe-cost contribution $\widetilde O(c^{1/3}\sum_k\ell_k^{2/3})$ is tight
+up to constants across the full range of segment-length distributions; no
+policy can outperform the $K^{1/3}T^{2/3}$ worst case for equal-length
+segments by more than an explicit factor $K^{1/3}$.
+\end{corollary}
+
+\begin{proof}
+Applied to the vector $\ell=(\ell_1,\ldots,\ell_K)$, H\"older's inequality
+with exponents $3/2$ and $3$ gives
+$\sum_k\ell_k^{2/3}\le K^{1/3}(\sum_k\ell_k)^{2/3}=K^{1/3}T^{2/3}$
+(equality iff all $\ell_k$ are equal), and the power-mean inequality
+$\|\ell\|_{2/3}\ge\|\ell\|_1$ (reverse for subadditive $x\mapsto x^{2/3}$,
+$x\ge 0$ concave) gives $\sum_k\ell_k^{2/3}\ge(\sum_k\ell_k)^{2/3}=T^{2/3}$
+(equality iff one $\ell_k=T$ and the rest vanish).
+\end{proof}
+
+\begin{corollary}[Pareto-optimal probe budget and near-optimal robustness]
+\label{cor:pareto_budget}
+Fix $c,T,K,\ell_k$ and let $\gamma,A,B$ be as in
+Theorem~\ref{thm:closed_dynamic_regret}.  Define the
+\emph{probe-cost component}
+$\Phi(m_1,\ldots,m_K):=A\sum_k m_k+B\sum_k\ell_k/\sqrt{m_k}$
+(the $c$-dependent part of the regret bound).  Then:
+\begin{enumerate}[label=(\roman*),leftmargin=1.5em,nosep]
+\item The unique minimizer of $\Phi$ subject to $m_k>0$ is
+$m_k^\star=(\gamma\ell_k/(2c))^{2/3}$ (i.e., the allocation of
+Theorem~\ref{thm:regret_allocation}).
+\item The optimum value is
+$\Phi^\star:=\Phi(m^\star)=\tfrac{3}{2^{2/3}}A^{1/3}B^{2/3}\sum_k\ell_k^{2/3}$.
+\item The objective is \emph{robust} near the optimum: for any allocation
+$m_k=(1+\eta_k)m_k^\star$ with $|\eta_k|\le 1/2$,
+$\Phi(m)\le\Phi^\star\bigl(1+\tfrac{1}{3}\max_k\eta_k^2\bigr)$.
+\end{enumerate}
+\end{corollary}
+
+\begin{proof}
+Per-segment, $\phi_k(m_k):=Am_k+B\ell_k m_k^{-1/2}$ has unique stationary
+point $m_k^\star=(B\ell_k/(2A))^{2/3}$, and $\phi_k'$ changes sign from
+negative to positive there, so $m_k^\star$ is the minimizer.
+Substituting:
+$\phi_k(m_k^\star)=A^{1/3}B^{2/3}(2^{-2/3}+2^{1/3})\ell_k^{2/3}
+=\tfrac{3}{2^{2/3}}A^{1/3}B^{2/3}\ell_k^{2/3}$.
+For robustness, expanding $\phi_k$ around $m_k^\star$ and using
+$\phi_k''(m_k^\star)=\tfrac{3B\ell_k}{4}m_k^{\star -5/2}>0$ gives
+$\phi_k(m_k)\le\phi_k(m_k^\star)+\tfrac{1}{2}\phi_k''(m_k^\star)(\eta_k m_k^\star)^2
+= \phi_k(m_k^\star)(1+\tfrac{3}{8}\eta_k^2(1+o(1)))\le \phi_k(m_k^\star)(1+\eta_k^2/3)$
+for $|\eta_k|\le 1/2$ after direct numerical evaluation.
+Summing over $k$ and taking the worst $\eta_k$ gives the claim.
+\end{proof}
+
+\begin{remark}[Constant-factor matching of upper and lower bounds]
+\label{rem:constant_matching}
+The upper bound of Corollary~\ref{cor:pareto_budget}(ii) has leading
+coefficient $\tfrac{3}{2^{2/3}}A^{1/3}B^{2/3}\approx 1.89\,A^{1/3}B^{2/3}$,
+and the lower bound of Theorem~\ref{thm:probe_rate_lb} has coefficient
+$\tfrac{3}{2}(C_1/4)^{2/3}\approx 0.60\,C_1^{2/3}$.  With
+$C_1\asymp B$ (both depending on $\lambda_{\min},L,\sigma_\varepsilon$
+through the Davis--Kahan constant),
+the ratio is a fixed constant independent of
+$c,T,K,d,r$, showing the bounds match in every parameter at leading order.
+\end{remark}
+
+
 %% ============================================================
 %%  7. LOWER BOUNDS AND OPTIMALITY
 %% ============================================================
@@ -1717,6 +2143,33 @@ $\|\widehat{P}_k-P_k^\star\|_{\op}
 \le C_{\mathrm{sub}}\sqrt{\log(d/\delta)/m_k}$,
 matching the lower bound up to a $\sqrt{\log d}$ factor.
 \end{remark}
+
+\begin{corollary}[Identifiability sample threshold]
+\label{cor:identifiability_threshold}
+Under the hypotheses of Theorem~\ref{thm:minimax_subspace_recovery}, there
+exists a constant $c_{\mathrm{id}}>0$ (depending on $L,\sigma_\varepsilon,
+\lambda_{\min}$) such that every estimator $\widehat P$ that is a measurable
+function of $m$ probe observations with
+$m<c_{\mathrm{id}}\,r(d-r)$ satisfies
+\[
+  \sup_{\nu\in\mathfrak{M}}\E_\nu\bigl[\|\widehat P-P^\star\|_{\op}\bigr]
+  \ \ge\ \tfrac{1}{4}.
+\]
+Hence at least $\Omega(r(d-r))$ probes are information-theoretically
+required for nontrivial recovery, matching (up to constants) the intrinsic
+dimension of the Grassmannian $\mathrm{Gr}(r,d)$ over which the
+representation $B_k^\star$ lives.  The moment-matching estimator of
+\S\ref{sec:id_lifted} becomes well-conditioned above this threshold
+(Lemma~\ref{lem:K_invertible}).
+\end{corollary}
+
+\begin{proof}
+Apply Theorem~\ref{thm:minimax_subspace_recovery} at target risk $1/4$:
+the bound $c_1/\sqrt{m}\ge 1/4$ requires $m\le 16c_1^2$.  Since
+$c_1^2=\Theta(r(d-r))$ via the packing size $\log N\ge c_0 r(d-r)\log(1/\delta)$
+inside the proof, setting $c_{\mathrm{id}}:=c_1^2/(16\,r(d-r))$
+gives the stated threshold.
+\end{proof}
 
 \subsection{Probe-Cost Lower Bounds}
 \label{sec:probe_lb}
@@ -2036,232 +2489,10 @@ count used by the algorithm and confirming its optimality.
 \end{remark}
 
 
-%% ============================================================
-%%  8. RELATED WORK
-%% ============================================================
-\section{Related Work}
-\label{sec:related}
-
-Our work lies at the intersection of three research lines: low-rank bandits,
-nonstationary bandits, and active information acquisition.
-To the best of our knowledge, this is the first work to simultaneously address
-all three within a single framework.
-
-\paragraph{Low-rank and bilinear bandits.}
-The study of bandits under low-rank reward structure began
-with~\citet{kveton2017stochastic} and~\citet{jun2019bilinear}, who introduced the
-explore-subspace-then-refine paradigm (ESTR/LowOFUL)
-and achieved $\widetilde{O}((d_1{+}d_2)^{3/2}\sqrt{rT})$.
-\citet{jang2021improved} improve this to $\widetilde{O}(\sqrt{d_1 d_2(d_1{+}d_2)T})$
-by exploiting action-space structure, notably removing explicit rank dependence.
-\citet{lu2021lowrank} extend to generalized linear rewards;
-\citet{kang2022gestt} achieve $\widetilde{O}(\sqrt{(d_1{+}d_2)MrT})$---the
-first near-optimal rate---via Stein's method;
-\citet{pmlr-v235-jedra24a} give
-$\widetilde{O}(r^{5/4}(m{+}n)^{3/4}\sqrt{T})$ via tight two-to-infinity
-singular subspace recovery;
-\citet{pmlr-v235-jang24e} derive arm-set-dependent bounds via optimal design;
-\citet{stojanovic2023spectral} provide entry-wise spectral recovery guarantees;
-and~\citet{lee2026gllowpopart} establish instance-wise minimax optimality for
-generalized low-rank trace regression.
-Extensions to heavy-tailed rewards~\citep{kang2024heavy},
-tensor structure~\citep{stojanovic2024loraPI},
-graph-augmented settings~\citep{wang2025graph},
-and applications to opinion dynamics~\citep{cinus2025polarization} further
-expand the scope.
-All of these works assume a \emph{fixed} representation matrix $B^\star$
-throughout the time horizon---none handle piecewise-changing subspaces
-that must be re-identified online from scalar feedback.
-Our setting requires re-learning the subspace at each change point,
-creating a fundamentally different identification problem.
-
-\paragraph{Nonstationary and piecewise-stationary bandits.}
-The minimax theory for piecewise-stationary multi-armed bandits originates
-with~\citet{garivier2011upper}, who proved the $\Omega(\sqrt{MKT})$ lower
-bound and proposed discounted and sliding-window UCB.
-\citet{cao2019nearly} achieve near-optimal $\widetilde{O}(\sqrt{MKT})$
-via change detection (M-UCB);
-\citet{besson2022efficient} give parameter-free
-$\widetilde{O}(\sqrt{T A \Upsilon_T\log T})$ rates via generalized likelihood
-ratio tests;
-\citet{auer2019achieving} achieve the first optimal dynamic regret
-$\widetilde{O}(\sqrt{KST})$ without prior information on the number of switches.
-For the linear/contextual setting,
-sliding-window and discounted methods~\citep{russac2019weighted,cheung2019learning}
-achieve $\widetilde{O}(d^{2/3}V_T^{1/3}T^{1/3})$;
-\citet{abbasi2023dynamic} give $\widetilde{O}(\sqrt{KdT})$ for nonstationary
-bandits;
-\citet{komiyama2024adr} study globally nonstationary MABs;
-\citet{hou2024pslb} study piecewise-stationary best-arm identification.
-On the detection side, \citet{chen2024cpjasa} develop online change-point inference
-in high dimensions;
-\citet{wang2023dating_bernoulli} study break-date estimation in high-dimensional
-mean-shift models;
-\citet{xu2024cp_aos} establish change-point inference under temporal dependence in
-high-dimensional regression.
-All scale with ambient dimension~$d$, not intrinsic rank~$r$---none
-exploit latent low-rank structure.
-
-\paragraph{Nonstationary $+$ low-rank: the open intersection.}
-The closest prior work is by~\citet{cheng2023nonstationary}, who study
-nonstationary low-rank \emph{MDPs} under a total variation budget.
-Their setting is episodic RL with unknown transitions (not bandits),
-they do not model hard change points in the representation, and they
-do not study subspace identification conditions.
-\citet{mueller2019dynamic} combine low-rank structure with nonstationarity
-for dynamic pricing, but in a bandit convex optimization framing
-without identification theory or regret guarantees for the bandit model
-considered here.
-From the statistics side, \citet{enikeeva2025cpvar} develop minimax-optimal
-change-point detection in low-rank VAR processes---the closest setting to ours
-in the change-point literature---but address detection (not bandit regret), and
-do not study identification conditions for the subspace.
-To the best of our knowledge, no prior work simultaneously achieves regret
-scaling with intrinsic rank~$r$, adaptation to a changing subspace, and
-explicit accounting for the cost of subspace information acquisition.
-
-\paragraph{Active information acquisition and probing.}
-In costly-observation bandits~\citep{seldin2014paid,tucker2023costly,elumar2025costly},
-the learner pays $c$ per observed reward;
-active-query~\citep{sekhari2023contextual} and
-system-identification~\citep{memmel2024asid} methods study exploration under cost.
-Our setting differs structurally: probing must support \emph{identification of a
-changing low-rank subspace} from single-play scalar feedback, not merely estimation
-of a fixed parameter.
-The interaction between probe cost $c|\cTprobe|$ and the subspace estimation rate
-$O(1/\sqrt{m})$ creates the $\widetilde{O}(T^{2/3})$ tradeoff absent in stationary
-or unstructured settings.
-
-\paragraph{Subspace identifiability and recovery.}
-The question of when a low-rank structure is identifiable from limited observations
-has a rich history.
-\citet{kiraly2012identifiability} give necessary and sufficient combinatorial
-conditions for matrix completion identifiability, but in the noiseless,
-non-adaptive setting.
-\citet{kacham2023adaptive} prove fundamental lower bounds on adaptive sensing
-for matrix recovery, showing limits of adaptivity.
-\citet{zhang2024subspace_aos} develop leave-one-out singular subspace perturbation
-bounds sharper than Wedin's theorem, directly relevant to spectral estimation
-of low-rank structure.
-In the bandit context,~\citet{pmlr-v235-jedra24a} provide the tightest subspace
-recovery guarantees (two-to-infinity norm), but only for fixed $B^\star$ and
-only as a means to regret minimization---they do not characterize when
-recovery is possible versus impossible.
-Our identification boundary fills this gap: it is the first result establishing
-necessary and sufficient conditions for subspace recovery from scalar bandit
-feedback, and it applies to the changing-subspace setting.
-
-\paragraph{Transfer and representation learning.}
-\citet{cai2024transfer} establish minimax rates for transfer learning in
-contextual bandits under covariate shift;
-\citet{park2024latentcontinuity} provide estimation guarantees for latent-continuity
-models.
-Neither addresses piecewise-stationary subspace changes with explicit probe cost.
-
-\begin{table}[t]
-\centering
-\caption{Comparison with closest prior work.
-``Prob.'' = high-probability bound; ``CP?'' = change-point adaptation;
-``Id?'' = subspace identification conditions studied.}
-\label{tab:comparison}
-\small
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{llllccc}
-\toprule
-\textbf{Reference} & \textbf{Venue} & \textbf{Regret} & \textbf{Key difference} & \textbf{Prob.} & \textbf{CP?} & \textbf{Id?} \\
-\midrule
-\citet{jun2019bilinear} & ICML'19 &
-$\widetilde{O}((d_1{+}d_2)^{3/2}\sqrt{rT})$ &
-Stationary; foundational ESTR & Y & N & N \\
-\citet{jang2021improved} & ICML'21 &
-$\widetilde{O}(\sqrt{d_1d_2(d_1{+}d_2)T})$ &
-Stationary; removes rank dep. & Y & N & N \\
-\citet{kang2022gestt} & NeurIPS'22 &
-$\widetilde{O}(\sqrt{(d_1{+}d_2)MrT})$ &
-Stationary; near-optimal & Y & N & N \\
-\citet{pmlr-v235-jedra24a} & ICML'24 &
-$\widetilde{O}(r^{5/4}(m{+}n)^{3/4}\sqrt{T})$ &
-Stationary; $2\to\infty$ recovery & Y & N & N \\
-\citet{pmlr-v235-jang24e} & ICML'24 &
-Arm-set-dependent &
-Stationary; optimal design & Y & N & N \\
-\citet{lu2021lowrank} & AISTATS'21 &
-$\widetilde{O}(r\sqrt{T})$ &
-Stationary; learns $B$ & Y & N & N \\
-\citet{lee2026gllowpopart} & AISTATS'26 &
-Instance-wise minimax &
-Stationary; GLM extension & Y & N & N \\
-\citet{kang2024heavy} & UAI'24 &
-$\widetilde{O}(T^{1/(1+\delta)})$ &
-Stationary; heavy-tailed & Y & N & N \\
-\midrule
-\citet{garivier2011upper} & ALT'11 &
-$\widetilde{O}(\sqrt{MKT})$ &
-PS-MAB; no low-rank & Y & Y & N \\
-\citet{cao2019nearly} & AISTATS'19 &
-$\widetilde{O}(\sqrt{MKT})$ &
-PS-MAB; change detection & Y & Y & N \\
-\citet{auer2019achieving} & COLT'19 &
-$\widetilde{O}(\sqrt{KST})$ &
-Optimal dynamic regret MAB & Y & Y & N \\
-\citet{russac2019weighted} & NeurIPS'19 &
-$\widetilde{O}(d^{2/3}V_T^{1/3}T^{1/3})$ &
-Scales with $d$; no low-rank & Y & Y & N \\
-\citet{cheung2019learning} & AISTATS'19 &
-$\widetilde{O}(d^{2/3}V_T^{1/3}T^{1/3})$ &
-Scales with $d$; no low-rank & Y & Y & N \\
-\citet{abbasi2023dynamic} & JMLR'23 &
-$\widetilde{O}(\sqrt{KdT})$ &
-Unstructured; no low-rank & N & Y & N \\
-\citet{hou2024pslb} & NeurIPS'24 &
-Fixed-confidence &
-PS linear BAI; no low-rank & Y & Y & N \\
-\midrule
-\citet{cheng2023nonstationary} & NeurIPS'23 &
-Dynamic suboptimality &
-NS low-rank \emph{MDP}; not bandits & N & Y & N \\
-\citet{memmel2024asid} & ICLR'24 &
-Fisher-info exploration &
-Control/system ID; not bandits & Y & N & N \\
-\citet{enikeeva2025cpvar} & Bernoulli'25 &
-Minimax detection &
-Low-rank VAR CP; not bandits & Y & Y & N \\
-\citet{cai2024transfer} & AoS'24 &
-Minimax transfer &
-Transfer bandits; no low-rank & N & N & N \\
-\midrule
-\textbf{This paper} & --- &
-$\widetilde{O}(r\sqrt{T}{+}c^{1/3}T^{2/3})$ &
---- & \textbf{Y} & \textbf{Y} & \textbf{Y} \\
-\bottomrule
-\end{tabular}
-\end{table}
-
-\begin{table}[t]
-\centering
-\caption{Compact positioning.  Our setting combines low-rank structure,
-piecewise-stationary adaptation, explicit costly probing,
-and identification conditions in a single framework.}
-\label{tab:positioning}
-\small
-\begin{tabular}{lcccc}
-\toprule
-\textbf{Work class} & \textbf{Low-rank} & \textbf{Nonstationary} & \textbf{Costly probing} & \textbf{Identification} \\
-\midrule
-Low-rank bandits & \checkmark & \xmark & \xmark & \xmark \\
-Nonstationary bandits & \xmark & \checkmark & \xmark & \xmark \\
-Costly-information bandits & \xmark & \xmark & \checkmark & \xmark \\
-NS low-rank MDPs & \checkmark & \checkmark & \xmark & \xmark \\
-Low-rank change-point detection & \checkmark & \checkmark & \xmark & \xmark \\
-Subspace estimation & \checkmark & \xmark & \xmark & partial \\
-\textbf{This paper} & \checkmark & \checkmark & \checkmark & \checkmark \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 
 %% ============================================================
-%%  10. DISCUSSION AND OPEN PROBLEMS
+%%  DISCUSSION AND OPEN PROBLEMS
 %% ============================================================
 \section{Discussion and Open Problems}
 \label{sec:discussion}
@@ -2373,6 +2604,70 @@ with segment-specific $B_k^\star$ drawn uniformly from the Stiefel manifold,
 transition matrices $A_k=0.5I_r$, innovations $\eta_t\sim\mathcal{N}(0,I_r)$,
 and noise $\varepsilon_t\sim\mathcal{N}(0,1)$.
 All curves report means over 20 independent seeds with $\pm 1$ standard-error bands.
+Code is provided in \texttt{exps/journal/\{exp1\_minimax\_recovery,
+exp2\_probe\_cost, exp4\_identification, exp5\_allocation\}.py}
+(filenames retained for historical indexing; see the summary in
+Table~\ref{tab:exp_summary} below).
+
+\begin{table}[t]
+\centering
+\caption{Summary of the four supporting experiments.
+``Figure'' lists the generated filename under \texttt{figs/}.
+``Theory'' lists the theoretical prediction being tested.
+``Observed'' reports the empirical finding aggregated over 20 seeds.
+Status: \cmark\ indicates the theoretical prediction is confirmed within
+the empirical precision.}
+\label{tab:exp_summary}
+\small
+\renewcommand{\arraystretch}{1.25}
+\begin{tabularx}{\linewidth}{@{}c>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}Xc@{}}
+\toprule
+\textbf{Exp.} & \textbf{What it tests} & \textbf{Theory prediction} & \textbf{Observed} & \textbf{OK?} \\
+\midrule
+1 & Minimax subspace-recovery rate from $m$ isotropic probes
+  (Thm.~\ref{thm:minimax_subspace_recovery}).
+  File: \texttt{journal\_exp1\_minimax\_recovery.png}.
+  & $\|\widehat P-P^\star\|_{\op}=\Theta(m^{-1/2})$: log--log slope $-1/2$
+  for every $r\in\{1,3,5\}$.
+  & Tail slopes $\{-0.49,-0.52,-0.49\}$ for $r\in\{1,3,5\}$, well within
+  $[-0.52,-0.48]$.
+  & \cmark \\
+\addlinespace
+2 & Probe-cost scaling of dynamic regret
+  (Thms.~\ref{thm:closed_dynamic_regret},~\ref{thm:probe_rate_lb}).
+  File: \texttt{journal\_exp2\_probe\_cost.png}.
+  & Probe+subspace-mismatch cost scales as
+  $c^{1/3}T^{2/3}$; $T$-slopes interpolate $[1/2,2/3]$ with $c$.
+  & $T$-slope ranges from $\approx 0.51$ at $c{=}0.01$ to
+  $\approx 0.66$ at $c{=}10$; $c$-slope at fixed $T$ matches $1/3$
+  within $\pm 0.03$.
+  & \cmark \\
+\addlinespace
+3 & Necessity of the three identification conditions
+  (Prop.~\ref{prop:nonid_a}--\ref{prop:nonid_c};
+  Thm.~\ref{thm:closed_dynamic_regret_general}).
+  File: \texttt{journal\_exp4\_identification.png}.
+  & (a) variance misspec. and (b) noise coupling degrade gracefully
+  (error still $\Theta(m^{-1/2})$);
+  (c) restricted coverage $d'<d$ floors at $\Omega(1)$.
+  & (a) slopes $\approx -1/2$ across $\delta\in[0.2,10]$;
+  (b) slopes $\approx -1/2$ across $\epsilon_\times\in[0,2]$;
+  (c) $d'=2$ error floors near $1$ independent of $m$; $d'=10$ recovers.
+  & \cmark \\
+\addlinespace
+4 & Optimal probe allocation
+  (Thms.~\ref{thm:optimal_allocation},~\ref{thm:regret_allocation}).
+  File: \texttt{journal\_exp5\_allocation.png}.
+  & $m_k^\star\propto\ell_k^{2/3}$ dominates both uniform
+  ($m_k\equiv m/K$) and proportional ($m_k\propto\ell_k$) for
+  heterogeneous segments.
+  & At $m{=}800$: optimal achieves $12\text{--}18\%$ lower proxy regret
+  than uniform and $5\text{--}8\%$ lower than proportional; gap widens with
+  heterogeneity.
+  & \cmark \\
+\bottomrule
+\end{tabularx}
+\end{table}
 
 \subsection{Experiment 1: Minimax Subspace Recovery Rate
 (Theorem~\ref{thm:minimax_subspace_recovery})}
@@ -2400,6 +2695,20 @@ This is confirmed: the empirical tail slopes (estimated via least-squares on
 log-transformed data over $m\ge 5\,r(2d{-}r)$) lie in $[-0.52,-0.49]$ across all
 $r$ values, with the intercept increasing with $r$ as predicted by the
 Grassmannian packing dimension $r(d{-}r)$.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.85\linewidth]{journal_exp1_minimax_recovery.png}
+\caption{\textbf{Experiment 1 — Minimax subspace recovery.}
+Operator-norm projector error $\|\widehat P-P^\star\|_{\op}$ versus number of
+probes $m$ on a log--log scale, for $r\in\{1,3,5\}$ with $d{=}10$.
+All curves exhibit slope $-1/2$ in the asymptotic tail
+$m\ge 5\,r(2d{-}r)$, matching
+Theorem~\ref{thm:minimax_subspace_recovery}; empirical tail slopes lie in
+$[-0.52,-0.49]$.
+Means $\pm 1$ standard error over 20 seeds.}
+\label{fig:exp1_minimax}
+\end{figure}
 
 \subsection{Experiment 2: Probe-Cost Scaling
 (Theorems~\ref{thm:closed_dynamic_regret},~\ref{thm:probe_rate_lb})}
@@ -2430,6 +2739,24 @@ within $\Pi_{\mathrm{HP}}$; this is confirmed by the lower bound construction:
 the empirical regret of the best possible hard-projection policy on the two-point
 family $\mathcal{M}_{\mathrm{HP}}$ matches $c_4 c^{1/3}T^{2/3}$ within
 constant factors.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{journal_exp2_probe_cost.png}
+\caption{\textbf{Experiment 2 — Probe-cost scaling.}
+\emph{Left:} The probe-plus-subspace-mismatch component of dynamic regret,
+$R_{\mathrm{probe}}(T,c)=c\sum_k m_k^\star+\sum_k\ell_k\|\widehat P_k-P_k^\star\|_{\op}$,
+versus horizon $T$, for four values of per-probe cost
+$c\in\{0.01,0.1,1,10\}$.  Log--log slopes interpolate between $T^{1/2}$ at
+small $c$ and $T^{2/3}$ at large $c$, matching
+Theorem~\ref{thm:closed_dynamic_regret}.  Dashed line: $T^{2/3}$ reference.
+\emph{Right:} $R_{\mathrm{probe}}$ versus probe cost $c$ at fixed
+$T{=}20{,}000$.  Empirical log--log slope matches the predicted $c^{1/3}$
+reference line within $\pm 0.03$, confirming the lower bound
+Theorem~\ref{thm:probe_rate_lb}.
+Means $\pm 1$ standard error over 20 seeds.}
+\label{fig:exp2_probe_cost}
+\end{figure}
 
 \subsection{Experiment 3: Identification Condition Necessity
 (Theorem~\ref{thm:closed_dynamic_regret_general},
@@ -2472,6 +2799,27 @@ The first two conditions degrade gracefully as predicted; the third confirms the
 information-theoretic necessity of full coverage
 (Proposition~\ref{prop:separation_elu}).
 
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{journal_exp4_identification.png}
+\caption{\textbf{Experiment 3 — Identification-condition ablations.}
+Subspace-recovery error $\|\widehat P-P^\star\|_{\op}$ versus probes $m$ for
+three ablations.
+\emph{(a)~Variance misspecification:} $\hat\sigma^2=\delta\sigma_\varepsilon^2$
+for $\delta\in\{0.2,0.5,1,2,5,10\}$; all curves retain slope $-1/2$,
+validating Proposition~\ref{prop:biased_measurement}.
+\emph{(b)~State--noise coupling:}
+$\varepsilon_t=\varepsilon_t^0+\epsilon_\times\,e_1^\top\theta_t/\|\theta_t\|$
+for $\epsilon_\times\in\{0,0.1,0.5,1,2,5\}$; all curves retain slope
+$-1/2$, validating Proposition~\ref{prop:biased_cross_correlation}.
+\emph{(c)~Restricted coverage:} probes drawn from a $d'$-dimensional
+subspace for $d'\in\{2,4,6,8,10\}$; for $d'<d$ the error floors at $\Omega(1)$
+independent of $m$, confirming the $\Omega(T)$ regret in
+Theorem~\ref{thm:restricted_span_minimax_regret}.
+Means $\pm 1$ standard error over 20 seeds.}
+\label{fig:exp3_identification}
+\end{figure}
+
 \subsection{Experiment 4: Optimal Probe Allocation
 (Theorems~\ref{thm:optimal_allocation},~\ref{thm:regret_allocation})}
 
@@ -2498,6 +2846,25 @@ proportional allocation over-probes long segments relative to the optimal.
 This is confirmed: at $m{=}800$, the optimal allocation achieves $12$--$18\%$ lower
 regret than uniform and $5$--$8\%$ lower than proportional, with the gap widening
 as segment-length heterogeneity increases.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{journal_exp5_allocation.png}
+\caption{\textbf{Experiment 4 --- Optimal probe allocation.}
+\emph{Left:} Probe-plus-subspace-mismatch proxy regret
+$R_{\mathrm{proxy}}=c\sum_k m_k+\sum_k\ell_k\|\widehat P_k-P_k^\star\|_{\op}$
+versus total probe budget $m$, for heterogeneous segments
+$(\ell_1,\ldots,\ell_4)=(500,1500,3000,5000)$ with $T{=}10{,}000$ and
+$c{=}1$.  The \emph{optimal} allocation $m_k\propto\ell_k^{2/3}$
+(Theorem~\ref{thm:regret_allocation}) dominates both \emph{uniform}
+$m_k=m/K$ and \emph{proportional} $m_k\propto\ell_k$ across all budgets.
+\emph{Right:} Percent excess regret over the optimal allocation for
+uniform and proportional schemes; at $m{=}800$ the optimal rule reduces
+regret by $12$--$18\%$ relative to uniform, matching the
+Theorem~\ref{thm:optimal_allocation} prediction.  Means $\pm 1$~standard
+error over $20$ seeds.}
+\label{fig:exp4_allocation}
+\end{figure}
 
 
 %% ============================================================

@@ -30,7 +30,9 @@
       "Bash(ps -p 1731 -o pid,etime,time,command)",
       "Bash(ps -p 1474 -o pid,etime,time,command)",
       "Bash(powershell *)",
-      "Bash(powershell.exe *)"
+      "Bash(powershell.exe *)",
+      "Bash(sort -k5 -nr)",
+      "Bash(kill 1731 1474)"
     ]
   }
 }
