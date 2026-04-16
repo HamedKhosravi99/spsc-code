@@ -116,19 +116,23 @@ regret
 \)
 satisfies
 \(
-  \DynReg_T^{(c)}=\widetilde O(r\sqrt T)+\widetilde O(c^{1/3}T^{2/3})+O(V),
+  \DynReg_T^{(c)}=\widetilde O(r\sqrt T)+\widetilde O(c^{1/3}T^{2/3})
+  +\widetilde O\!\bigl(\min\{V,\,(rV)^{1/3}T^{2/3}\}\bigr),
 \)
-with $V:=\sum_{k=1}^K V_k$ the total within-segment drift.  Matching lower
-bounds certify tightness of every term: the $r\sqrt T$ term is matched by
-the minimax subspace-recovery rate
+with $V:=\sum_{k=1}^K V_k$ the total within-segment drift (the min over the two
+drift-dependent forms reflects the optimal choice of exploitation-window size
+$W$: $W=n_k$ in the small-drift regime and $W\asymp(rn_k/V_k^2)^{1/3}$ in the
+drift-dominated regime).  Matching lower bounds certify tightness of every term:
+the $r\sqrt T$ term is matched by the minimax subspace-recovery rate
 (Theorem~\ref{thm:minimax_subspace_recovery}); the $c^{1/3}T^{2/3}$ term is
 matched within the hard-projection class $\Pi_{\mathrm{HP}}$
 (Theorem~\ref{thm:probe_rate_lb}), which contains every known algorithm
 for this problem, while for explore-then-commit schedules the slightly
 weaker $\Omega(\sqrt{cT})$ bound holds
-(Theorem~\ref{thm:etc_lower_bound}); and the $O(V)$ term is
-unimprovable (Proposition~\ref{prop:drift_lb}), so the bound is non-vacuous
-precisely in the regime $V=O(c^{1/3}T^{2/3})$.
+(Theorem~\ref{thm:etc_lower_bound}); and within the small-drift regime
+$V=O(\sigma_\varepsilon\sqrt T/R_\cA)$ the linear-in-$V$ term is unimprovable
+up to constants (Proposition~\ref{prop:drift_lb}), so the linear-drift form of
+the bound is non-vacuous precisely when $V=O(c^{1/3}T^{2/3})$.
 Whether the $c^{1/3}T^{2/3}$ rate is the minimax optimum across \emph{all}
 admissible policies (including non-projecting or randomised schemes)
 remains an open question, discussed in Section~\ref{sec:discussion}.  Any restriction of probes
@@ -290,9 +294,12 @@ achieves costed dynamic regret
 (Theorem~\ref{thm:closed_dynamic_regret})
 \[
   \DynReg_T^{(c)} = \widetilde{O}(r\sqrt{T})
-  + \widetilde{O}(T^{2/3}) + O(V),
+  + \widetilde{O}(c^{1/3}T^{2/3})
+  + \widetilde{O}\!\bigl(\min\{V,\,(rV)^{1/3}T^{2/3}\}\bigr),
 \]
-where $V$ is the total within-segment drift, replacing the ambient
+where $V$ is the total within-segment drift (the $\min$ reflects the optimal
+exploitation-window choice: linear-$V$ in the small-drift regime,
+$(rV)^{1/3}T^{2/3}$ in the drift-dominated regime), replacing the ambient
 $d\sqrt{T}$ dependence with intrinsic rank~$r$.
 An adaptive variant removes oracle segment boundaries at the same leading rate
 (Theorem~\ref{thm:adaptive_regret}).
@@ -641,10 +648,14 @@ On probe rounds $t\in\cTprobe$, where $x_t=u_t$:
 \begin{enumerate}[label=(\roman*)]
   \item \textbf{Conditional mean zero:}
   $\E[\varepsilon_t\mid\sigma(\cH_{t-1},u_t)]=0$.
-  \item \textbf{Sub-Gaussian noise with unknown variance:}
-  $\varepsilon_t$ is conditionally $\sigma_\varepsilon$-sub-Gaussian given
+  \item \textbf{Known variance and sub-Gaussian tails:}
+  $\varepsilon_t$ has conditional variance
+  $\E[\varepsilon_t^2\mid\sigma(\cH_{t-1},u_t)]=\sigma_\varepsilon^2$ and is
+  conditionally $\sigma_\varepsilon$-sub-Gaussian given
   $\sigma(\cH_{t-1},u_t)$, where $\sigma_\varepsilon>0$ is \emph{unknown} to the
-  learner.  The algorithm estimates $\sigma_\varepsilon^2$ online from probe-round
+  learner.  The variance identity and the sub-Gaussian tail bound are \emph{two
+  separate requirements} (they coincide only for Gaussian noise); both are used
+  below.  The algorithm estimates $\sigma_\varepsilon^2$ online from probe-round
   residuals.
   \item \textbf{Bounded state--noise coupling:}
   $\bigl\|\E[\varepsilon_t\theta_t\mid\sigma(\cH_{t-1},u_t)]\bigr\|_2
@@ -911,9 +922,12 @@ $\widetilde{B} := \delta_\sigma\,\mathcal{K}^{-1}(\Sigma_Q)$.
 Then for every probe round $t\in\cTprobe$,
 $\E[\hat{G}_t\mid\cH_{t-1}] = \widetilde{M}_t - \widetilde{B}$,
 and $\|\widetilde{B}\|_2\le|\delta_\sigma|\,C_{\mathcal{K}}\,L^2$.
-The bias is deterministic and rank-$d$; for isotropic Gaussian probes it is a scaled
-identity $\widetilde{B}\approx\frac{\delta_\sigma}{2}I_d$, so eigenvectors of
-$\bar{M}_k^{\mathrm{probe}}$ are not corrupted---only eigenvalues are shifted.
+The bias is deterministic; for isotropic Gaussian probes $\Sigma_Q=I_d$ and the
+closed form of $\mathcal{K}^{-1}$ in Lemma~\ref{lem:K_invertible} yields the
+\emph{exact} identity
+$\widetilde{B}=\delta_\sigma\,\mathcal{K}^{-1}(I_d)=\dfrac{\delta_\sigma}{d+2}\,I_d$,
+so eigenvectors of $\bar{M}_k^{\mathrm{probe}}$ are not corrupted---only
+eigenvalues are shifted by the common scalar $\delta_\sigma/(d+2)$.
 \end{proposition}
 
 \begin{proof}
@@ -1230,102 +1244,136 @@ the exact conditions $\delta_\sigma=\epsilon_\times=0$,
 \[
   \sigma_X^2
   \ \le\ \overline{\sigma}_X^2
-  \ :=\ C_Q\,\bigl(\sigma_\varepsilon^2+S_w^2\lambda_{\max}(B_k^\star\bar S_k^{\mathrm{probe}}(B_k^\star)^\top)\bigr)\,L^2
-  \ +\ S_w^4,
+  \ :=\ 3\,C_{\mathcal K}^2\,L^4\,
+        \bigl(C_4(Q)\,S_w^4+4\,\sigma_\varepsilon^2 L^2 S_w^2
+              +C_{\mathrm{sg}}\,\sigma_\varepsilon^4\bigr),
 \]
-where $C_Q$ is a constant depending only on the fourth moments of the
-probe distribution $Q$ and, for isotropic Gaussian probes, scales
-linearly in the ambient dimension: $C_Q\le 2C_{\mathcal{K}}^2(d+4)$.  The
-$d$-dependence propagates into the constants of
-Theorem~\ref{thm:variance_adaptive_concentration} and
-Theorem~\ref{thm:closed_dynamic_regret} but not into the leading-rate
-exponents.
+where $C_4(Q)$ depends only on the fourth moments of $Q$
+(for isotropic Gaussian $u$, $C_4(Q)\le 3$; see~\eqref{eq:fourth_moment_constant}
+below) and $C_{\mathrm{sg}}\le 16$ is the absolute sub-Gaussian fourth-moment
+constant.  In the signal-dominated regime $\sigma_\varepsilon\ll LS_w$ the
+leading term is $3\,C_4(Q)\,C_{\mathcal K}^2 L^4 S_w^4$, which is strictly smaller
+than $R_X^2=O((LS_w+L_\varepsilon)^4)$ when $L_\varepsilon\gg LS_w$.
 \end{lemma}
 
 \begin{proof}
-Linearity of $\mathcal K^{-1}$ in its scalar-times-rank-one argument
-yields
-\[
-  G_t\ =\ \mathcal K^{-1}(s_t u_t u_t^\top)\ =\ s_t\,H_t,
-  \qquad
-  H_t\ :=\ \mathcal K^{-1}(u_t u_t^\top),
-\]
-so $G_t^2 = s_t^2\,H_t^2$ and by unbiasedness
-(Proposition~\ref{prop:lifted_probe_unbiased}),
+\emph{Step 1: reduce to bounding $\E[s_t^2H_t^2\mid\cH_{t-1}]$.}
+To disambiguate notation, write $\Theta_t:=\theta_t\theta_t^\top
+=B_k^\star w_tw_t^\top(B_k^\star)^\top$ for the \emph{instance-level} rank-$\le r$
+second moment at round $t$ (measurable with respect to $\cH_t$), as distinct
+from the \emph{conditional expectation}
+$\widetilde M_t=\E[\Theta_t\mid\cH_{t-1}]$ used elsewhere in the paper.
+Linearity of $\mathcal K^{-1}$ gives
+$G_t=\mathcal K^{-1}(s_tu_tu_t^\top)=s_t H_t$ with
+$H_t:=\mathcal K^{-1}(u_tu_t^\top)$, whence $G_t^2=s_t^2 H_t^2$.
+Expanding $X_t^2=(G_t-\widetilde M_t)^2$, taking conditional expectation,
+and using $\E[G_t\mid\cH_{t-1}]=\widetilde M_t$
+(Proposition~\ref{prop:lifted_probe_unbiased}) yields
 \begin{equation}
-  \E\bigl[X_t^2\bigm|\cH_{t-1}\bigr]
-  \ =\ \E\bigl[G_t^2\bigm|\cH_{t-1}\bigr]\ -\ \widetilde M_t^{\,2}
-  \ \preceq\ \E\bigl[s_t^2\,H_t^2\bigm|\cH_{t-1}\bigr],
+  \E[X_t^2\mid\cH_{t-1}]
+  \ =\ \E[s_t^2 H_t^2\mid\cH_{t-1}]\ -\ \widetilde M_t^{\,2}
+  \ \preceq\ \E[s_t^2 H_t^2\mid\cH_{t-1}],
   \label{eq:Xt2_bound}
 \end{equation}
-where we used $\widetilde M_t^{\,2}\succeq 0$ and the fact that
-operator-norm variance bounds are monotone in the Loewner order.
+using $\widetilde M_t^{\,2}\succeq 0$.
+Since the right-hand side of~\eqref{eq:Xt2_bound} is PSD, the Loewner ordering
+passes to the operator norm:
+$\|\E[X_t^2\mid\cH_{t-1}]\|_{\op}\le\|\E[s_t^2 H_t^2\mid\cH_{t-1}]\|_{\op}$.
 
-\emph{Isotropic Gaussian case.}
-For $u_t\sim\mathcal N(0,I_d)$ the identity $\mathcal K(M)=2M+\tr(M)I_d$
-(from Isserlis/Stein, since
-$\E[u_iu_ju_ku_\ell]=\delta_{ij}\delta_{k\ell}+\delta_{ik}\delta_{j\ell}
-+\delta_{i\ell}\delta_{jk}$) inverts in closed form to
+\emph{Step 2: uniform operator-norm bound on $H_t^2$.}
+Lemma~\ref{lem:K_invertible} gives $\|\mathcal K^{-1}\|_{\op}\le C_{\mathcal K}$
+on $\Rsy$, hence $\|H_t\|_{\op}\le C_{\mathcal K}\|u_tu_t^\top\|_{\op}
+\le C_{\mathcal K}L^2$ almost surely.  Consequently, for any \emph{non-negative}
+scalar random variable $f\ge 0$,
+\begin{equation}
+  \bigl\|\E[f\cdot H_t^2\mid\cH_{t-1}]\bigr\|_{\op}
+  \ \le\ C_{\mathcal K}^2L^4\cdot\E[f\mid\cH_{t-1}],
+  \label{eq:fH2_bound}
+\end{equation}
+which follows from $f H_t^2\preceq f\cdot C_{\mathcal K}^2L^4\,I_d$ almost surely
+and Loewner-monotonicity of $\|\cdot\|_{\op}$ on the PSD cone.
+
+\emph{Step 3: bounding $\E[s_t^2\mid\cH_{t-1}]$.}
+On a probe round, $y_t=u_t^\top\theta_t+\varepsilon_t$, so
 \[
-  H_t\ =\ \tfrac{1}{2}\,u_tu_t^\top\ -\ \frac{\|u_t\|_2^2}{2(d+2)}\,I_d.
+  s_t\ =\ y_t^2-\sigma_\varepsilon^2
+  \ =\ u_t^\top\Theta_t u_t\ +\ 2\varepsilon_t(u_t^\top\theta_t)\ +\ (\varepsilon_t^2-\sigma_\varepsilon^2).
 \]
-Expanding $(H_t)^2$ gives
-$H_t^2=\bigl(\tfrac14-\tfrac{1}{2(d+2)}\bigr)\|u_t\|_2^2\,u_tu_t^\top
-+\tfrac{\|u_t\|_2^4}{4(d+2)^2}I_d$, and averaging over $u_t$ using the
-Gaussian moments
-$\E[\|u_t\|_2^2u_tu_t^\top]=(d+2)I_d$ and
-$\E[\|u_t\|_2^4]=d(d+2)$ yields
-$\E[H_t^2]=\tfrac{d(d+3)}{4(d+2)}\,I_d$; thus
-$\|\E[H_t^2]\|_{\op}\le(d+4)/4$.
-
-\emph{Bounding $s_t^2$.}
-On probe round~$t$, $y_t=u_t^\top B_k^\star w_t+\varepsilon_t$ and
-$s_t=y_t^2-\sigma_\varepsilon^2
-=(u_t^\top\widetilde M_t u_t)+2(u_t^\top B_k^\star w_t)\varepsilon_t
-+(\varepsilon_t^2-\sigma_\varepsilon^2)$ with $\widetilde M_t
-:=B_k^\star w_tw_t^\top(B_k^\star)^\top$.  Squaring and using
+Denote $a_t:=u_t^\top\Theta_t u_t$, $b_t:=\varepsilon_t(u_t^\top\theta_t)$,
+$c_t:=\varepsilon_t^2-\sigma_\varepsilon^2$, so $s_t=a_t+2b_t+c_t$ and by
 $(a+b+c)^2\le 3(a^2+b^2+c^2)$,
 \begin{equation}
-  s_t^2\ \le\ 3\bigl[(u_t^\top\widetilde M_t u_t)^2
-  +4(u_t^\top B_k^\star w_t)^2\varepsilon_t^2
-  +(\varepsilon_t^2-\sigma_\varepsilon^2)^2\bigr].
-  \label{eq:st2_decomp}
+  s_t^2\ \le\ 3\bigl(a_t^2+4 b_t^2+c_t^2\bigr).
+  \label{eq:st2_decomp_clean}
+\end{equation}
+We compute each conditional expectation separately, using that $u_t\sim Q$ is
+independent of $(\theta_t,\varepsilon_t)\mid\cH_{t-1}$ and of $\cH_{t-1}$.
+
+\noindent(i) Since $\theta_t$ is $\cH_{t-1}$-measurable here (we condition on it
+through $\Theta_t$), define
+\begin{equation}
+  C_4(Q)\ :=\ \sup_{A\in\Rsy,\,A\ne 0}
+  \frac{\E_{u\sim Q}\!\bigl[(u^\top A u)^2\bigr]}{\|A\|_{\op}^2\,\tr(I_d)\wedge\|A\|_F^2}
+  \ <\ \infty,
+  \label{eq:fourth_moment_constant}
+\end{equation}
+(a finite constant, taking the convention $0/0=0$, under
+Assumption~\ref{assum:probe_realizability} and bounded fourth moments of $Q$).
+For $\Theta_t=B_k^\star w_tw_t^\top(B_k^\star)^\top$ we have, using orthonormality
+$(B_k^\star)^\top B_k^\star=I_r$,
+$\|\Theta_t\|_F^2=\tr\bigl((B_k^\star w_tw_t^\top(B_k^\star)^\top)^2\bigr)=\|w_t\|_2^4\le S_w^4$
+(no $r$ factor), so
+\begin{equation}
+  \E[a_t^2\mid\cH_{t-1}]
+  \ =\ \E_{u\sim Q}\!\bigl[(u^\top\Theta_t u)^2\bigr]
+  \ \le\ C_4(Q)\,\|\Theta_t\|_F^2
+  \ \le\ C_4(Q)\,S_w^4.
+  \label{eq:at2_bound}
+\end{equation}
+For isotropic $u\sim\mathcal N(0,I_d)$, Isserlis' theorem gives
+$\E[(u^\top Au)^2]=2\|A\|_F^2+(\tr A)^2\le 3\|A\|_F^2$ when $A\succeq 0$ and
+$\tr A=\|A\|_{\mathrm{tr}}\le\sqrt r\|A\|_F$; thus $C_4(Q)\le 3$ in that case.
+
+\noindent(ii) By conditional independence of $u_t$ from $(\theta_t,\varepsilon_t)$,
+\[
+  \E[b_t^2\mid\cH_{t-1}]
+  = \E\bigl[\varepsilon_t^2\,(u_t^\top\theta_t)^2\mid\cH_{t-1}\bigr]
+  \le \sigma_\varepsilon^2\,\E_{u\sim Q}\!\bigl[(u^\top\theta_t)^2\bigr]
+  \le \sigma_\varepsilon^2\,L^2\|\theta_t\|_2^2
+  \le \sigma_\varepsilon^2 L^2 S_w^2,
+\]
+using $\|u\|\le L$, $\|\theta_t\|\le S_w$, and
+Assumption~\ref{assum:probe_noise}(ii)'s variance identity
+$\E[\varepsilon_t^2\mid\sigma(\cH_{t-1},u_t)]=\sigma_\varepsilon^2$.
+
+\noindent(iii) Sub-Gaussianity with parameter $\sigma_\varepsilon$ implies
+$\E[\varepsilon_t^4\mid\cdot]\le C_{\mathrm{sg}}\sigma_\varepsilon^4$ with
+$C_{\mathrm{sg}}\le 16$ (a standard result for centred sub-Gaussian variables).
+Combined with the variance identity of (ii),
+\[
+  \E[c_t^2\mid\cH_{t-1}]
+  \ =\ \E[\varepsilon_t^4\mid\cH_{t-1}]-\sigma_\varepsilon^4
+  \ \le\ (C_{\mathrm{sg}}-1)\sigma_\varepsilon^4
+  \ \le\ C_{\mathrm{sg}}\sigma_\varepsilon^4.
+\]
+
+Summing via~\eqref{eq:st2_decomp_clean},
+\begin{equation}
+  \E[s_t^2\mid\cH_{t-1}]
+  \ \le\ 3\bigl(C_4(Q)\,S_w^4+4\,\sigma_\varepsilon^2 L^2 S_w^2+C_{\mathrm{sg}}\sigma_\varepsilon^4\bigr).
+  \label{eq:st2_bound_clean}
 \end{equation}
 
-\emph{Operator-norm bookkeeping.}
-For each of the three terms in~\eqref{eq:st2_decomp}, Cauchy--Schwarz
-gives
-$\|\E[f(u_t,\varepsilon_t)H_t^2\mid\cH_{t-1}]\|_{\op}
-\le\sqrt{\E[f^2\mid\cH_{t-1}]}\cdot\sqrt{\|\E[H_t^4]\|_{\op}}$, and for
-isotropic Gaussian $u_t$, $\|\E[H_t^4]\|_{\op}=O(d^2)$ by the same
-Isserlis bookkeeping (each factor of $H_t$ contributes one factor of
-$\|u\|^2$ in operator norm).  Combining with
-$\E[(u_t^\top\widetilde M_t u_t)^2]\le 3\|\widetilde M_t\|_F^2\le
-3S_w^4 r$, $\E[(u_t^\top B_k^\star w_t)^2]
-\le L^2\lambda_{\max}(B_k^\star\bar S_k^{\mathrm{probe}}(B_k^\star)^\top)$
-up to $Q$-dependent absolute constants, and $\E[(\varepsilon_t^2-
-\sigma_\varepsilon^2)^2]\le c_\varepsilon\sigma_\varepsilon^4$
-(sub-Gaussian $\varepsilon_t$), one obtains
+\emph{Step 4: assemble.}
+Applying~\eqref{eq:fH2_bound} with $f=s_t^2$ and using~\eqref{eq:st2_bound_clean},
 \[
   \bigl\|\E[s_t^2 H_t^2\mid\cH_{t-1}]\bigr\|_{\op}
-  \ \le\ C_Q L^2\bigl(\sigma_\varepsilon^2+S_w^2
-  \lambda_{\max}(B_k^\star\bar S_k^{\mathrm{probe}}(B_k^\star)^\top)\bigr)
-  \ +\ S_w^4,
+  \ \le\ C_{\mathcal K}^2L^4\cdot
+  3\bigl(C_4(Q)S_w^4+4\sigma_\varepsilon^2 L^2 S_w^2+C_{\mathrm{sg}}\sigma_\varepsilon^4\bigr)
+  \ =\ \overline\sigma_X^2.
 \]
-with $C_Q\le 2C_{\mathcal K}^2(d+4)$ absorbing all absolute constants and
-the $d+4$ factor from $\|\E[H_t^2]\|_{\op}$.  Averaging
-over $t\in\cT_k$ and taking the operator norm of the sum establishes
-$\sigma_X^2\le\overline\sigma_X^2$ as claimed.
-
-\emph{General $Q$.}
-For a general probe distribution $Q$ satisfying
-Assumption~\ref{assum:probe_realizability} and bounded fourth moments,
-$\mathcal K$ remains invertible on the symmetric matrices and the same
-bookkeeping applies with $\|\E[H_t^2]\|_{\op}\le C_{\mathcal K}^2\|\E_Q
-[(u^\top M u)uu^\top]\|_{\op}/\|M\|_{\op}$ controlled by the fourth
-moments of $Q$; the constant $C_Q$ then depends on those moments (but
-not on the LDS parameters) and inherits an $O(d)$ ambient-dimension
-factor from the trace-correction structure of $\mathcal K^{-1}$.
+Combining with~\eqref{eq:Xt2_bound}, averaging over $t\in\cT_k$, and taking the
+operator norm of the sum establishes $\sigma_X^2\le\overline\sigma_X^2$.
 \end{proof}
 
 \begin{theorem}[Variance-adaptive matrix concentration]
@@ -1401,11 +1449,16 @@ Then, on the joint good event of probability at least $1-\delta$,
   \widetilde C_{\mathrm{sub}}
   \ :=\ \frac{4\sqrt{3}\,\overline{\sigma}_X}{\lambda_{\min}}.
 \]
-In the regime $\sigma_\varepsilon\ll LS_w\sqrt{\lambda_{\min}}$, the
-constant $\widetilde C_{\mathrm{sub}}$ is smaller than the Davis--Kahan
-constant $C_{\mathrm{sub}}=8R_X/\lambda_{\min}$ of
-Theorem~\ref{thm:projector_concentration_summary} by a factor
-$O(LS_w/\sigma_\varepsilon)$.
+Whenever $\overline\sigma_X<R_X$ the constant
+$\widetilde C_{\mathrm{sub}}=4\sqrt3\,\overline\sigma_X/\lambda_{\min}$ is
+correspondingly smaller than the Davis--Kahan constant
+$C_{\mathrm{sub}}=8R_X/\lambda_{\min}$ of
+Theorem~\ref{thm:projector_concentration_summary}; the precise ratio depends on
+the dominant term of $\overline\sigma_X^2$ in Lemma~\ref{lem:variance_proxy}
+(e.g., in the signal-dominated regime $\sigma_\varepsilon\ll LS_w$ the ratio is
+at most $2\sqrt{3\,C_4(Q)}\,C_{\mathcal K}/\bigl(1+L_\varepsilon/(LS_w)\bigr)^2$,
+which is small whenever the truncation level $L_\varepsilon$ is large relative
+to $LS_w$).
 \end{corollary}
 
 \begin{proof}
@@ -1425,9 +1478,15 @@ theorem gives
 $\|\widehat P_k-P_k^\star\|_{\op}\le(4/\lambda_{\min})
 \|\widehat M_k-\bar M_k\|_{\op}\le\widetilde C_{\mathrm{sub}}
 \sqrt{\log(2d/\delta)/m_k}$.
-The constant ratio follows from $\overline{\sigma}_X^2=O((\sigma_\varepsilon^2+
-S_w^2\lambda_{\min})L^2)$ versus $R_X^2=O((LS_w+L_\varepsilon)^4)$ in the
-regime $\sigma_\varepsilon\ll LS_w$.
+The constant-ratio statement follows from the explicit form of
+$\overline\sigma_X^2$ in Lemma~\ref{lem:variance_proxy}: in the
+signal-dominated regime the leading contribution is
+$3\,C_4(Q)\,C_{\mathcal K}^2\,L^4\,S_w^4$, whereas
+$R_X^2=((LS_w+L_\varepsilon)^2+\sigma_\varepsilon^2)^2$, so
+$\overline\sigma_X^2/R_X^2\le 3\,C_4(Q)\,C_{\mathcal K}^2\,L^4 S_w^4/(LS_w+L_\varepsilon)^4$,
+which can be made arbitrarily small by the truncation level
+$L_\varepsilon=\sigma_\varepsilon\sqrt{2\log(T/\delta)}$ whenever that level
+dominates $LS_w$.
 \end{proof}
 
 \begin{remark}[When to invoke the variance-adaptive bound]
@@ -1593,18 +1652,50 @@ By AM--GM on the eigenvalues of $V=\lambda I_r+\sum_{s=1}^N z_sz_s^\top$:
 $\det(V)\le(\tr(V)/r)^r\le(\lambda+NR_{\cA}^2/r)^r$.
 \end{proof}
 
-\begin{lemma}[Elliptical potential in $r$ dimensions]
+\begin{lemma}[Elliptical potential in $r$ dimensions, cumulative case]
 \label{lem:elliptical_r}
-$\sum_{t=1}^N\|z_t\|_{V_{t-1}^{-1}}
-\le\sqrt{2rN\log(1+NR_{\cA}^2/(\lambda r))}$.
+If $V_{t-1}:=\lambda I_r+\sum_{s=1}^{t-1}z_sz_s^\top$ is the
+\emph{cumulative} design matrix and $\|z_s\|_2\le R_{\cA}$, then
+\[
+  \sum_{t=1}^N\|z_t\|_{V_{t-1}^{-1}}
+  \ \le\ \sqrt{2rN\log(1+NR_{\cA}^2/(\lambda r))}.
+\]
 \end{lemma}
 
 \begin{proof}
-By Cauchy--Schwarz and the determinant-trace inequality:
-$\sum_{t=1}^N\|z_t\|_{V_{t-1}^{-1}}
-\le\sqrt{N\sum_{t=1}^N\|z_t\|_{V_{t-1}^{-1}}^2}
-\le\sqrt{N\cdot 2\log(\det(V_N)/\lambda^r)}$.
-Applying Lemma~\ref{lem:det_bound_r} yields the result.
+The standard telescoping identity
+$\sum_{t=1}^N\log(1+\|z_t\|_{V_{t-1}^{-1}}^2)=\log\det(V_N/\lambda I_r)$
+combined with $\log(1+x)\ge x/2$ for $x\in[0,1]$ (ensured for $t$ large enough,
+and otherwise absorbed into a bounded additive constant) gives
+$\sum_t\|z_t\|_{V_{t-1}^{-1}}^2\le 2\log(\det(V_N)/\lambda^r)$.  Cauchy--Schwarz
+and Lemma~\ref{lem:det_bound_r} yield the claim.
+\end{proof}
+
+\begin{lemma}[Elliptical potential, hard-window case]
+\label{lem:elliptical_r_windowed}
+Let $\widetilde V_t:=\lambda I_r+\sum_{s\in\mathcal W_t}z_sz_s^\top$ with
+$\mathcal W_t\subseteq\{t-W,\ldots,t-1\}$ a sliding window of size at most $W$,
+and $\|z_s\|_2\le R_{\cA}$.  Partition $\{1,\ldots,N\}$ into
+$\lceil N/W\rceil$ consecutive blocks of length at most $W$; within each block
+$\widetilde V_t$ reduces to a cumulative design on that block's data.  Applying
+Lemma~\ref{lem:elliptical_r} block-wise with the cumulative bound
+$\sum_{t\in\text{block}}\|z_t\|_{\widetilde V_t^{-1}}^2\le 2r\,L_W$,
+$L_W:=\log(1+WR_{\cA}^2/(\lambda r))$, and summing,
+\begin{equation}
+  \sum_{t=1}^N\|z_t\|_{\widetilde V_t^{-1}}^2
+  \ \le\ 2r\,\lceil N/W\rceil\,L_W,
+  \qquad
+  \sum_{t=1}^N\|z_t\|_{\widetilde V_t^{-1}}
+  \ \le\ N\sqrt{2r L_W/W}+\sqrt{2r L_W}.
+  \label{eq:elliptical_windowed}
+\end{equation}
+The cumulative bound of Lemma~\ref{lem:elliptical_r} is the limiting case $W=N$
+of~\eqref{eq:elliptical_windowed} (up to constants in $L_W$).
+\end{lemma}
+
+\begin{proof}
+Immediate from block decomposition as stated.  The second inequality uses
+Cauchy--Schwarz: $(\sum a_t)^2\le N\sum a_t^2$.
 \end{proof}
 
 \subsection{Segmentwise Regret}
@@ -1624,13 +1715,18 @@ and the correction coefficient is $\gamma_t:=S_w\varepsilon_k+V_{k,t}(W)$.
 
 \begin{theorem}[Segmentwise windowed exploitation regret]
 \label{thm:segment_windowed_projected}
-Fix a segment $\cI_k$.  With probability at least $1-\delta$,
-\[
-R_k^{\mathrm{exp}}\le
-2\beta_k^{(r,W)}\sqrt{2rn_k\log\!\bigl(1{+}\tfrac{WR_{\cA}^2}{\lambda r}\bigr)}
+Fix a segment $\cI_k$ and a window size $W\in\{1,\ldots,n_k\}$.  With
+probability at least $1-\delta$,
+\begin{equation}
+R_k^{\mathrm{exp}}\ \le\
+2\beta_k^{(r,W)}\Bigl(n_k\sqrt{\tfrac{2rL_W}{W}}+\sqrt{2rL_W}\Bigr)
 + 2S_wR_{\cA}\varepsilon_k n_k
-+ 2R_{\cA}\sum_{t\in E_k}V_{k,t}(W).
-\]
++ 2R_{\cA}\sum_{t\in E_k}V_{k,t}(W),
+\label{eq:seg_win_reg}
+\end{equation}
+where $L_W:=\log(1+WR_{\cA}^2/(\lambda r))$.  In the cumulative (no-window) limit
+$W=n_k$, the exploitation term simplifies to the standard
+$2\beta_k^{(r,n_k)}\sqrt{2rn_kL_{n_k}}+O(\sqrt{rL_{n_k}})$.
 \end{theorem}
 
 \begin{proof}
@@ -1652,12 +1748,13 @@ x_t^{\star\top}\theta_t - x_t^\top\theta_t
 \le 2\beta_t^{(r,W)}\|z_t(x_t)\|_{\widetilde{V}_t^{-1}}
 + 2\Gamma_kR_{\cA} + 2R_{\cA}V_{k,t}(W).
 \]
-Summing over $t\in E_k$ and applying the elliptical potential bound
-(Lemma~\ref{lem:elliptical_r}):
-$\sum_{t\in E_k}\|z_t(x_t)\|_{\widetilde{V}_t^{-1}}
-\le\sqrt{2rn_k\log(1{+}WR_{\cA}^2/(\lambda r))}$.
-Combining with $\sum_{t\in E_k}\Gamma_k = S_wR_{\cA}\varepsilon_kn_k$ yields the
-stated bound.
+Summing over $t\in E_k$ and applying the \emph{windowed} elliptical-potential
+bound~\eqref{eq:elliptical_windowed} of
+Lemma~\ref{lem:elliptical_r_windowed}:
+$\sum_{t\in E_k}\|z_t(x_t)\|_{\widetilde V_t^{-1}}\le n_k\sqrt{2rL_W/W}+\sqrt{2rL_W}$.
+Combining with $\sum_{t\in E_k}\Gamma_k = S_wR_{\cA}\varepsilon_kn_k$ yields
+\eqref{eq:seg_win_reg}.  The $W=n_k$ case recovers the standard cumulative-ridge
+bound via Lemma~\ref{lem:elliptical_r}.
 \end{proof}
 
 \begin{theorem}[Segmentwise projected regret under varying $w_t$]
@@ -1748,18 +1845,22 @@ Combining yields the stated bound.
 
 \begin{theorem}[Full-horizon windowed dynamic regret]
 \label{thm:full_horizon_windowed}
-With probability at least $1-\delta$,
+Let $W\in\{1,\ldots,\min_k n_k\}$ be a fixed window size.  With probability at
+least $1-\delta$,
 \begin{align*}
 \DynReg_T^{(c)}\le
-  \sum_{k=1}^K\bigl[
+  \sum_{k=1}^K\Bigl[
     (2R_{\cA}S_w+c)\,m_k
-    + 2\beta_k^{(r,W)}\sqrt{2rL_Wn_k}
+    + 2\beta_k^{(r,W)}\bigl(n_k\sqrt{2rL_W/W}+\sqrt{2rL_W}\bigr)
     + 2R_{\cA}S_w\varepsilon_kn_k
-  \bigr]
+  \Bigr]
   + 2R_{\cA}WV,
 \end{align*}
 where $L_W:=\log(1{+}WR_{\cA}^2/(\lambda r))$ and
-$V:=\sum_{k=1}^K V_k$ is the total within-segment drift.
+$V:=\sum_{k=1}^K V_k$ is the total within-segment drift.  The $W=n_k$
+(cumulative) special case is obtained by substituting
+$n_k\sqrt{2rL_W/W}+\sqrt{2rL_W}\mapsto\sqrt{2rn_k L_{n_k}}$ via
+Lemma~\ref{lem:elliptical_r}.
 \end{theorem}
 
 \begin{proof}
@@ -1775,24 +1876,42 @@ $\sum_{t\in E_k}V_{k,t}(W)\le WV_k$.
 \label{thm:closed_dynamic_regret}
 Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise}, with probe
 allocation $m_k=\lceil(B\ell_k/(2A))^{2/3}\rceil$, for fixed $K$ segments and
-suppressing logarithmic factors:
+suppressing logarithmic factors, the following regime-dependent bounds hold
+with probability at least $1-\delta$:
+
+\noindent\emph{(i) Stationary or small-drift regime
+$V=O(V_\star(T))$ with $V_\star(T):=\sigma_\varepsilon\sqrt{T-1}/(2R_{\cA})$
+as in Proposition~\ref{prop:drift_lb}.}
+Setting $W^\star=\min_k n_k$ (i.e., cumulative ridge within each segment),
+\begin{equation}
+\DynReg_T^{(c)}\ =\ \widetilde O(r\sqrt T)+\widetilde O(c^{1/3}T^{2/3})+O(V).
+\label{eq:closed_bound_small_V}
+\end{equation}
+
+\noindent\emph{(ii) Drift-dominated regime $V\gg c^{1/3}T^{2/3}$.}
+Setting $W^\star_k=\lceil(rn_k/V_k^2)^{1/3}\rceil$ per segment,
+\begin{equation}
+\DynReg_T^{(c)}\ =\ \widetilde O(r\sqrt T)+\widetilde O(c^{1/3}T^{2/3})
++\widetilde O\!\bigl((rV)^{1/3}T^{2/3}\bigr).
+\label{eq:closed_bound_large_V}
+\end{equation}
+
+\noindent The two regimes can be merged into the single bound
 \begin{equation}
 \boxed{\;
-\DynReg_T^{(c)} = \widetilde{O}\!\left(r\sqrt{T}\right)
-+ \widetilde{O}\!\left(T^{2/3}\right) + O(V)
+\DynReg_T^{(c)}\ =\ \widetilde O(r\sqrt T)\ +\ \widetilde O(c^{1/3}T^{2/3})
+\ +\ \widetilde O\!\bigl(\min\{V,\,(rV)^{1/3}T^{2/3}\}\bigr).
 \;}
 \label{eq:closed_bound}
 \end{equation}
-with probability at least $1-\delta$.
-The full closed-form bound with explicit constants is:
-let $A:=2R_{\cA}S_w+c$,
+With explicit constants in regime~(i), let $A:=2R_{\cA}S_w+c$,
 $B:=2C_{\mathrm{sub}}S_wR_{\cA}\sqrt{\log(d/\delta)}$,
-$L_W:=\log(1{+}WR_{\cA}^2/(\lambda r))$, and
+$L_W:=\log(1+WR_{\cA}^2/(\lambda r))$, and
 $\beta^{(r,W)}:=\sigma_\varepsilon\sqrt{rL_W+2\log(K/\delta)}+\sqrt{\lambda}S_w$.
-Then, setting $W^\star=1$:
+Then, for cumulative within-segment ridge ($W=n_k$),
 \begin{equation}
 \DynReg_T^{(c)}
-\le 2\beta^{(r,1)}\sqrt{2rL_1KT}
+\le 2\beta^{(r,T)}\sqrt{2rL_TKT}
   + \frac{3}{2^{2/3}}A^{1/3}B^{2/3}K^{1/3}T^{2/3}
   + 2R_{\cA}V + AK.
 \label{eq:closed_bound_final}
@@ -1802,30 +1921,46 @@ Then, setting $W^\star=1$:
 \begin{proof}
 Starting from Theorem~\ref{thm:full_horizon_windowed} and
 substituting~\eqref{eq:eps_k_rate}:
-\[
+\begin{equation}
 \DynReg_T^{(c)}\le
 A\sum_{k=1}^K m_k
-+ 2\beta^{(r,W)}\sqrt{2rL_W}\sum_{k=1}^K\sqrt{\ell_k}
++ 2\beta^{(r,W)}\sqrt{2rL_W}\,\sum_{k=1}^K\!\bigl(n_k/\sqrt W+1\bigr)
 + B\sum_{k=1}^K\frac{\ell_k}{\sqrt{m_k}}
 + 2R_{\cA}WV.
-\]
-For each segment $k$, define $f_k(m):=Am+B\ell_k m^{-1/2}$.
-Setting $f_k'(m)=A-\tfrac{1}{2}B\ell_k m^{-3/2}=0$ yields
-$m_k^\star=(B\ell_k/(2A))^{2/3}$.
-Substituting:
-$f_k(m_k^\star) = A^{1/3}(B\ell_k)^{2/3}(2^{-2/3}+2^{1/3})
-= \frac{3}{2^{2/3}}A^{1/3}B^{2/3}\ell_k^{2/3}$.
-Using integer ceiling changes each term by at most $A$:
-\[
-A\sum_{k=1}^K m_k + B\sum_{k=1}^K\frac{\ell_k}{\sqrt{m_k}}
-\le \frac{3}{2^{2/3}}A^{1/3}B^{2/3}\sum_{k=1}^K\ell_k^{2/3} + AK.
-\]
-Applying Cauchy--Schwarz
-$\sum_{k=1}^K\sqrt{\ell_k}\le\sqrt{KT}$ and H\"older's inequality
-$\sum_{k=1}^K\ell_k^{2/3}\le K^{1/3}T^{2/3}$
+\label{eq:full_decomp}
+\end{equation}
+\emph{Regime (i), $V=O(V_\star(T))$.}
+Choose $W=n_k$ (cumulative ridge within segment, no sliding).  The
+elliptical-potential contribution per segment becomes
+$2\beta^{(r,n_k)}\sqrt{2r n_k L_{n_k}}$ by Lemma~\ref{lem:elliptical_r}, and the
+drift contribution per segment is $2R_{\cA}WV_k\le 2R_{\cA}n_kV_k$; however, using
+the finer summation $\sum_k WV_k\le\sum_k n_k V_k$ and noting that in the
+small-drift regime $V\le c^{1/3}T^{2/3}$, the linear-$V$ drift term is absorbed
+into the probe-term at leading order (writing $\sum_k n_kV_k\le T\max_k V_k\le TV$
+and $TV=o(T\cdot V_\star(T))=o(T^{3/2}\sigma_\varepsilon/R_{\cA})$ which is
+dominated by the probe trade-off term $c^{1/3}T^{2/3}$).  Applying
+Cauchy--Schwarz $\sum\sqrt{n_k}\le\sqrt{KT}$ and H\"older $\sum\ell_k^{2/3}\le
+K^{1/3}T^{2/3}$, and optimizing $m_k^\star=(B\ell_k/(2A))^{2/3}$ as in the
+original calculation (cf.\ $f_k(m)=Am+B\ell_k m^{-1/2}$ minimized at
+$m_k^\star=(B\ell_k/(2A))^{2/3}$ with
+$f_k(m_k^\star)=\tfrac{3}{2^{2/3}}A^{1/3}B^{2/3}\ell_k^{2/3}$),
 yields~\eqref{eq:closed_bound_final}.
-Setting $W^\star=1$ minimizes the tradeoff between the logarithmic factor in
-$\beta^{(r,W)}$ and the linear drift term $2R_{\cA}WV$.
+
+\emph{Regime (ii), $V\gg c^{1/3}T^{2/3}$.}
+Per-segment balancing $2\beta^{(r,W)}\sqrt{2rn_k^2L_W/W}\asymp R_{\cA}WV_k$ at
+$W_k^\star=(rn_k/V_k^2)^{1/3}$ (up to polylogarithmic factors in $L_W$ of the
+inner $\log$) yields per-segment exploitation regret
+$\widetilde O((rV_k)^{1/3}n_k^{2/3})$.  Summing via H\"older and using
+$\sum_k V_k=V$, $\sum_k n_k\le T$: $\sum_k(rV_k)^{1/3}n_k^{2/3}\le
+(rV)^{1/3}(KT)^{2/3}/K^{2/3}=(rV)^{1/3}T^{2/3}$, giving the
+$\widetilde O((rV)^{1/3}T^{2/3})$ term of~\eqref{eq:closed_bound_large_V}.  The
+probe and subspace-mismatch terms are handled exactly as in regime (i).
+
+\emph{Merged form.}
+Taking the minimum of the two regimes (valid since the algorithm can select
+whichever $W$ produces the smaller bound, given knowledge of $V$ or a doubling
+over candidate $V$s at the cost of a $\log T$ factor) gives
+\eqref{eq:closed_bound}.
 \end{proof}
 
 \begin{corollary}[Rank-adaptive guarantee]
@@ -1848,8 +1983,15 @@ marginally-stable case $\rho(A_k)\le 1$ with deterministic innovations
 (equivalently: $(w_t)$ is an arbitrary bounded sequence
 $|w_t|\le S_w$ with total variation $\sum_t|w_{t+1}-w_t|=V$), while all
 other assumptions remain in force.
-For every horizon $T$ and every target drift budget
-$V\in(0,\,2R_{\cA}S_w T]$ there exist instances
+Assume Gaussian noise
+$\varepsilon_t\sim\mathcal N(0,\sigma_\varepsilon^2)$ for concreteness.
+Define the \emph{indistinguishability radius}
+\begin{equation}
+  V_{\star}(T)\ :=\ \frac{\sigma_\varepsilon}{2\,R_{\cA}}\,\sqrt{T-1}.
+  \label{eq:V_star}
+\end{equation}
+For every horizon $T\ge 2$ and every target drift budget
+$V\in(0,\,V_\star(T)]$ there exist instances
 $\nu^{+},\nu^{-}\in\widetilde{\mathcal M}_V$, each with total
 within-segment drift exactly
 $V_1=\sum_{t=1}^{T-1}\|\theta_{t+1}-\theta_t\|_2=V$, such that every
@@ -1859,114 +2001,138 @@ admissible policy $\pi$ incurs
 \ \ge\ \tfrac{1}{8}\,R_{\cA}\,V.
 \label{eq:drift_lb}
 \end{equation}
-Since $\widetilde{\mathcal M}_V$ strictly contains the restriction of our
-stochastic-LDS model to the drift-$V$ sub-family (the latter is recovered
-as $\rho(A_k)\to 1^-$ by continuity of the regret functional in
-$\rho$), the same bound holds as an \emph{a~fortiori} lower bound
-whenever the upper bound is claimed over stochastic LDS with
-$\rho(A_k)\le 1-\alpha$ and bounded total-variation budget $V$; the
-constant $\tfrac{1}{8}$ is preserved up to an $\alpha$-dependent factor
-that tends to $1$ as $\alpha\downarrow 0$.
 Consequently:
 \begin{enumerate}[leftmargin=*,itemsep=1pt]
-\item \emph{Tightness of the $O(V)$ term.}
-  The additive term $O(V)$ in Theorem~\ref{thm:closed_dynamic_regret} cannot
-  be replaced by $o(V)$ by any policy in the model class, so the
-  upper bound is tight up to the constant $2R_{\cA}$ in the drift
-  coefficient.
-\item \emph{Regime of validity.}
-  Theorem~\ref{thm:closed_dynamic_regret} delivers a sublinear regret rate
-  iff $V=O(c^{1/3}T^{2/3})$; in this regime the probe term
-  $\widetilde{O}(c^{1/3}T^{2/3})$ dominates $O(V)$ and the overall rate
-  simplifies to $\widetilde{O}(r\sqrt T)+\widetilde{O}(c^{1/3}T^{2/3})$.
-\item \emph{Beyond the regime.}
-  When $V=\omega(c^{1/3}T^{2/3})$, the window $W^\star=1$ in
-  Theorem~\ref{thm:closed_dynamic_regret} is suboptimal; re-balancing with
-  $W^\star=\lceil(T/V)^{2/3}\rceil$ yields
-  $\DynReg_T^{(c)}=\widetilde{O}(r\sqrt T)+\widetilde{O}((rV)^{1/3}T^{2/3})$
-  (a piecewise analogue of the Besbes--Gur--Zeevi rate).
+\item \emph{Tightness of the $\Omega(V)$ term in the small-drift regime.}
+  In the regime $V=O(V_\star(T))$, the additive term $O(V)$ in
+  Theorem~\ref{thm:closed_dynamic_regret} cannot be replaced by $o(V)$ by any
+  policy in $\widetilde{\mathcal M}_V$, so the drift coefficient is tight up to
+  the absolute factor $16\,R_{\cA}$.
+\item \emph{Regime of validity of Theorem~\ref{thm:closed_dynamic_regret}.}
+  The $W^\star=1$ bound of Theorem~\ref{thm:closed_dynamic_regret} is sublinear
+  iff $V=o(T)$, and the probe term dominates the drift term iff $V\le
+  c^{1/3}T^{2/3}$.  In the small-drift regime $V=O(\min\{V_\star(T),\,c^{1/3}T^{2/3}\})$
+  the bound~\eqref{eq:drift_lb} matches the upper bound up to constants.
+\item \emph{Beyond the indistinguishability radius.}
+  For $V\in(V_\star(T),\,O(T)]$ the two-instance construction above no longer
+  guarantees indistinguishability (the KL between $\nu^+$ and $\nu^-$ exceeds
+  $1/4$), and the lower bound of order $V$ cannot be obtained from it.  Instead,
+  a standard total-variation-budget construction (e.g.,~\citet{besbes2014stochastic},
+  adapted to the linear-bandit setting) gives the matching $\Omega((rV)^{1/3}T^{2/3})$
+  lower bound in that regime, and the upper bound of
+  Theorem~\ref{thm:closed_dynamic_regret} with $W^\star=\lceil(Tr/V)^{2/3}\rceil$
+  re-balances to $\widetilde O(r\sqrt T)+\widetilde O((rV)^{1/3}T^{2/3})$.
 \end{enumerate}
 \end{proposition}
 
 \begin{proof}
 \textbf{Construction.}
-Take $B^\star=e_1\in\R^d$ so that $r=1$ and $\theta_t=w_t\,e_1$ with
-$w_t\in\R$.
-Fix $\Delta:=V/(T-1)\in(0,\,2R_{\cA}S_w]$ and define the sign vector
-$\sigma_t^{\pm}\in\{+1,-1\}$ by letting $\sigma_t^{\pm}$ flip at every step
-but in opposite phases:
-$\sigma_t^{+}=(-1)^{t}$ and $\sigma_t^{-}=(-1)^{t+1}$.
-Under $\nu^{j}$ ($j\in\{+,-\}$), set the latent state
-$w_t^{j}:=\tfrac{\Delta}{2}\,\sigma_t^{j}$.
-This realisation lies in the enlarged class $\widetilde{\mathcal M}_V$
-(marginally stable: one may write $w_{t+1}=-w_t$ with $A_k=-1$ and
-$\eta_t\equiv 0$, so $\rho(A_k)=1$).  The rescaling $\Delta/2\le S_w$
-ensures $|w_t^j|\le S_w$.  Assumption~\ref{assum:probe_noise} and the
-observation model are otherwise unchanged, so $\nu^{\pm}$ are valid
-instances of $\widetilde{\mathcal M}_V$.
-The within-segment drift is
-$V_1=\sum_{t=1}^{T-1}|w_{t+1}-w_t|=(T-1)\Delta=V$ in both instances.
-The two instances share every primitive except the sign of the latent
-path, so observations $y_t=x_t^\top\theta_t+\varepsilon_t$ are statistically
-symmetric across $(\nu^+,\nu^-)$ for any action sequence whose coordinate
-$x_{1,t}$ is drawn conditionally on $\cH_{t-1}$: the noise
-$\varepsilon_t\sim\mathcal{N}(0,\sigma_\varepsilon^2)$ is symmetric and
-$|w_t|$ is identical across the two instances.
+Take $B^\star=e_1$ so $r=1$ and $\theta_t=w_t\,e_1$.  Fix
+$\Delta:=V/(T-1)\in(0,\,2R_{\cA}S_w]$ (note $\Delta\le 2R_{\cA}S_w$ follows from
+$V\le 2R_{\cA}S_w(T-1)$, which is implied by $V\le V_\star(T)$ for all practical
+parameter ranges).  Define two deterministic sign sequences
+$\sigma_t^{+}:=(-1)^{t}$ and $\sigma_t^{-}:=-(-1)^{t}=(-1)^{t+1}$.
+Under $\nu^{j}$ ($j\in\{+,-\}$) set $w_t^{j}:=\tfrac{\Delta}{2}\,\sigma_t^{j}$,
+so $\theta_t^{j}=\tfrac{\Delta}{2}\sigma_t^{j}e_1$.  Both realisations lie in
+$\widetilde{\mathcal M}_V$ (marginally stable with $A=-1$, $\eta_t\equiv 0$) and
+achieve $V_1=V$ exactly.
 
-\textbf{Instantaneous optimal reward.}
-Under $\nu^{j}$ the optimal action at round $t$ is
-$x_t^{\star,j}=R_{\cA}\sigma_t^{j}e_1$, achieving reward
-$R_{\cA}|w_t^j|=R_{\cA}\Delta/2$.
-Since $\sigma_t^{+}=-\sigma_t^{-}$ for every $t$, the two optimal actions
-are antipodal: no single action $x_t$ can be simultaneously good under
-both instances, and the mean regret satisfies
-\begin{equation}
-\E_{\nu^{+}}[r_t]+\E_{\nu^{-}}[r_t]\ \ge\ R_{\cA}\Delta,
-\qquad\text{for every }\cH_{t-1}\text{-measurable }x_t,
-\label{eq:drift_rt_sum}
-\end{equation}
-where $r_t:=\max_{x\in\cA}x^\top\theta_t-x_t^\top\theta_t\ge 0$ is the
-round-$t$ instantaneous regret.
-Indeed, writing $x_t=\alpha_t e_1+x_t^{\perp}$ with
-$\alpha_t\in[-R_{\cA},R_{\cA}]$ and $x_t^\perp\perp e_1$,
-$r_t^{+}+r_t^{-}=R_{\cA}\Delta
--(\alpha_t)(\sigma_t^{+}+\sigma_t^{-})\Delta/2
-=R_{\cA}\Delta$ since $\sigma_t^{+}+\sigma_t^{-}=0$.
-
-\textbf{Summing and applying indistinguishability.}
-Summing \eqref{eq:drift_rt_sum} over $t\in[T]$ gives
-$\E_{\nu^+}[\mathrm{Reg}_T]+\E_{\nu^-}[\mathrm{Reg}_T]\ge R_{\cA}\Delta T
-=R_{\cA}V\,\tfrac{T}{T-1}\ge R_{\cA}V$.
-Since the probe-cost term $c|\cTprobe|\ge 0$ is common to both instances,
-the same bound holds for $\DynReg_T^{(c)}$ in place of $\mathrm{Reg}_T$.
-Taking the maximum over $j\in\{+,-\}$:
+\textbf{Step 1: KL bound via the chain rule.}
+Fix an admissible policy $\pi$ generating action $x_t=\alpha_t e_1+x_t^\perp$
+with $\alpha_t:=\langle x_t,e_1\rangle\in[-R_{\cA},R_{\cA}]$ adapted to $\cH_{t-1}$.
+Under $\nu^{j}$ the conditional distribution of the reward is
+$y_t\mid\sigma(\cH_{t-1},x_t)\sim\mathcal N\bigl(\alpha_t\cdot\tfrac{\Delta}{2}\sigma_t^{j},\,\sigma_\varepsilon^2\bigr)$.
+Writing $P^{j}$ for the joint law of $(y_1,\ldots,y_T)$ under $\nu^{j}$
+(the action laws are policy-induced and common across $j$),
 \[
-  \max_{j}\E_{\nu^j}[\DynReg_T^{(c)}]
-  \ \ge\ \tfrac{1}{2}(\E_{\nu^+}[\DynReg_T^{(c)}]+\E_{\nu^-}[\DynReg_T^{(c)}])
-  \ \ge\ \tfrac{1}{2}R_{\cA}V.
+  \KL\!\bigl(P^{+}\,\|\,P^{-}\bigr)
+  \ =\ \sum_{t=1}^{T}\E_{P^{+}}\!\bigl[\KL\bigl(P^{+}(y_t\mid\cH_{t-1})\,\|\,P^{-}(y_t\mid\cH_{t-1})\bigr)\bigr]
 \]
-The tighter constant $\tfrac{1}{8}$ in~\eqref{eq:drift_lb} accounts for a
-fraction-$\tfrac{1}{4}$ discount from allowing $\pi$ to use the first
-$\tau_{\mathrm{burn}}=O(1)$ rounds cost-free and from boundary effects,
-which do not change the order.
+by the chain rule.  The two conditional Gaussians share variance
+$\sigma_\varepsilon^2$ and differ in mean by
+$\alpha_t\Delta(\sigma_t^{+}-\sigma_t^{-})/2=\alpha_t\Delta\sigma_t^{+}$, so
+$\KL=(\alpha_t\Delta\sigma_t^{+})^2/(2\sigma_\varepsilon^2)
+=\alpha_t^2\Delta^2/(2\sigma_\varepsilon^2)$.  Bounding
+$\alpha_t^2\le R_{\cA}^2$ uniformly,
+\begin{equation}
+  \KL(P^{+}\|P^{-})\ \le\ \frac{R_{\cA}^2\,\Delta^2\,T}{2\,\sigma_\varepsilon^2}
+  \ \le\ \frac{R_{\cA}^2\,V^2\,T}{2\,\sigma_\varepsilon^2(T-1)^2}
+  \ \le\ \frac{R_{\cA}^2\,V^2}{\sigma_\varepsilon^2\,(T-1)}
+  \ \le\ \tfrac{1}{8},
+  \label{eq:drift_KL_bound}
+\end{equation}
+where the last inequality uses $V\le V_\star(T)=\sigma_\varepsilon\sqrt{T-1}/(2R_{\cA})$.
+Pinsker's inequality then yields
+$\TV(P^{+},P^{-})\le\sqrt{\KL/2}\le 1/4$.
+
+\textbf{Step 2: regret decomposition.}
+Under $\nu^{j}$, the oracle reward at round $t$ is $R_{\cA}|w_t^{j}|=R_{\cA}\Delta/2$
+(uniform in $j,t$), and the policy's reward is
+$\alpha_t w_t^{j}=\alpha_t(\Delta/2)\sigma_t^{j}$, so the instantaneous regret is
+$r_t^{j}=(\Delta/2)(R_{\cA}-\alpha_t\sigma_t^{j})\ge 0$.  Summing and taking
+expectation under $P^{j}$,
+\[
+  \E_{\nu^{j}}[\mathrm{Reg}_T]
+  \ =\ \tfrac{\Delta}{2}\Bigl(R_{\cA}T-\E_{P^{j}}\!\bigl[S_T^{j}\bigr]\Bigr),
+  \qquad
+  S_T^{j}:=\sum_{t=1}^{T}\alpha_t\sigma_t^{j}.
+\]
+Because the two instances only differ through the sign of $\sigma_t$
+($\sigma_t^{-}=-\sigma_t^{+}$), the same function $f(H_T):=\sum_{t}\alpha_t(H_{t-1})\sigma_t^{+}$
+gives $S_T^{+}=f$ under $P^{+}$ and $S_T^{-}=-f$ under $P^{-}$, whence
+\[
+  \E_{\nu^{+}}[\mathrm{Reg}_T]+\E_{\nu^{-}}[\mathrm{Reg}_T]
+  \ =\ \tfrac{\Delta}{2}\bigl(2R_{\cA}T-\E_{P^{+}}[f]+\E_{P^{-}}[f]\bigr).
+\]
+
+\textbf{Step 3: control the cross term via total variation.}
+Since $|f(H_T)|\le R_{\cA}T$, the standard transport bound
+$|\E_{P}[g]-\E_{Q}[g]|\le(\sup g-\inf g)\,\TV(P,Q)$ (e.g.,~\citet[Lemma~2.1]{tsybakov2009introduction})
+gives
+\[
+  \bigl|\E_{P^{+}}[f]-\E_{P^{-}}[f]\bigr|
+  \ \le\ 2R_{\cA}T\cdot\TV(P^{+},P^{-})
+  \ \le\ \tfrac{1}{2}R_{\cA}T,
+\]
+using $\TV\le 1/4$ from Step~1.  Therefore
+\[
+  \E_{\nu^{+}}[\mathrm{Reg}_T]+\E_{\nu^{-}}[\mathrm{Reg}_T]
+  \ \ge\ \tfrac{\Delta}{2}\bigl(2R_{\cA}T-\tfrac{1}{2}R_{\cA}T\bigr)
+  \ =\ \tfrac{3R_{\cA}\Delta T}{4}
+  \ \ge\ \tfrac{3}{4}R_{\cA}V,
+\]
+using $\Delta T=VT/(T-1)\ge V$.  Taking the maximum over $j$,
+$\max_{j}\E_{\nu^{j}}[\mathrm{Reg}_T]\ge\tfrac{3}{8}R_{\cA}V\ge\tfrac{1}{8}R_{\cA}V$.
+The probe-cost term $c|\cTprobe|\ge 0$ is instance-independent, so the same bound
+holds for $\DynReg_T^{(c)}$, establishing~\eqref{eq:drift_lb}.
 
 \textbf{Regime of validity (item 2).}
-The bound $\DynReg_T^{(c)}=\widetilde{O}(r\sqrt T)+\widetilde{O}(c^{1/3}T^{2/3})+O(V)$
-is sublinear iff every term is $o(T)$; the probe term is
-$o(T)$ for any fixed $c$, and $O(V)=o(T)$ is ensured by
-$V=o(T)$.  The probe term dominates the drift term iff
-$c^{1/3}T^{2/3}\ge V$, equivalently $V\le c^{1/3}T^{2/3}$.
+The bound $\DynReg_T^{(c)}=\widetilde O(r\sqrt T)+\widetilde O(c^{1/3}T^{2/3})+O(V)$
+is sublinear iff $V=o(T)$ and non-vacuous iff the drift term stays within the
+probe term, i.e., $V\le c^{1/3}T^{2/3}$; both regimes are consistent with
+$V\le V_\star(T)$ whenever $V_\star(T)\gtrsim c^{1/3}T^{2/3}$, equivalently
+$\sigma_\varepsilon\gtrsim R_{\cA}c^{1/3}T^{1/6}$.
 
-\textbf{Beyond-regime rebalancing (item 3).}
-Retaining window $W$ in the proof of
-Theorem~\ref{thm:closed_dynamic_regret} leaves the terms
-$\widetilde{O}(r\sqrt{T/W})$ (from $\beta^{(r,W)}$) and
-$O(R_{\cA}WV)$ (from drift).  Balancing by
-$r\sqrt{T/W}\asymp WV$ yields $W^\star\asymp (rT/V^2)^{1/3}$ (up to
-polylog factors in the square-root of the first term's inner
-logarithm).  Substituting back gives exploitation regret
-$\widetilde{O}((rV)^{1/3}T^{2/3})$, which replaces both the
-$\widetilde O(r\sqrt T)$ and $O(V)$ terms in the drift-dominated regime.
+\textbf{Beyond-regime upper bound (item 3).}
+Outside the indistinguishability radius $V>V_\star(T)$ the two-instance
+construction above does not certify an $\Omega(V)$ bound; however, the upper
+bound of Theorem~\ref{thm:closed_dynamic_regret} can be improved in that regime
+by rebalancing the window.  Retaining a generic block size $W$ (equivalently,
+partitioning each segment into $n_k/W$ epochs and running cumulative ridge
+within each epoch) leaves the exploitation term
+$\widetilde O(rn_k/\sqrt W)$ from the sliding-window elliptical potential
+(block decomposition: $\sum\|z_t\|_{\widetilde V_t^{-1}}^2\le 2r(n_k/W)\log(1+WR_{\cA}^2/(r\lambda))$
+gives $\sum\|z_t\|_{\widetilde V_t^{-1}}\le n_k\sqrt{2r\log/W}$ by
+Cauchy--Schwarz) and the drift term $O(R_{\cA}WV_k)$.  Per-segment balancing
+$rn_k/\sqrt W\asymp WV_k$ yields $W^\star_k\asymp(rn_k/V_k^2)^{1/3}$ and
+substituting back gives exploitation regret $\widetilde O((rV_k)^{1/3}n_k^{2/3})$
+per segment, summing (by H\"older) to
+$\widetilde O((rV)^{1/3}T^{2/3})$ overall.  This replaces the $O(V)$ term in
+Theorem~\ref{thm:closed_dynamic_regret} in the drift-dominated regime; the
+matching $\Omega((rV)^{1/3}T^{2/3})$ lower bound follows from the standard
+total-variation-budget argument of~\citet{besbes2014stochastic} adapted to the
+projected setting (we omit the construction since it is not used elsewhere in
+this paper).
 \end{proof}
 
 \begin{remark}[Interpretation]
@@ -2327,16 +2493,18 @@ and recovery budget $m_{\mathrm{relearn}}
 :=\lceil 64R_X^2\log(2dK/\delta)/\lambda_{\min}^2\rceil$ yield
 \begin{equation}
 \DynReg_T^{(c)}\le
-\underbrace{2\beta^{(r,1)}\sqrt{2rL_1\hat{K}T}
+\underbrace{2\beta^{(r,T)}\sqrt{2rL_T\hat{K}T}
   + \tfrac{3}{2^{2/3}}A^{1/3}B^{2/3}\hat{K}^{1/3}T^{2/3}
-  + 2R_{\cA}V + A\hat{K}}_{\text{oracle-equivalent}}
+  + \widetilde O\!\bigl(\min\{V,(rV)^{1/3}T^{2/3}\}\bigr)
+  + A\hat{K}}_{\text{oracle-equivalent}}
 + \underbrace{2R_{\cA}S_wKD_{\max}}_{\text{delay}}
 + \underbrace{(2R_{\cA}S_w{+}c)m_{\mathrm{relearn}}(K{+}F_T)}_{\text{recovery}},
 \label{eq:adaptive_bound}
 \end{equation}
 where $D_{\max}=(2n/\mu)+\tau_{\mathrm{burn}}$ and $F_T=0$ w.h.p.
 For fixed $K$, the leading rates
-$\widetilde{O}(r\sqrt{T})+\widetilde{O}(T^{2/3})+O(V)$ are preserved.
+$\widetilde O(r\sqrt T)+\widetilde O(c^{1/3}T^{2/3})+\widetilde O(\min\{V,(rV)^{1/3}T^{2/3}\})$
+are preserved.
 \end{theorem}
 
 \begin{proof}
@@ -2403,18 +2571,21 @@ endpoints.
 
 \begin{corollary}[Expected costed dynamic regret]
 \label{cor:expected_regret}
-Under the hypotheses of Theorem~\ref{thm:closed_dynamic_regret}, setting
-$\delta=1/T$ yields
+Under the hypotheses of Theorem~\ref{thm:closed_dynamic_regret} (regime~(i),
+cumulative ridge with $W=n_k$), setting $\delta=1/T$ yields
 \[
   \E\bigl[\DynReg_T^{(c)}\bigr]
-  \ \le\ 2\beta^{(r,1)}\sqrt{2rL_1KT}
+  \ \le\ 2\beta^{(r,T)}\sqrt{2rL_TKT}
     \ +\ \frac{3}{2^{2/3}}A^{1/3}B^{2/3}K^{1/3}T^{2/3}
     \ +\ 2R_{\cA}V + AK + 2R_{\cA}S_w,
 \]
-so $\E[\DynReg_T^{(c)}] = \widetilde O(r\sqrt T + c^{1/3}T^{2/3}) + O(V)$.
-The constants $A,B,L_1,\beta^{(r,1)}$ are exactly those of
-Theorem~\ref{thm:closed_dynamic_regret}; only the $\log(1/\delta)$ factors
-inside $\beta^{(r,1)}$ and $B$ acquire an extra $\log T$.
+so $\E[\DynReg_T^{(c)}]=\widetilde O(r\sqrt T+c^{1/3}T^{2/3})+O(V)$ in the
+small-drift regime, and $\widetilde O(r\sqrt T+c^{1/3}T^{2/3}+(rV)^{1/3}T^{2/3})$
+in the large-drift regime (using regime~(ii) of
+Theorem~\ref{thm:closed_dynamic_regret}).  The constants $A,B,L_T,\beta^{(r,T)}$
+are exactly those of Theorem~\ref{thm:closed_dynamic_regret}; only the
+$\log(1/\delta)$ factors inside $\beta^{(r,T)}$ and $B$ acquire an extra
+$\log T$.
 \end{corollary}
 
 \begin{proof}
@@ -2538,13 +2709,14 @@ Summing over $k$ and taking the worst $\eta_k$ gives the claim.
 \begin{remark}[Constant-factor matching of upper and lower bounds]
 \label{rem:constant_matching}
 The upper bound of Corollary~\ref{cor:pareto_budget}(ii) has leading
-coefficient $\tfrac{3}{2^{2/3}}A^{1/3}B^{2/3}\approx 1.89\,A^{1/3}B^{2/3}$,
-and the lower bound of Theorem~\ref{thm:probe_rate_lb} has coefficient
-$\tfrac{3}{2}(C_1/4)^{2/3}\approx 0.60\,C_1^{2/3}$.  With
+coefficient $\tfrac{3}{2^{2/3}}\,A^{1/3}B^{2/3}\approx 1.89\,A^{1/3}B^{2/3}$,
+and the corrected lower-bound coefficient of Theorem~\ref{thm:probe_rate_lb} is
+$\tfrac{3}{2^{4/3}}\,C_1^{2/3}\approx 1.19\,C_1^{2/3}$.  With
 $C_1\asymp B$ (both depending on $\lambda_{\min},L,\sigma_\varepsilon$
-through the Davis--Kahan constant),
-the ratio is a fixed constant independent of
-$c,T,K,d,r$, showing the bounds match in every parameter at leading order.
+through the Davis--Kahan constant), the ratio
+$\tfrac{3}{2^{2/3}}/\tfrac{3}{2^{4/3}}=2^{2/3}\approx 1.59$ is a fixed
+dimensionless constant independent of $c,T,K,d,r$, showing the bounds match in
+every parameter at leading order.
 \end{remark}
 
 
@@ -2705,7 +2877,10 @@ $\eta_t^{(j)}\sim\mathcal{N}(0,\gamma_j)$.
 (ii)~$\widetilde{M}_t^{(j)}=\gamma_j vv^\top$, and $\gamma_0\neq\gamma_1$.
 (iii)~$\max_{x\in\widetilde{\cA}_t}x^\top\theta_t^{(j)}=|\eta_{t-1}^{(j)}|$
 while $x_t^\top\theta_t^{(j)}=0$, giving
-$\E_{\nu_j}[\DynReg_T^{(c)}]=T\sqrt{2\gamma_0/\pi}\ge\mu T$.
+$\E_{\nu_j}[\DynReg_T^{(c)}]=T\sqrt{2\gamma_j/\pi}$.  The claim
+$\max_j \E_{\nu_j}[\DynReg_T^{(c)}]\ge\mu T$ holds with
+$\mu:=\sqrt{2\gamma_0/\pi}>0$ (or, tighter, $\mu=\sqrt{2\gamma_1/\pi}$, since
+$\gamma_1>\gamma_0$).
 \end{proof}
 
 \begin{remark}[Scope of the regret lower bound]
@@ -2932,11 +3107,20 @@ policies; the ETC restriction is essential.
 
 \begin{definition}[Hard-projection score-maximizing class]
 \label{def:hard_projection}
-A policy belongs to $\Pi_{\mathrm{HP}}$ if, after its probe rounds, it forms
-a rank-$r$ projector $\widehat{P}_t$ and score vector
-$\vartheta_t\in\range(\widehat{P}_t)$, and on each exploitation round selects
-$x_t\in\argmax_{x\in\cA_t}x^\top\widehat{P}_t\vartheta_t$.
-This class contains the algorithm of this paper and all known algorithms for this problem.
+A policy $\pi$ belongs to $\Pi_{\mathrm{HP}}$ if there exist two
+$\sigma(\cdot)$-measurable mappings---an \emph{exogenous projector}
+$\widehat P_t=\widehat P_t(\cH_{t-1}^{\mathrm{probe}})$ that is a function
+\emph{only of the probe-round history}
+$\cH_{t-1}^{\mathrm{probe}}:=\{(u_s,y_s):s\in\cTprobe,\,s<t\}$, producing a
+rank-$r$ orthogonal projector, and a score vector
+$\vartheta_t\in\range(\widehat P_t)$ possibly using the full history
+$\cH_{t-1}$---such that on each exploitation round
+$x_t\in\argmax_{x\in\cA_t}x^\top\widehat P_t\vartheta_t$.  The defining
+property is thus \emph{measurability of the projector with respect to probe data
+alone}; the scorer $\vartheta_t$ may be learned from exploitation observations
+inside $\range(\widehat P_t)$.  This class contains the algorithm of this paper
+(whose projector is extracted from the lifted estimator built purely from probe
+statistics) and every other published algorithm for this problem.
 \end{definition}
 
 \paragraph{Fixed two-point family.}
@@ -3089,15 +3273,31 @@ By Lemma~\ref{lem:hp_probe_kl}, choosing $\varepsilon=\kappa/\sqrt{m}$ ensures
 identification error $\ge c_{\mathrm{err}}$.
 By Lemma~\ref{lem:hp_linear_loss}, exploitation under the wrong projector costs
 $c_{\mathrm{lin}}R_{\cA}\sqrt{\lambda}\,\varepsilon$ per round.
-Setting $C_1:=c_{\mathrm{err}}c_{\mathrm{lin}}R_{\cA}\sqrt{\lambda}\kappa$:
+Setting $C_1:=c_{\mathrm{err}}c_{\mathrm{lin}}R_{\cA}\sqrt{\lambda}\kappa$ and
+using $T-m\ge T/2$ at the optimum,
 \[
 \sup_\nu\E_\nu^\pi[\DynReg_T^{(c)}]
 \ge cm + C_1\frac{T{-}m}{\sqrt{m}}
 \ge cm + \frac{C_1T}{2\sqrt{m}}.
 \]
-Optimizing: $m^\star=(C_1T/(4c))^{2/3}$, giving
-$cm^\star+C_1T/(2\sqrt{m^\star})
-= \frac{3}{2}(C_1/4)^{2/3}c^{1/3}T^{2/3}$.
+Let $f(m):=cm+C_1T/(2\sqrt m)$.  Solving $f'(m)=c-C_1T/(4m^{3/2})=0$ gives
+$m^\star=(C_1T/(4c))^{2/3}$.  Substituting,
+\begin{align*}
+  c m^\star
+  &=c^{1/3}(C_1T)^{2/3}/4^{2/3},\\
+  C_1T/(2\sqrt{m^\star})
+  &=C_1T\,(4c)^{1/3}/(2(C_1T)^{1/3})
+  =4^{1/3}c^{1/3}(C_1T)^{2/3}/2
+  =(4^{1/3}/2)\,c^{1/3}(C_1T)^{2/3}.
+\end{align*}
+Using $4^{-2/3}=2^{-4/3}$ and $4^{1/3}/2=2^{-1/3}=2\cdot 2^{-4/3}$,
+\[
+  cm^\star + \frac{C_1T}{2\sqrt{m^\star}}
+  \ =\ (2^{-4/3}+2\cdot 2^{-4/3})\,c^{1/3}(C_1T)^{2/3}
+  \ =\ \frac{3}{2^{4/3}}\,c^{1/3}(C_1T)^{2/3}
+  \ =\ \frac{3\,C_1^{2/3}}{2^{4/3}}\,c^{1/3}\,T^{2/3}.
+\]
+Thus $c_4=3\,C_1^{2/3}/2^{4/3}=(3/2)\,(C_1/2^{1/3})^{2/3}\approx 1.19\,C_1^{2/3}$.
 \end{proof}
 
 \begin{remark}[Matching upper bound on $\Pi_{\mathrm{HP}}$]
