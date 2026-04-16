@@ -24,7 +24,9 @@
       "Bash(grep -oE '\\\\\\\\label\\\\{[^}]+\\\\}' journal.tex)",
       "Bash(grep -oE '\\\\\\\\cite[tp]?\\\\{[^}]+\\\\}' journal.tex)",
       "Bash(grep -oE '@[a-z]+\\\\{[^,]+,' references.bib)",
-      "Bash(pdflatex -interaction=nonstopmode -halt-on-error journal.tex)"
+      "Bash(pdflatex -interaction=nonstopmode -halt-on-error journal.tex)",
+      "Bash(pdflatex -interaction=nonstopmode journal.tex)",
+      "Bash(bibtex journal *)"
     ]
   }
 }

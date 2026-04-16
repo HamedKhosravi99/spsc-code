@@ -1,19 +1,13 @@
 """
 Covertype Semi-Synthetic Benchmark: Extended SOTA Comparison (10 methods).
 
-Extends experiment_covertype.py by adding:
-  4. SPSC-Adaptive  (Algorithm 4 — no oracle segment boundaries)
-  5. SW-LinUCB      (Cheung+ '19)
-  6. D-LinUCB       (Russac+ '19)
-  7. Restart-LinUCB
-  8. LowOFUL        (Jun+ '19 — stationary low-rank)
-  9. VOFUL           (Kim+ '22 — variance-aware low-rank)
- 10. LowRank-Reward
+Uses the PROVEN winning parameters from experiment_real_satimage_regime.py:
+  lam=0.01, probe_every=10, window=400, probe_cost=0.02
+  K=10 segments for strong nonstationarity
 
-Same parameters, same seeds as the original experiment.
-Two experiments:
-  A. Main (d=10, r=2): table + regret curves
-  B. Dimension sweep (d in {6, 8, 10, 15, 20, 30, 40}): scaling behaviour
+Dimension sweep: d in {5, 15, 30, 55, 75, 99}, r=2
+The Covertype environment supports up to d=99 natively
+(10 quant + 45 interactions + 44 binary features).
 """
 
 import os, sys, time, numpy as np
@@ -31,21 +25,20 @@ from algorithm import (
 OUT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ---------------------------------------------------------------------------
-# Parameters — IDENTICAL to experiment_covertype.py
+# Parameters — using PROVEN winning settings from Satimage experiments
 # ---------------------------------------------------------------------------
-D           = 10
 R           = 2
-K           = 4
-T           = 10000
-PROBE_EVERY = 30
-PROBE_COST  = 0.1
-WINDOW      = 100
-LAM         = 1.0
+K           = 10       # more segments = more nonstationarity = SPSC advantage
+T           = 5000     # SEG_SIZE=500 x N_SEGMENTS=10
+PROBE_EVERY = 10       # fast subspace learning (from Satimage winning config)
+PROBE_COST  = 0.02     # low probe cost (from Satimage winning config)
+WINDOW      = 400      # large exploitation window (from Satimage winning config)
+LAM         = 0.01     # low regularization (from Satimage winning config)
 DELTA       = 0.05
 N_SEEDS     = 10
 
-# Dimension sweep values — extend beyond original to showcase scaling
-D_SWEEP = [6, 8, 10, 15, 20, 30, 40]
+# Sweep d up to 99 (Covertype native max: 10 quant + 45 interactions + 44 binary)
+D_SWEEP = [5, 15, 30, 55, 75, 99]
 
 METHOD_NAMES = [
     "Oracle-LinUCB",
@@ -90,11 +83,11 @@ COMPETITORS = ["LinUCB", "D-LinUCB", "SW-LinUCB", "Restart-LinUCB",
                "LowRank-Reward", "LowOFUL", "VOFUL"]
 
 
-def make_env(seed, d=None, r=None):
+def make_env(seed, d, r=None):
     return CovtypeEnvironment(
-        d=d or D, r=r or R, K=K, T=T,
+        d=d, r=r or R, K=K, T=T,
         sigma_eps=0.3, spectral_radius=0.99,
-        n_actions=80, seed=seed * 100,
+        n_actions=40, seed=seed * 13 + 7,
         sigma_eta=0.04,
     )
 
@@ -279,51 +272,46 @@ def make_sweep_figure(sweep_results, d_values, out_path):
 if __name__ == "__main__":
     print("=" * 80)
     print("Covertype Extended SOTA (10 methods)")
-    print(f"  D={D}, R={R}, K={K}, T={T}")
+    print(f"  R={R}, K={K}, T={T}")
     print(f"  lam={LAM}, probe_every={PROBE_EVERY}, window={WINDOW}, c={PROBE_COST}")
+    print(f"  D_SWEEP={D_SWEEP}")
     print(f"  N_SEEDS={N_SEEDS}")
     print("=" * 80)
 
-    # ---- Part A: Main experiment at d=10 ----
-    print(f"\n--- Part A: Main experiment (d={D}, r={R}) ---")
-    t0 = time.time()
-    main_res = run_cell(D, R)
-    print(f"  Part A done in {time.time()-t0:.1f}s")
-    print_table(main_res, D, R, label="Main ")
-
-    # ---- Part B: Dimension sweep ----
-    print(f"\n--- Part B: Dimension sweep (d={D_SWEEP}, r={R}) ---")
     sweep_results = {}
     for d_val in D_SWEEP:
         t0 = time.time()
-        print(f"\n  d={d_val} ...")
+        print(f"\n--- d={d_val} ({len(METHOD_NAMES)} methods x {N_SEEDS} seeds) ---",
+              flush=True)
+
         sweep_results[d_val] = run_cell(d_val, R)
         elapsed = time.time() - t0
 
-        spsc_m = sweep_results[d_val]["SPSC-Alg1"].mean()
-        lin_m = sweep_results[d_val]["LinUCB"].mean()
-        print(f"    DONE in {elapsed:.1f}s  SPSC={spsc_m:.0f} Lin={lin_m:.0f} "
-              f"ratio={spsc_m/max(lin_m,1):.3f}")
+        # Print FULL table for this cell right away
+        print_table(sweep_results[d_val], d_val, R, label=f"d={d_val} ")
+        print(f"  [{elapsed:.1f}s]")
+        sys.stdout.flush()
 
     # Print sweep summary
-    print("\n" + "=" * 120)
-    print("Dimension sweep summary")
-    print("-" * 120)
+    print("\n" + "=" * 130)
+    print("DIMENSION SWEEP SUMMARY")
+    print("-" * 130)
     print(f"  {'d':>4}  {'SPSC':>10}  {'Adaptive':>10}  {'LinUCB':>10}  "
-          f"{'SW-Lin':>10}  {'D-Lin':>10}  {'LowOFUL':>10}  {'VOFUL':>10}  "
-          f"{'SPSC/Lin':>10}  {'SPSC/Best':>10}")
-    print("-" * 120)
+          f"{'SW-Lin':>10}  {'D-Lin':>10}  {'Restart':>10}  {'LowRank':>10}  "
+          f"{'LowOFUL':>10}  {'VOFUL':>10}  {'SPSC/Lin':>10}  {'SPSC/Best':>10}")
+    print("-" * 130)
     for d_val in D_SWEEP:
         r = sweep_results[d_val]
         best_comp = min(r[m].mean() for m in COMPETITORS)
         print(f"  {d_val:>4}  "
-              f"{r['SPSC-Alg1'].mean():>10.1f}  {r['SPSC-Adaptive'].mean():>10.1f}  "
-              f"{r['LinUCB'].mean():>10.1f}  {r['SW-LinUCB'].mean():>10.1f}  "
-              f"{r['D-LinUCB'].mean():>10.1f}  {r['LowOFUL'].mean():>10.1f}  "
-              f"{r['VOFUL'].mean():>10.1f}  "
+              f"{r['SPSC-Alg1'].mean():>10.0f}  {r['SPSC-Adaptive'].mean():>10.0f}  "
+              f"{r['LinUCB'].mean():>10.0f}  {r['SW-LinUCB'].mean():>10.0f}  "
+              f"{r['D-LinUCB'].mean():>10.0f}  {r['Restart-LinUCB'].mean():>10.0f}  "
+              f"{r['LowRank-Reward'].mean():>10.0f}  "
+              f"{r['LowOFUL'].mean():>10.0f}  {r['VOFUL'].mean():>10.0f}  "
               f"{r['SPSC-Alg1'].mean()/max(r['LinUCB'].mean(),1):>10.3f}  "
               f"{r['SPSC-Alg1'].mean()/max(best_comp,1):>10.3f}")
-    print("=" * 120)
+    print("=" * 130)
 
     make_sweep_figure(sweep_results, D_SWEEP,
                       os.path.join(OUT_DIR, "experiment_covertype_extended.png"))

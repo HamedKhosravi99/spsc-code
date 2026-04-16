@@ -90,42 +90,42 @@ $x_t$ from a set $\cA_t\subset\R^d$ and observes a scalar reward
 $y_t = x_t^\top\theta_t + \varepsilon_t$, where $\theta_t = B_k^\star w_t$
 lies in a changing $r$-dimensional subspace ($r \ll d$) that is piecewise constant over
 $K$ segments.
-Existing low-rank bandit methods~\citep{jun2019bilinear,pmlr-v235-jedra24a,lu2021lowrank}
-exploit rank structure to achieve $\widetilde{O}(r\sqrt{T})$ regret, but require a
-\emph{fixed} representation matrix $B^\star$; nonstationary
-methods~\citep{russac2019weighted,cheung2019learning} adapt to changing parameters but
-pay the full ambient cost $\widetilde{O}(d\sqrt{T})$.
-No prior work simultaneously achieves regret scaling with intrinsic rank~$r$,
-adaptation to a changing subspace, and explicit accounting for the cost of acquiring
-subspace information.
+Existing low-rank bandit methods assume a fixed representation;
+nonstationary methods adapt to changing parameters but pay the full ambient cost
+$\widetilde{O}(d\sqrt{T})$.
+No prior work establishes when a changing low-rank subspace is even
+\emph{identifiable} from single-play scalar feedback, let alone how to exploit
+such structure optimally.
 
-We close this gap.
+We provide a complete answer.
 Our main contribution is a sharp probe-side identification boundary:
 three structural conditions---sub-Gaussian noise with online variance estimation,
 bounded state--noise coupling $\|\E[\varepsilon_t\theta_t\mid\cH_{t-1},u_t]\|_2\le\epsilon_\times$,
 and full-dimensional probe coverage $\E[uu^\top]\succeq\rho I_d$---are each individually
 necessary (Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}, with formal impossibility
-for every violation) and jointly sufficient for subspace recovery from single-play scalar
-feedback via a lifted matrix operator $G_t = \mathcal{K}^{-1}(s_t\,u_tu_t^\top)$.
+for every violation) and jointly sufficient for subspace recovery via a lifted matrix
+operator $G_t = \mathcal{K}^{-1}(s_t\,u_tu_t^\top)$.
 This identification result is the first of its kind for changing low-rank structure under
-scalar observations.
+scalar observations; all subsequent results---regret bounds and lower bounds
+alike---follow from this characterization.
 
-Building on this characterization, we propose Single-Play Subspace-Calibrated Optimism
-(SPSC) and prove a costed dynamic regret bound
-$\DynReg_T^{(c)} = \widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$,
-replacing the ambient $d\sqrt{T}$ dependence with intrinsic rank~$r$.
-We establish three matched lower bounds:
+We establish three matched lower bounds that together determine the fundamental
+limits of the problem:
 (i)~the $1/\sqrt{m}$ subspace recovery rate is minimax optimal via Fano's inequality
 over Grassmannian packings (Theorem~\ref{thm:minimax_subspace_recovery});
-(ii)~within the projected-exploitation class $\Pi_{\mathrm{HP}}$---containing SPSC and
-all known algorithms for this problem---a matching $\Omega(c^{1/3}T^{2/3})$ lower bound
+(ii)~within the projected-exploitation class $\Pi_{\mathrm{HP}}$---containing all
+known algorithms for this problem---a matching $\Omega(c^{1/3}T^{2/3})$ lower bound
 shows the probe--subspace tradeoff is sharp (Theorem~\ref{thm:probe_rate_lb});
 (iii)~an unconditional $\Omega(\sqrt{cT})$ lower bound holds for all admissible policies
 (Theorem~\ref{thm:sqrt_ct_all}).
 Full-dimensional probe coverage is information-theoretically necessary:
 restricting probes to any proper subspace forces $\Omega(T)$ regret
 (Theorem~\ref{thm:restricted_span_minimax_regret}).
-An adaptive variant removes oracle segment boundaries at the same leading rate.
+As an algorithmic consequence, we prove that interleaving projected UCB exploitation
+with probing achieves costed dynamic regret
+$\DynReg_T^{(c)} = \widetilde{O}(r\sqrt{T}) + \widetilde{O}(T^{2/3}) + O(V)$,
+replacing the ambient $d\sqrt{T}$ dependence with intrinsic rank~$r$,
+and an adaptive variant removes oracle segment boundaries at the same leading rate.
 \end{abstract}
 
 %% ============================================================
@@ -271,9 +271,9 @@ $1/\sqrt{m}$ projector concentration rate achieved by our Davis--Kahan
 bound (Theorem~\ref{thm:projector_concentration_summary}) is minimax
 optimal via Fano's inequality over Grassmannian packings of dimension
 $r(d{-}r)$ (Theorem~\ref{thm:minimax_subspace_recovery}).
-Algorithmically, Single-Play Subspace-Calibrated Optimism (SPSC) interleaves
-probing with projected UCB exploitation in the learned $r$-dimensional subspace,
-achieving costed dynamic regret
+As an algorithmic consequence, interleaving probing with
+projected UCB exploitation in the learned $r$-dimensional subspace
+achieves costed dynamic regret
 (Theorem~\ref{thm:closed_dynamic_regret})
 \[
   \DynReg_T^{(c)} = \widetilde{O}(r\sqrt{T})
@@ -287,7 +287,7 @@ An adaptive variant removes oracle segment boundaries at the same leading rate
 Two lower bounds clarify the cost of projection-based control under subspace
 uncertainty: $\Omega(\sqrt{cT})$ for all admissible policies
 (Theorem~\ref{thm:sqrt_ct_all}), and a matching $\Omega(c^{1/3}T^{2/3})$ within
-the projected-exploitation class $\Pi_{\mathrm{HP}}$---containing SPSC and all
+the projected-exploitation class $\Pi_{\mathrm{HP}}$---containing all
 known algorithms for this problem
 (Theorem~\ref{thm:probe_rate_lb}).
 The gap between these bounds isolates a precise open question:
@@ -299,15 +299,15 @@ is allowed to probe within the restricted space
 (Theorem~\ref{thm:restricted_span_minimax_regret_with_probe}).
 The leading rate is preserved under $T^{-1/3}$-level probe misspecification
 (Theorem~\ref{thm:closed_dynamic_regret_general}), and the crossover
-$d-r > C\,T^{1/6}$ gives a finite-$T$ rule-of-thumb for when SPSC dominates
-ambient-space methods.
+$d-r > C\,T^{1/6}$ gives a finite-$T$ rule-of-thumb for when projected
+exploitation dominates ambient-space methods.
 
 \paragraph{Paper organization.}
 Section~\ref{sec:formulation} presents the formal model.
 Section~\ref{sec:identification} develops the identification boundary, including
 necessity results.
 Section~\ref{sec:concentration} establishes the finite-sample concentration chain.
-Section~\ref{sec:algorithm} introduces SPSC and its adaptive variant.
+Section~\ref{sec:algorithm} introduces the algorithm and its adaptive variant.
 Section~\ref{sec:regret} gives the full regret analysis.
 Section~\ref{sec:lower_bounds} develops the lower bounds and optimality results.
 Section~\ref{sec:separations} provides mathematical separations from prior work.
@@ -1173,6 +1173,89 @@ Combining with $\sum_{t\in E_k}\Gamma_k = S_wR_{\cA}\varepsilon_kn_k$ yields the
 stated bound.
 \end{proof}
 
+\begin{theorem}[Segmentwise projected regret under varying $w_t$]
+\label{thm:segment_projected_varying}
+With probability at least $1-\delta$,
+$R_k^{\mathrm{exp}} \le 2\beta_{k,\max}^{(r)} \sqrt{2rn_k\log(1+n_kR_{\cA}^2/(\lambda r))} + 2S_wR_{\cA}\varepsilon_k n_k + 2R_{\cA} \sum_{t\in E_k} D_{k,t}$,
+where $D_{k,t} := \|\theta_t - \theta_{\tau_{k-1}}\|_2$.
+\end{theorem}
+
+\begin{proof}
+Fix $t \in E_k$ and define the reduced reference parameter
+$a_t^\circ := \widehat U_k^\top \theta_{\tau_{k-1}} \in \R^r$, the projection of
+the segment's initial reward parameter into the estimated subspace.
+
+\emph{Reward decomposition.}
+For any action $x \in \cA_t$:
+\begin{align*}
+x^\top \theta_t
+&= z_t(x)^\top a_t^\circ + z_t(x)^\top \widehat U_k^\top (\theta_t - \theta_{\tau_{k-1}}) + x^\top(I - \widehat P_k)\theta_{\tau_{k-1}} + x^\top(I-\widehat P_k)(\theta_t - \theta_{\tau_{k-1}}).
+\end{align*}
+
+\emph{Subspace mismatch.}
+Since $\theta_{\tau_{k-1}} \in \range(B_k^\star) = \range(P_k^\star)$,
+$(I - P_k^\star)\theta_{\tau_{k-1}} = 0$, so
+$|x^\top(I - \widehat P_k)\theta_{\tau_{k-1}}|
+= |x^\top(\widehat P_k - P_k^\star)\theta_{\tau_{k-1}}|
+\le R_{\cA}\varepsilon_k S_w = \Gamma_k\|x\|_2$.
+The drift terms satisfy
+$|z_t(x)^\top \widehat U_k^\top(\theta_t - \theta_{\tau_{k-1}})| \le R_{\cA} D_{k,t}$
+and $|x^\top(I-\widehat P_k)(\theta_t - \theta_{\tau_{k-1}})| \le R_{\cA} D_{k,t}$.
+
+\emph{Estimation error.}
+Applying Lemma~\ref{lem:self_normalized_r} to the ridge estimator
+$\widehat a_t = \widetilde V_{t-1}^{-1} \widetilde b_{t-1}$ in $\R^r$:
+$\|(\widehat a_t - a_t^\circ)\|_{\widetilde V_{t-1}} \le \beta_{k,\max}^{(r)}$
+with probability at least $1-\delta$.
+
+\emph{Optimism and summation.}
+The UCB selection rule ensures per-round regret
+$x_t^{\star\top}\theta_t - x_t^\top\theta_t
+\le 2\beta_{k,\max}^{(r)}\|z_t(x_t)\|_{\widetilde V_{t-1}^{-1}} + 2\Gamma_k R_{\cA} + 2R_{\cA} D_{k,t}$.
+Summing over $t \in E_k$ and applying the elliptical potential bound
+(Lemma~\ref{lem:elliptical_r}) yields the stated bound.
+\end{proof}
+
+\begin{theorem}[Windowed projected regret under varying $w_t$]
+\label{thm:windowed_projected_varying}
+With probability at least $1-\delta$, the exploitation regret satisfies
+$R_k^{\mathrm{exp}} \le 2\beta_k^{(r,W)} \sqrt{2rn_k\log(1+WR_{\cA}^2/(\lambda r))} + 2S_wR_{\cA}\varepsilon_k n_k + 2R_{\cA} W V_k$.
+\end{theorem}
+
+\begin{proof}
+Fix $t \in E_k$ and define $a_t^\star := \widehat U_k^\top \theta_t \in \R^r$.
+
+\emph{Reward decomposition.}
+For any $x \in \cA_t$:
+$x^\top \theta_t = z_t(x)^\top a_t^\star + x^\top(I - \widehat P_k)\theta_t$,
+where $|x^\top(I - \widehat P_k)\theta_t| \le S_w\varepsilon_k\|x\|_2 = \Gamma_k\|x\|_2$.
+
+\emph{Windowed regression error.}
+For past rounds $s \in \mathcal W_t := \{s \in E_k : t - W \le s < t\}$,
+the response satisfies $y_s = z_t(x_s)^\top a_t^\star + \tilde\varepsilon_s$ where
+the drift error is
+$|z_t(x_s)^\top (a_t^\star - a_s^\star)|
+= |z_t(x_s)^\top \widehat U_k^\top (\theta_t - \theta_s)|
+\le R_{\cA} V_{k,t}(W)$
+since $s \in [t-W, t)$.
+
+\emph{Self-normalized confidence set.}
+Applying Lemma~\ref{lem:self_normalized_r} to the windowed ridge estimator
+in $\R^r$, and using Lemma~\ref{lem:det_bound_r} with $|\mathcal{W}_t| \le W$,
+the estimation error in the $\widetilde V_t$-norm is bounded by
+$\beta_t^{(r,W)}$ with high probability.
+
+\emph{Optimism and summation.}
+The UCB selection rule gives per-round regret
+$x_t^{\star\top}\theta_t - x_t^\top\theta_t
+\le 2\beta_t^{(r,W)}\|z_t(x_t)\|_{\widetilde V_t^{-1}} + 2\Gamma_k R_{\cA} + 2R_{\cA} V_{k,t}(W)$.
+Summing over $t \in E_k$ and applying the elliptical potential bound:
+$\sum_{t \in E_k}\|z_t\|_{\widetilde V_t^{-1}} \le \sqrt{2rn_k\log(1 + WR_{\cA}^2/(\lambda r))}$.
+For the drift sum, each parameter difference is counted by at most $W$ rounds, so
+$\sum_{t \in E_k} V_{k,t}(W) \le W V_k$.
+Combining yields the stated bound.
+\end{proof}
+
 \subsection{Main Upper Bounds}
 \label{sec:main_upper}
 
@@ -1534,6 +1617,15 @@ No policy in $\Pi(S)$ or $\Pi_{\mathrm{probe}}(S)$ can guarantee $o(T)$ expected
 costed dynamic regret over $\mathfrak{M}(S)$.
 \end{corollary}
 
+\begin{definition}[Observable-support restriction induced by the environment]
+\label{def:observable_support_restriction}
+Fix a proper subspace $S\subsetneq \R^d$. We say that an instance $\nu$ satisfies the
+observable-support restriction associated with $S$ if, almost surely, every reward-bearing
+action available to the learner lies in $S$: $\cA_t \subseteq S$ and
+$\supp(Q_t)\subseteq S$ for all $t$. We denote by $\mathfrak M_{\mathrm{obs}}(S)$ the
+subclass of instances satisfying this restriction.
+\end{definition}
+
 \begin{theorem}[Two-point non-identifiability under incomplete coverage]
 \label{thm:two_point_testing}
 Let $S\subsetneq\R^d$ with $\dim(S^\perp)\ge 1$.
@@ -1557,6 +1649,17 @@ $\eta_t^{(j)}\sim\mathcal{N}(0,\gamma_j)$.
 while $x_t^\top\theta_t^{(j)}=0$, giving
 $\E_{\nu_j}[\DynReg_T^{(c)}]=T\sqrt{2\gamma_0/\pi}\ge\mu T$.
 \end{proof}
+
+\begin{remark}[Scope of the regret lower bound]
+\label{rem:scope_augmented_regret_lb}
+Theorem~\ref{thm:two_point_testing} should primarily be interpreted as a complete
+non-identifiability result for the predictable second moment under incomplete observable
+coverage.  The regret lower bound is formulated against an enlarged benchmark action set,
+not the paper's original comparator, since if all actions lie in $S$ then the comparator
+itself cannot exploit directions in $S^\perp$.  The $\Omega(T)$ regret claims in
+Theorems~\ref{thm:restricted_span_minimax_regret}
+and~\ref{thm:restricted_span_minimax_regret_with_probe} do not use this enlarged benchmark.
+\end{remark}
 
 \subsection{Minimax Subspace Recovery Rate}
 \label{sec:minimax_recovery}
@@ -1632,6 +1735,34 @@ $b_1=\cos\alpha\,e_1-\sin\alpha\,e_2$,
 with projector distance $\|b_0b_0^\top-b_1b_1^\top\|_{\op}=\sin 2\alpha$.
 Instances $\nu_0,\nu_1$: $B^\star=b_j$ ($r=1$), scalar AR(1) with $w_t=Aw_{t-1}+\eta_t$,
 $\eta_t\sim\mathcal{N}(0,\lambda)$, $\varepsilon_t\sim\mathcal{N}(0,\sigma^2)$.
+Under both hypotheses, the latent process $\{w_t\}$ has the same marginal distribution
+(it depends only on $A$, $\lambda$, $\{\eta_t\}$).
+
+\begin{lemma}[Per-round KL divergence]
+\label{lem:kl_per_round}
+Under $\nu_j$, conditional on action $x_t$ and latent state $w_t$:
+$\KL(P_0(y_t\mid x_t,w_t)\,\|\,P_1(y_t\mid x_t,w_t)) = 2x_{2,t}^2\sin^2\!\alpha\cdot w_t^2/\sigma^2$.
+In particular, actions with $x_{2,t}=0$ produce identical distributions under both hypotheses.
+\end{lemma}
+
+\begin{proof}
+The means under $\nu_j$ are $\mu_j = (x_1\cos\alpha+(-1)^j x_2\sin\alpha)w_t$ with
+common variance $\sigma^2$.
+Hence $\KL = (\mu_0-\mu_1)^2/(2\sigma^2) = (2x_2\sin\alpha\cdot w_t)^2/(2\sigma^2)$.
+\end{proof}
+
+\begin{lemma}[Deterministic regret gap]
+\label{lem:regret_gap_det}
+For any $x\in\R^d$ with $\|x\|\le R_{\cA}$ and any $w\in\R$, define
+$r^{(j)}(x,w) := R_{\cA}|w| - (b_j^\top x)w\sign(w)$.  Then:
+$r^{(0)}(x,w) + r^{(1)}(x,w) \ge 2(1-\cos\alpha)R_{\cA}|w|$.
+\end{lemma}
+
+\begin{proof}
+Since $b_0 + b_1 = 2\cos\alpha\,e_1$:
+$r^{(0)}+r^{(1)} = 2|w|(R_{\cA} - \cos\alpha\,x_1\sign(w)) \ge 2(1-\cos\alpha)R_{\cA}|w|$,
+using $|x_1|\le R_{\cA}$.
+\end{proof}
 
 \begin{theorem}[Minimax lower bound for ETC policies]
 \label{thm:etc_lower_bound}
@@ -1669,6 +1800,17 @@ where $\beta := \sigma^2 S_w/(128R_{\cA}S_{w,2}^2)$.
 By AM--GM: $cm+\beta T/m\ge 2\sqrt{c\beta T}$.
 \end{proof}
 
+\begin{remark}[Interpretation of the ETC lower bound]
+\label{rem:etc_lb_interpretation}
+Theorem~\ref{thm:etc_lower_bound} establishes that the probe--subspace tradeoff incurs
+at least $\Omega(\sqrt{cT})$ regret for any ETC-type policy via the
+information-theoretic $\Omega(\varepsilon^2)$ per-round cost from subspace misalignment
+(using $1 - \cos\alpha \sim \alpha^2/2$).
+Theorems~\ref{thm:minimax_subspace_recovery}--\ref{thm:probe_rate_lb} below strengthen
+this to $\Omega(c^{1/3}T^{2/3})$ for projected-exploitation policies, matching the
+upper bound.
+\end{remark}
+
 \begin{theorem}[Unconditional $\Omega(\sqrt{cT})$ for all policies]
 \label{thm:sqrt_ct_all}
 Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} with
@@ -1696,7 +1838,7 @@ A policy belongs to $\Pi_{\mathrm{HP}}$ if, after its probe rounds, it forms
 a rank-$r$ projector $\widehat{P}_t$ and score vector
 $\vartheta_t\in\range(\widehat{P}_t)$, and on each exploitation round selects
 $x_t\in\argmax_{x\in\cA_t}x^\top\widehat{P}_t\vartheta_t$.
-This class contains SPSC and all known algorithms for this problem.
+This class contains the algorithm of this paper and all known algorithms for this problem.
 \end{definition}
 
 \paragraph{Fixed two-point family.}
@@ -1711,6 +1853,27 @@ $x_2:=R_{\cA}(\tfrac{1}{2}{-}\tfrac{\varepsilon}{4},\tfrac{1}{2})$.
 Let $\mathcal{M}_{\mathrm{HP}}:=\{\nu_1,\nu_2\}$ where
 $\nu_j:\theta_t=w_tb_j$, $w_t\sim\mathcal{N}(0,\lambda)$ i.i.d.,
 $\varepsilon_t\sim\mathcal{N}(0,\sigma_\varepsilon^2)$.
+Let $Q_\varepsilon$ be the uniform distribution on $\cA_\varepsilon$.
+
+\begin{lemma}[The fixed action set satisfies Assumption~\ref{assum:probe_realizability}]
+\label{lem:hp_probe_realizability}
+For all sufficiently small $\varepsilon \in (0, \varepsilon_0]$, there exists $\rho_0 > 0$
+independent of $\varepsilon$ such that $\E_{Q_\varepsilon}[uu^\top] \succeq \rho_0 I_2$,
+$\supp(Q_\varepsilon) \subseteq \cA_\varepsilon$, and $\|u\|_2 \le R_{\cA}$ a.s.
+\end{lemma}
+
+\begin{proof}
+Since $Q_\varepsilon$ is uniform on $\{\pm x_1, \pm x_2\}$ and $(-x)(-x)^\top = xx^\top$:
+$\E_{Q_\varepsilon}[uu^\top] = \frac{1}{2}x_1 x_1^\top + \frac{1}{2}x_2 x_2^\top$.
+At $\varepsilon = 0$, $x_1 = R_{\cA}(\frac{1}{2}, 0)$ and $x_2 = R_{\cA}(\frac{1}{2}, \frac{1}{2})$, giving
+$\frac{1}{R_{\cA}^2}\E_{Q_0}[uu^\top]
+= \bigl(\begin{smallmatrix} 1/4 & 1/8 \\ 1/8 & 1/8 \end{smallmatrix}\bigr)$,
+whose minimum eigenvalue is $(3-\sqrt{5})/16 > 0$.
+By continuity of eigenvalues, for all $\varepsilon \in (0, \varepsilon_0]$ with $\varepsilon_0$
+sufficiently small, there exists $\rho_0 > 0$ such that
+$\E_{Q_\varepsilon}[uu^\top] \succeq \rho_0 I_2$.
+Each action has norm at most $R_{\cA}$ for small $\varepsilon$.
+\end{proof}
 
 \begin{lemma}[Linear exploitation loss]
 \label{lem:hp_linear_loss}
@@ -1790,8 +1953,52 @@ the upper bound.
 Whether non-projecting algorithms can close this gap is a precise open question.
 \end{remark}
 
+\begin{remark}[Matching upper bound]
+The algorithm achieves $\widetilde{O}(\sqrt{rT}) + \widetilde{O}(c^{1/3}T^{2/3}) + O(V)$
+via projected exploitation with $m \asymp (T/c)^{2/3}$ probes per segment.
+Theorem~\ref{thm:probe_rate_lb} shows that the $c^{1/3}T^{2/3}$ term is tight for
+the hard-projection score-maximizing class.
+\end{remark}
+
+\begin{remark}[Scope of the sharp lower bound]
+\label{rem:sharp_lb_scope}
+Theorem~\ref{thm:probe_rate_lb} fully closes the probe-cost lower bound for
+the hard-projection score-maximizing class of Definition~\ref{def:hard_projection}.
+It does not claim the same unconditional $\Omega(c^{1/3}T^{2/3})$ lower bound for
+every possible projected-exploitation policy, nor for algorithms that operate
+directly in the ambient space without committing to a projected score representation.
+\end{remark}
+
 \subsection{Optimal Probe Allocation}
 \label{sec:optimal_allocation}
+
+\begin{theorem}[Optimal probe allocation]
+\label{thm:optimal_allocation}
+Suppose the learner allocates $m_k$ probes to segment $k$, subject to
+$\sum_{k=1}^K m_k = m$ and $m_k \le \ell_k$ where $\ell_k := |\cI_k|$.
+The worst-case projector recovery error across segments satisfies
+$\max_{1 \le k \le K} \|\widehat{P}_k - P_k^\star\|_{\op}
+\le C_{\mathrm{sub}} \sqrt{\log(2d/\delta)/m_k}$
+on a $1-K\delta$ probability event.
+The allocation minimizing $\max_k 1/\sqrt{m_k}$ subject to $\sum_k m_k = m$ is the
+uniform allocation $m_k^\star = m/K$, yielding
+$\max_k \|\widehat{P}_k - P_k^\star\|_{\op}
+\le C_{\mathrm{sub}}\sqrt{K\log(2d/\delta) / m}$.
+\end{theorem}
+
+\begin{proof}
+The optimization problem is
+$\min_{m_1, \ldots, m_K} \max_{1 \le k \le K} m_k^{-1/2}$ subject to
+$\sum_{k=1}^K m_k = m$ and $m_k > 0$.
+Since $f(m_k) = m_k^{-1/2}$ is strictly convex and strictly decreasing on $(0, \infty)$,
+the minimax objective $\max_k f(m_k)$ is a convex function of $(m_1, \ldots, m_K)$.
+At the optimum, all $f(m_k)$ must be equal: if $f(m_i) > f(m_j)$, transferring
+$\epsilon > 0$ from $m_j$ to $m_i$ would decrease $\max_k f(m_k)$, contradicting
+optimality.
+Therefore $m_k = m/K$ for all $k$.
+Substituting into Theorem~\ref{thm:projector_concentration_summary} with a union bound
+over $K$ segments yields the stated bound.
+\end{proof}
 
 \begin{theorem}[Regret-optimal probe allocation]
 \label{thm:regret_allocation}
@@ -1807,7 +2014,7 @@ giving total regret
 $\sum_{k=1}^K R_k(m_k^\star)
 = \frac{3}{2}(\gamma/2)^{2/3}c^{1/3}\sum_{k=1}^K\ell_k^{2/3}$.
 For equal-length segments: $\frac{3}{2}(\gamma/2)^{2/3}c^{1/3}K^{1/3}T^{2/3}$,
-confirming SPSC's allocation is optimal.
+confirming the algorithm's allocation is optimal.
 \end{theorem}
 
 \begin{proof}
@@ -1819,6 +2026,14 @@ Substituting: $R_k(m_k^\star)=\frac{3}{2}(\gamma/2)^{2/3}c^{1/3}\ell_k^{2/3}
 +O(\ell_k^{1/3})$.
 Summing over $k$ yields the result.
 \end{proof}
+
+\begin{remark}[Optimal total probe budget]
+Theorem~\ref{thm:regret_allocation} determines not only the allocation across segments
+but also the optimal total budget:
+$m = \sum_k m_k^\star = (\gamma/(2c))^{2/3} \sum_k \ell_k^{2/3}$.
+For equal segments, $m = (\gamma/(2c))^{2/3} K^{1/3} T^{2/3}$, matching the probe
+count used by the algorithm and confirming its optimality.
+\end{remark}
 
 
 %% ============================================================
@@ -2045,7 +2260,7 @@ NS low-rank \emph{MDP}; not bandits & N & Y & N \\
 Fisher-info exploration &
 Control/system ID; not bandits & Y & N & N \\
 \midrule
-\textbf{SPSC (ours)} & --- &
+\textbf{This paper} & --- &
 $\widetilde{O}(r\sqrt{T}{+}c^{1/3}T^{2/3})$ &
 --- & \textbf{Y} & \textbf{Y} & \textbf{Y} \\
 \bottomrule
