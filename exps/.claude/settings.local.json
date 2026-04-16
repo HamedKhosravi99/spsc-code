@@ -38,7 +38,8 @@
       "Bash(python exp5_allocation.py --seeds 5)",
       "Bash(python exp2_probe_cost.py --seeds 3)",
       "Bash(python exp2_probe_cost.py --seeds 5)",
-      "Bash(python exp3_rank_vs_dim.py --seeds 3)"
+      "Bash(python exp3_rank_vs_dim.py --seeds 3)",
+      "Bash(ls -la *.tex *.bib)"
     ]
   }
 }
