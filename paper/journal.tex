@@ -71,8 +71,8 @@
 \newcommand{\cmark}{\ding{51}}
 \newcommand{\xmark}{\ding{55}}
 
-\title{Identification Boundaries for Piecewise Stationary Low-Rank Bandits:\\
-When Is a Changing Subspace Recoverable from Scalar Feedback?}
+\title{Minimax Identification and Regret for\\
+Piecewise-Stationary Low-Rank Bandits with Costed Probing}
 
 \author{
   Anonymous Authors
@@ -85,93 +85,44 @@ When Is a Changing Subspace Recoverable from Scalar Feedback?}
 %%  ABSTRACT
 %% ============================================================
 \begin{abstract}
-We study a sequential decision problem over a horizon of $T$ rounds.
-At each round $t=1,\ldots,T$, a learner chooses an action
-$x_t\in\cA_t\subset\R^d$ (where $d$ is the ambient dimension and
-$\cA_t\subset\R^d$ is a revealed action set) and observes a scalar reward
-$y_t = x_t^\top\theta_t + \varepsilon_t\in\R$, in which $\varepsilon_t\in\R$
-is zero-mean observation noise with unknown variance
-$\sigma_\varepsilon^2:=\E[\varepsilon_t^2]$, and the reward parameter
-$\theta_t\in\R^d$ admits a low-rank factorization
-$\theta_t = B_k^\star w_t$.
-Here $B_k^\star\in\R^{d\times r}$ is an unknown orthonormal matrix (the
-\emph{representation}) of intrinsic rank $r\ll d$, piecewise constant over
-$K$ disjoint segments of the time horizon, and $w_t\in\R^r$ is a latent state
-evolving as a stable linear dynamical system within each segment.
-Existing low-rank bandit methods assume a fixed representation;
-nonstationary methods adapt to changing parameters but pay the full ambient
-exploitation cost $\widetilde{O}(d\sqrt{T})$.
-No prior work establishes when a changing low-rank subspace is even
-\emph{identifiable} from single-play scalar feedback, let alone how to
-exploit such structure optimally.
+We study a piecewise-stationary linear bandit in which, at each round
+$t=1,\ldots,T$, the learner selects $x_t$ from a revealed action set
+$\cA_t\subset\R^d$ and observes $y_t=x_t^\top\theta_t+\varepsilon_t$, with
+zero-mean noise~$\varepsilon_t$ of variance $\sigma_\varepsilon^2$.
+The reward parameter admits a latent low-rank factorization
+$\theta_t=B_k^\star w_t$, where $B_k^\star\in\R^{d\times r}$ ($r\ll d$) is an
+unknown orthonormal representation, piecewise constant over $K$ segments,
+and $w_t\in\R^r$ is a latent state evolving as a stable linear system within
+each segment.  A distinguished subset of rounds
+$\cTprobe\subseteq[T]$ may be reserved for \emph{probing}: on each such
+round the action is drawn from a known distribution $Q$ on $\R^d$ at cost
+$c>0$.  Existing low-rank methods assume a fixed representation, while
+nonstationary methods pay the ambient rate $\widetilde O(d\sqrt T)$; no prior
+work determines when a changing subspace is even identifiable from scalar
+feedback.
 
-\medskip
-\noindent\emph{Main contribution: a sharp probe-side identification boundary.}
-The learner is permitted to designate a subset of rounds
-$\cTprobe\subseteq\{1,\ldots,T\}$ as \emph{probe rounds}; on every such round
-the action is drawn from a known probe distribution $Q$ on $\R^d$
-(i.e.\ $x_t=u_t\sim Q$) at a per-probe cost $c>0$.
-We identify three structural conditions on the probe channel---%
-(i)~sub-Gaussian noise with online variance estimation,
-(ii)~bounded state--noise coupling
-$\bigl\|\E[\varepsilon_t\theta_t\mid\cH_{t-1},u_t]\bigr\|_2\le\epsilon_\times$,
-where $\cH_{t-1}$ is the past history (filtration up to round $t{-}1$) and
-$\epsilon_\times\ge 0$ is the cross-correlation bound,
-and (iii)~full-dimensional probe coverage
-$\E_{u\sim Q}[uu^\top]\succeq\rho I_d$ with coverage constant $\rho>0$
-(quantifying how well random probes excite all $d$ ambient directions)---%
-and prove that each condition is individually \emph{necessary} and, together,
-\emph{sufficient} for subspace recovery.
-Recovery is achieved via a lifted matrix estimator
-$G_t := \mathcal{K}^{-1}(s_t\,u_tu_t^\top)\in\R^{d\times d}$,
-in which $s_t := y_t^2-\hat\sigma^2\in\R$ is the centered squared reward
-(with $\hat\sigma^2$ the online estimate of $\sigma_\varepsilon^2$) and
-$\mathcal{K}(M):=\E_{u\sim Q}[(u^\top Mu)\,uu^\top]$ is the probe
-fourth-moment operator acting on symmetric matrices
-(invertible under the three identification conditions; see
-Lemma~\ref{lem:K_invertible}).
-This identification result is the first of its kind for changing low-rank
-structure under scalar observations; all subsequent regret bounds and lower
-bounds follow from this characterization.
-
-\medskip
-\noindent\emph{Matched upper and lower bounds.}
-Three lower bounds together pin down the fundamental limits of the problem:
-(i)~a $1/\sqrt{m}$ minimax rate on projector recovery from $m$ probes, via
-Fano's inequality over Grassmannian packings of dimension $r(d{-}r)$
-(Theorem~\ref{thm:minimax_subspace_recovery});
-(ii)~a matching $\Omega(c^{1/3}T^{2/3})$ lower bound within the
-\emph{projected-exploitation class} $\Pi_{\mathrm{HP}}$---the class of
-policies that commit to a rank-$r$ projector and then play greedy projected
-scores (formally defined in Definition~\ref{def:hard_projection}; this class
-contains all known algorithms for the problem)
-(Theorem~\ref{thm:probe_rate_lb});
-(iii)~an unconditional $\Omega(\sqrt{cT})$ lower bound for every admissible
-policy (Theorem~\ref{thm:sqrt_ct_all}).
-Full-dimensional probe coverage is information-theoretically necessary:
-restricting probes to any proper subspace of $\R^d$ forces linear regret
-$\Omega(T)$ (Theorem~\ref{thm:restricted_span_minimax_regret}).
-
-\medskip
-\noindent\emph{Algorithmic consequence.}
-Performance is measured by the \emph{costed dynamic regret}
-\[
-  \DynReg_T^{(c)} := \sum_{t=1}^T\!\Bigl(\max_{x\in\cA_t}x^\top\theta_t
-  - x_t^\top\theta_t\Bigr) + c\,|\cTprobe|,
-\]
-which penalizes both suboptimal actions and the number of probes used.
-We prove that interleaving projected UCB exploitation (in the learned
-$r$-dimensional subspace) with probing achieves
-\[
-  \DynReg_T^{(c)} = \widetilde{O}\bigl(r\sqrt{T}\bigr)
-   + \widetilde{O}\bigl(c^{1/3}T^{2/3}\bigr) + O(V),
-\]
-where $V:=\sum_{k=1}^K V_k$ is the total within-segment parameter drift
-(with $V_k$ the segment-$k$ drift) and $\widetilde{O}(\cdot)$ suppresses
-logarithmic factors.
-This replaces the ambient $d\sqrt{T}$ dependence with intrinsic rank~$r$;
-an adaptive variant removes oracle segment boundaries at the same leading
-rate.
+We establish three conditions on the probe channel---sub-Gaussian noise,
+bounded state--noise cross-correlation~$\epsilon_\times$, and
+full-dimensional coverage $\E_{u\sim Q}[uu^\top]\succeq\rho I_d$---and prove
+each to be individually necessary and jointly sufficient for subspace
+recovery.  Identifiability is realized by a lifted estimator built on the
+probe fourth-moment operator
+$\mathcal{K}(M):=\E_{u\sim Q}[(u^\top Mu)uu^\top]$ acting on centered
+squared rewards $s_t:=y_t^2-\hat\sigma^2$.  The resulting costed dynamic
+regret
+\(
+  \DynReg_T^{(c)}:=\sum_{t=1}^T(\max_{x\in\cA_t}x^\top\theta_t-x_t^\top\theta_t)+c|\cTprobe|
+\)
+satisfies the matched upper and lower bound
+\(
+  \DynReg_T^{(c)}=\widetilde\Theta(r\sqrt T)+\widetilde\Theta(c^{1/3}T^{2/3})+O(V),
+\)
+with $V:=\sum_{k=1}^K V_k$ the total within-segment drift; the
+$c^{1/3}T^{2/3}$ term is tight within the projected-exploitation class
+(Definition~\ref{def:hard_projection}), and any restriction of probes to a
+proper subspace of $\R^d$ forces linear regret~$\Omega(T)$.  An adaptive
+variant attains the same rate without oracle segment boundaries, replacing
+the ambient $d\sqrt T$ dependence by the intrinsic rank~$r$.
 \end{abstract}
 
 %% ============================================================
