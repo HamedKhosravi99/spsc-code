@@ -1,0 +1,30 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "Bash(curl -s \"https://api.semanticscholar.org/graph/v1/paper/search?query=piecewise+stationary+bandits&limit=20&fields=title,authors,year,venue,abstract,citationCount&year=2018-2026\")",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s \"https://api.semanticscholar.org/graph/v1/paper/search?query=dynamic+regret+contextual+bandits+changing+parameters&limit=20&fields=title,authors,year,venue,abstract,citationCount&year=2018-2026\")",
+      "Bash(curl -s \"https://api.semanticscholar.org/graph/v1/paper/search?query=change+point+detection+bandits+algorithms&limit=20&fields=title,authors,year,venue,abstract,citationCount&year=2018-2026\")",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:proceedings.neurips.cc)",
+      "WebFetch(domain:proceedings.mlr.press)",
+      "Bash(curl -s \"https://api.semanticscholar.org/graph/v1/paper/search?query=switching+bandits+restless+bandits+regret+guarantees&limit=20&fields=title,authors,year,venue,abstract,citationCount&year=2018-2026\")",
+      "WebFetch(domain:openreview.net)",
+      "WebFetch(domain:www.semanticscholar.org)",
+      "WebFetch(domain:www.bkveton.com)",
+      "WebFetch(domain:scholar.google.com)",
+      "WebFetch(domain:sites.google.com)",
+      "WebFetch(domain:kwangsungjun.github.io)",
+      "WebFetch(domain:icml.cc)",
+      "Bash(grep -oP '\\\\\\\\ref\\\\{[^}]+\\\\}' journal.tex)",
+      "Bash(sed 's/\\\\\\\\ref{//;s/}//')",
+      "Bash(grep -oP '\\\\\\\\label\\\\{[^}]+\\\\}' journal.tex)",
+      "Bash(grep -oE '\\\\\\\\ref\\\\{[^}]+\\\\}' journal.tex)",
+      "Bash(grep -oE '\\\\\\\\label\\\\{[^}]+\\\\}' journal.tex)",
+      "Bash(grep -oE '\\\\\\\\cite[tp]?\\\\{[^}]+\\\\}' journal.tex)",
+      "Bash(grep -oE '@[a-z]+\\\\{[^,]+,' references.bib)",
+      "Bash(pdflatex -interaction=nonstopmode -halt-on-error journal.tex)"
+    ]
+  }
+}
