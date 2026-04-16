@@ -39,7 +39,11 @@
       "Bash(python exp2_probe_cost.py --seeds 3)",
       "Bash(python exp2_probe_cost.py --seeds 5)",
       "Bash(python exp3_rank_vs_dim.py --seeds 3)",
-      "Bash(ls -la *.tex *.bib)"
+      "Bash(ls -la *.tex *.bib)",
+      "Bash(npm install *)",
+      "Bash(wait bn87562jd *)",
+      "Bash(claude *)",
+      "WebFetch(domain:www.anthropic.com)"
     ]
   }
 }

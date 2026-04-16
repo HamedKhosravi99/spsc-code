@@ -35,8 +35,8 @@ OUT_DIR = os.path.dirname(os.path.abspath(__file__))
 # =========================================================================
 # Parameters — IDENTICAL to experiment1_synthetic_final.py
 # =========================================================================
-DS = [5, 10, 20, 30, 45, 60, 80, 100]
-RS = [1, 3, 5, 10, 15, 20]
+DS = [5, 50, 100, 500]
+RS = [1, 10, 25, 50, 100]
 K = 10
 T = 5000
 SIGMA_EPS = 0.3
@@ -104,72 +104,57 @@ def make_env(seed, d, r):
     )
 
 
-def run_cell(d, r):
-    """Run all 10 methods on one (d, r) cell, return costed regret arrays."""
-    results = {m: [] for m in METHOD_NAMES}
-
-    for seed in range(N_SEEDS):
-        # --- SPSC Algorithm 1 (oracle segment boundaries) ---
-        env = make_env(seed, d, r)
+def run_method(name, seed, d, r):
+    """Run a single method for a single seed, return final costed regret."""
+    env = make_env(seed, d, r)
+    if name == "SPSC-Alg1":
         m = SPSC_Algorithm1(env, probe_every=PROBE_EVERY, probe_cost=PROBE_COST,
                             window=WINDOW, lam=LAM, delta=DELTA, seed=seed,
                             normalize_gamma_by_d=True).run()
-        results["SPSC-Alg1"].append(m.cumulative_costed_regret[-1])
-
-        # --- SPSC Adaptive (no oracle boundaries) ---
-        env = make_env(seed, d, r)
+    elif name == "SPSC-Adaptive":
         m = SPSC_Adaptive(env, probe_every=PROBE_EVERY, probe_cost=PROBE_COST,
                           window=WINDOW, lam=LAM, delta=DELTA, seed=seed,
                           m_relearn=30, det_window=50, cusum_threshold=3.0,
                           warmup=100).run()
-        results["SPSC-Adaptive"].append(m.cumulative_costed_regret[-1])
-
-        # --- LinUCB ---
-        env = make_env(seed, d, r)
+    elif name == "LinUCB":
         m = LinUCB(env, lam=LAM, delta=DELTA, seed=seed + 1000).run()
-        results["LinUCB"].append(m.cumulative_costed_regret[-1])
-
-        # --- Oracle LinUCB ---
-        env = make_env(seed, d, r)
+    elif name == "Oracle-LinUCB":
         m = OracleLinUCB(env, window=WINDOW, lam=LAM, delta=DELTA,
                          seed=seed + 2000).run()
-        results["Oracle-LinUCB"].append(m.cumulative_costed_regret[-1])
-
-        # --- D-LinUCB (discounted) ---
-        env = make_env(seed, d, r)
+    elif name == "D-LinUCB":
         m = LinUCB(env, lam=LAM, delta=DELTA, seed=seed + 3000,
                    forgetting_factor=0.998).run()
-        results["D-LinUCB"].append(m.cumulative_costed_regret[-1])
-
-        # --- SW-LinUCB ---
-        env = make_env(seed, d, r)
+    elif name == "SW-LinUCB":
         m = SWLinUCB(env, window=WINDOW, lam=LAM, delta=DELTA,
                      seed=seed + 4000).run()
-        results["SW-LinUCB"].append(m.cumulative_costed_regret[-1])
-
-        # --- Restart-LinUCB (periodic, oracle period) ---
-        env = make_env(seed, d, r)
+    elif name == "Restart-LinUCB":
         m = RestartLinUCB(env, restart_period=T // K,
                           lam=LAM, delta=DELTA, seed=seed + 5000).run()
-        results["Restart-LinUCB"].append(m.cumulative_costed_regret[-1])
-
-        # --- LowRank-Reward ---
-        env = make_env(seed, d, r)
+    elif name == "LowRank-Reward":
         m = LowRankRewardUCB(env, window=WINDOW, pca_warmup=50,
                               lam=LAM, delta=DELTA, seed=seed + 6000).run()
-        results["LowRank-Reward"].append(m.cumulative_costed_regret[-1])
-
-        # --- LowOFUL (stationary low-rank) ---
-        env = make_env(seed, d, r)
+    elif name == "LowOFUL":
         m = LowOFUL(env, lam=LAM, delta=DELTA, seed=seed + 7000,
                      pca_warmup=30, subspace_update_freq=20).run()
-        results["LowOFUL"].append(m.cumulative_costed_regret[-1])
-
-        # --- VOFUL (variance-aware low-rank) ---
-        env = make_env(seed, d, r)
+    elif name == "VOFUL":
         m = VOFUL(env, lam=LAM, delta=DELTA, seed=seed + 8000,
                   pca_warmup=30, subspace_update_freq=20).run()
-        results["VOFUL"].append(m.cumulative_costed_regret[-1])
+    return m.cumulative_costed_regret[-1]
+
+
+def run_cell(d, r, n_seeds):
+    """Run all 10 methods x n_seeds with per-seed per-method timing printed."""
+    results = {m: [] for m in METHOD_NAMES}
+
+    for seed in range(n_seeds):
+        print(f"\n  -- seed {seed+1}/{n_seeds} --", flush=True)
+        for name in METHOD_NAMES:
+            t0 = time.time()
+            val = run_method(name, seed, d, r)
+            results[name].append(val)
+            elapsed = time.time() - t0
+            print(f"    {METHOD_LABELS[name]:<30}  regret = {val:>10.1f}   [{elapsed:.1f}s]",
+                  flush=True)
 
     return {m: np.array(results[m]) for m in METHOD_NAMES}
 
@@ -178,8 +163,6 @@ def run_cell(d, r):
 # Tables
 # =========================================================================
 def print_tables(all_results, d_vals, r_vals):
-    n = N_SEEDS
-
     print("\n" + "=" * 140)
     print("DETAILED RESULTS")
     print("=" * 140)
@@ -190,9 +173,10 @@ def print_tables(all_results, d_vals, r_vals):
             if res is None:
                 continue
 
+            n = len(res["LinUCB"])
             print()
             print("=" * 130)
-            print(f"  d={d}, r={r}   ({n} seeds)")
+            print(f"  d={d}, r={r}   ({n} seed{'s' if n>1 else ''})")
             print("-" * 130)
             print(f"  {'Method':<30}  {'Mean':>10}  {'SE':>10}  "
                   f"{'vs LinUCB':>10}  {'vs Best':>10}  {'Note':>12}")
@@ -205,7 +189,7 @@ def print_tables(all_results, d_vals, r_vals):
             for method in METHOD_NAMES:
                 arr = res[method]
                 mean = arr.mean()
-                se = arr.std() / np.sqrt(n)
+                se = arr.std() / np.sqrt(max(n, 1))
                 vs_lin = (mean / max(lin_mean, 1e-8) - 1) * 100
                 vs_best = (mean / max(best_comp_mean, 1e-8) - 1) * 100
 
@@ -415,7 +399,7 @@ def make_heatmap_figure(all_results, d_vals, r_vals, out_path):
 
     for mi, meth in enumerate(show_methods):
         vals = [all_results[cell][meth].mean() for cell in slice_cells]
-        ses = [all_results[cell][meth].std() / np.sqrt(N_SEEDS) for cell in slice_cells]
+        ses = [all_results[cell][meth].std() / np.sqrt(max(len(all_results[cell][meth]), 1)) for cell in slice_cells]
         ax.bar(x + mi * w - 0.4 + w/2, vals, w, yerr=ses,
                label=METHOD_LABELS[meth].split("(")[0].strip(),
                color=METHOD_COLORS[meth], edgecolor="black", linewidth=0.3,
@@ -464,11 +448,15 @@ if __name__ == "__main__":
                 print(f"\n[{cell_idx}/{total_cells}] d={d}, r={r} -- SKIPPED (r >= d)")
                 continue
 
-            t0 = time.time()
-            print(f"\n[{cell_idx}/{total_cells}] Running d={d}, r={r} "
-                  f"(10 methods x {N_SEEDS} seeds) ...", flush=True)
+            # Use 1 seed for d=500 (too slow), full N_SEEDS for others
+            n_seeds = 1 if d >= 500 else N_SEEDS
 
-            res = run_cell(d, r)
+            t0 = time.time()
+            print(f"\n\n[{cell_idx}/{total_cells}] ========== d={d}, r={r}  "
+                  f"(10 methods x {n_seeds} seed{'s' if n_seeds>1 else ''}) ==========",
+                  flush=True)
+
+            res = run_cell(d, r, n_seeds)
             elapsed = time.time() - t0
             all_results[(d, r)] = res
             if d not in d_run:
