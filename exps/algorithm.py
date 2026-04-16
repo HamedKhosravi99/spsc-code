@@ -1540,3 +1540,505 @@ class SPSC_Robustness:
                 metrics.control_regret[t] = r_opt - r_t
                 metrics.costed_regret[t] = r_opt - r_t
         return metrics
+
+
+# ---------------------------------------------------------------------------
+# Algorithm 4 — Adaptive SPSC (unknown segment boundaries)
+# ---------------------------------------------------------------------------
+
+class SPSC_Adaptive:
+    """
+    Algorithm 4: Adaptive Single-Play Subspace-Calibrated Optimism.
+
+    Removes the oracle segment-boundary assumption of Algorithm 1
+    via a reward-degradation change-point detector.
+
+    The detector tracks a CUSUM-like statistic on exploitation rewards:
+    if the recent per-round reward drops significantly below the
+    historical baseline (indicating the learned subspace has become
+    stale after a regime change), the algorithm enters RECOVERY mode.
+
+    In RECOVERY, it deploys m_relearn consecutive probes to rebuild
+    the subspace from scratch, then transitions back to NORMAL mode.
+
+    This is a practical instantiation of Algorithm 4 from the paper,
+    replacing the theoretical M_hat-based detector (which requires
+    sample sizes impractical at moderate d) with a reward-based
+    signal that directly measures exploitation quality.
+    """
+
+    def __init__(
+        self,
+        env: "LowRankLDSEnvironment",
+        probe_every: int = 5,
+        probe_cost: float = 0.1,
+        window: int = 200,
+        lam: float = 1.0,
+        delta: float = 0.05,
+        seed: int = 0,
+        # Detector parameters
+        m_relearn: int = 40,            # probes in recovery phase
+        det_window: int = 50,           # exploitation rounds for recent reward window
+        cusum_threshold: float = 3.0,   # multiples of reward std for detection
+        warmup: int = 100,              # exploitation rounds before detector activates
+    ):
+        self.env          = env
+        self.probe_every  = probe_every
+        self.c            = probe_cost
+        self.W            = window
+        self.lam          = lam
+        self.delta        = delta
+        self.rng          = np.random.default_rng(seed)
+
+        d, r = env.d, env.r
+        self.d = d
+        self.r = r
+
+        self.L_x       = env.L_x
+        self.sigma_eps = env.sigma_eps
+        self.S         = env.S
+        self.K_inv_op  = (d + 2) / (2.0 * d)
+
+        # Detector config
+        self.m_relearn       = m_relearn
+        self.det_window      = det_window
+        self.cusum_threshold = cusum_threshold
+        self.warmup          = warmup
+
+    # ------------------------------------------------------------------
+    # Confidence radii (same as Algorithm 1)
+    # ------------------------------------------------------------------
+
+    def _beta(self, n_exploit: int) -> float:
+        effective_n = min(n_exploit, self.W)
+        arg = max(1.0 + effective_n * self.L_x ** 2 / self.lam, 1.0 + 1e-12)
+        return (
+            self.sigma_eps * np.sqrt(self.r * np.log(arg / self.delta))
+            + np.sqrt(self.lam) * self.S
+        )
+
+    def _gamma(self, m_probe: int, G_norms: list, M_hat=None) -> float:
+        if m_probe < 2:
+            return float(self.S)
+        R_X_hat = (
+            float(np.percentile(G_norms, 90))
+            if len(G_norms) >= 2
+            else self.K_inv_op * self.d * ((self.S + 1.0) ** 2 + self.sigma_eps ** 2)
+        )
+        if M_hat is not None:
+            eigs = np.sort(np.linalg.eigvalsh(M_hat))[::-1]
+            gap = max(float(eigs[self.r - 1] - eigs[self.r]), 1e-4) if len(eigs) > self.r else 1e-4
+        else:
+            gap = 1e-4
+        return (
+            8.0 * self.S * R_X_hat / gap
+            * np.sqrt(np.log(2.0 * self.d / self.delta) / m_probe)
+        )
+
+    # ------------------------------------------------------------------
+    # Main loop
+    # ------------------------------------------------------------------
+
+    def run(self) -> "RunMetrics":
+        env = self.env
+        d, r, T = self.d, self.r, env.T
+        metrics = RunMetrics(name="SPSC-Adaptive", T=T)
+
+        # Subspace state
+        M_sum       = np.zeros((d, d))
+        U_hat       = np.eye(d, r)
+        P_hat       = U_hat @ U_hat.T
+        m_probe_tot = 0
+        G_norms: list = []
+        expl_buf: List[tuple] = []
+
+        # Reward-based detector state
+        reward_history: List[float] = []  # exploitation rewards since last reset
+        n_exploit_since_reset = 0
+
+        # Phase control
+        RECOVERY = 0
+        NORMAL   = 1
+        phase    = RECOVERY
+        rec_count = 0
+        probe_counter = 0
+        M_rec = np.zeros((d, d))
+
+        for t in range(T):
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt      = env.optimal_reward(action_set, t)
+
+            # ==============================================================
+            # RECOVERY MODE — pure probing to build fresh subspace estimate
+            # ==============================================================
+            if phase == RECOVERY:
+                metrics.probe_flags[t] = True
+
+                z_probe = self.rng.standard_normal(d)
+                u_t     = np.sqrt(d) * z_probe / (np.linalg.norm(z_probe) + 1e-12)
+                y_t     = env.step(u_t, t)
+
+                s_t = y_t ** 2 - self.sigma_eps ** 2
+                G_t = K_inverse(s_t * np.outer(u_t, u_t), d)
+
+                G_norms.append(float(np.linalg.norm(G_t, ord=2)))
+                M_rec       += G_t
+                m_probe_tot += 1
+                rec_count   += 1
+
+                if rec_count >= self.m_relearn and rec_count >= 2:
+                    M_hat_now = M_rec / rec_count
+                    eig_vals, eig_vecs = np.linalg.eigh(M_hat_now)
+                    U_hat = eig_vecs[:, -r:]
+                    P_hat = U_hat @ U_hat.T
+
+                    M_sum = M_rec.copy()
+                    phase = NORMAL
+                    rec_count = 0
+                    probe_counter = 0
+                    expl_buf = []
+                    reward_history = []
+                    n_exploit_since_reset = 0
+
+                # Subspace error diagnostic
+                k = env.seg_of[t]
+                P_true = env.segment_projector(k)
+                metrics.subspace_error[t] = np.linalg.norm(P_hat - P_true, ord=2)
+
+                r_t = float(u_t @ env.theta[t])
+                metrics.control_regret[t] = r_opt - r_t
+                metrics.costed_regret[t]  = r_opt - r_t + self.c
+
+            # ==============================================================
+            # NORMAL MODE — interleaved probe + exploit
+            # ==============================================================
+            else:
+                is_probe = (probe_counter % self.probe_every == 0)
+                probe_counter += 1
+
+                if is_probe:
+                    # --- PROBE ROUND ---
+                    metrics.probe_flags[t] = True
+
+                    z_probe = self.rng.standard_normal(d)
+                    u_t     = np.sqrt(d) * z_probe / (np.linalg.norm(z_probe) + 1e-12)
+                    y_t     = env.step(u_t, t)
+
+                    s_t = y_t ** 2 - self.sigma_eps ** 2
+                    G_t = K_inverse(s_t * np.outer(u_t, u_t), d)
+
+                    G_norms.append(float(np.linalg.norm(G_t, ord=2)))
+                    M_sum       += G_t
+                    m_probe_tot += 1
+
+                    M_hat_now = M_sum / m_probe_tot
+                    eig_vals, eig_vecs = np.linalg.eigh(M_hat_now)
+                    U_hat = eig_vecs[:, -r:]
+                    P_hat = U_hat @ U_hat.T
+
+                    k = env.seg_of[t]
+                    P_true = env.segment_projector(k)
+                    metrics.subspace_error[t] = np.linalg.norm(P_hat - P_true, ord=2)
+
+                    r_t = float(u_t @ env.theta[t])
+                    metrics.control_regret[t] = r_opt - r_t
+                    metrics.costed_regret[t]  = r_opt - r_t + self.c
+
+                else:
+                    # --- EXPLOITATION ROUND ---
+                    window_entries = [(x_s, y_s) for (x_s, y_s, s) in expl_buf
+                                     if s >= t - self.W]
+
+                    V_tilde = self.lam * np.eye(r)
+                    b_tilde = np.zeros(r)
+                    for x_s, y_s in window_entries:
+                        z_s = U_hat.T @ x_s
+                        V_tilde += np.outer(z_s, z_s)
+                        b_tilde += z_s * y_s
+
+                    a_hat   = np.linalg.solve(V_tilde, b_tilde)
+                    beta_t  = self._beta(len(window_entries))
+                    M_hat_curr = M_sum / max(m_probe_tot, 1) if m_probe_tot >= 2 else None
+                    gamma_t = self._gamma(m_probe_tot, G_norms, M_hat_curr)
+
+                    Z       = action_set @ U_hat
+                    V_inv_Z = np.linalg.solve(V_tilde, Z.T).T
+                    ellip   = np.sqrt(np.einsum('ij,ij->i', Z, V_inv_Z))
+                    x_norms = np.linalg.norm(action_set, axis=1)
+                    ucb     = Z @ a_hat + beta_t * ellip + gamma_t * x_norms
+
+                    best_idx = int(np.argmax(ucb))
+                    x_dep    = action_set[best_idx]
+                    y_t      = env.step(x_dep, t)
+
+                    expl_buf.append((x_dep, y_t, t))
+                    if len(expl_buf) > self.W + 10:
+                        expl_buf = [(x_s, y_s, s) for (x_s, y_s, s) in expl_buf
+                                    if s >= t - self.W]
+
+                    # --- REWARD-BASED CHANGE DETECTION ---
+                    reward_history.append(y_t)
+                    n_exploit_since_reset += 1
+
+                    dw = self.det_window
+                    if n_exploit_since_reset >= self.warmup + dw:
+                        # Compare recent reward to historical baseline
+                        recent = np.array(reward_history[-dw:])
+                        historical = np.array(reward_history[:-dw])
+
+                        mu_hist = historical.mean()
+                        sigma_hist = max(historical.std(), 1e-6)
+                        mu_recent = recent.mean()
+
+                        # Standardized drop: how many sigma below historical mean?
+                        z_score = (mu_hist - mu_recent) / (sigma_hist / np.sqrt(dw))
+
+                        if z_score > self.cusum_threshold:
+                            # DETECTED CHANGE — enter recovery
+                            phase       = RECOVERY
+                            rec_count   = 0
+                            M_rec       = np.zeros((d, d))
+                            M_sum       = np.zeros((d, d))
+                            m_probe_tot = 0
+                            G_norms     = []
+                            expl_buf    = []
+                            reward_history = []
+                            n_exploit_since_reset = 0
+
+                    r_t = float(x_dep @ env.theta[t])
+                    metrics.control_regret[t] = r_opt - r_t
+                    metrics.costed_regret[t]  = r_opt - r_t
+
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# SOTA Baseline: LowOFUL (Jun et al. 2019 spirit)
+# ---------------------------------------------------------------------------
+
+class LowOFUL:
+    """
+    Low-rank OFUL: learns a rank-r subspace from the action-reward outer
+    products, then runs UCB in the learned r-dimensional subspace.
+
+    Captures the core idea of Jun et al. (2019) / Lu et al. (2021):
+    maintain a running estimate of the reward parameter via nuclear-norm
+    regularized ridge regression, extract the top-r subspace, and exploit
+    in that subspace.
+
+    Key property: assumes STATIONARY subspace.  Under nonstationarity the
+    subspace estimate degrades because past data from old segments pollutes
+    the estimate — this is the critical weakness SPSC addresses.
+
+    Resets at oracle segment boundaries are NOT given (this is the point:
+    show that stationary low-rank methods fail under nonstationarity).
+    """
+
+    def __init__(
+        self,
+        env: "LowRankLDSEnvironment",
+        lam: float = 1.0,
+        delta: float = 0.05,
+        seed: int = 0,
+        pca_warmup: int = 30,
+        subspace_update_freq: int = 20,
+    ):
+        self.env    = env
+        self.lam    = lam
+        self.delta  = delta
+        self.rng    = np.random.default_rng(seed)
+        self.pca_warmup = pca_warmup
+        self.subspace_update_freq = subspace_update_freq
+
+        self.d = env.d
+        self.r = env.r
+        self.L_x       = env.L_x
+        self.sigma_eps = env.sigma_eps
+        self.S         = env.S
+
+    def _beta_r(self, n_exploit: int) -> float:
+        arg = max(1.0 + n_exploit * self.L_x ** 2 / self.lam, 1.0 + 1e-12)
+        return (
+            self.sigma_eps * np.sqrt(self.r * np.log(arg / self.delta))
+            + np.sqrt(self.lam) * self.S
+        )
+
+    def run(self) -> "RunMetrics":
+        env = self.env
+        d, r, T = self.d, self.r, env.T
+        metrics = RunMetrics(name="LowOFUL", T=T)
+
+        # Accumulate action-reward outer products for subspace estimation
+        # M = (1/n) sum_t (y_t * x_t)(y_t * x_t)^T  (rank-r in expectation)
+        M_sum     = np.zeros((d, d))
+        n_total   = 0
+        U_hat     = np.eye(d, r)
+
+        # Ridge regression in learned subspace
+        V_r       = self.lam * np.eye(r)
+        b_r       = np.zeros(r)
+
+        for t in range(T):
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt      = env.optimal_reward(action_set, t)
+
+            # Project actions into current subspace
+            Z = action_set @ U_hat
+
+            # UCB action selection
+            a_hat  = np.linalg.solve(V_r, b_r)
+            beta_t = self._beta_r(n_total)
+
+            V_inv_Z = np.linalg.solve(V_r, Z.T).T
+            ellip   = np.sqrt(np.einsum('ij,ij->i', Z, V_inv_Z))
+            ucb     = Z @ a_hat + beta_t * ellip
+
+            best_idx = int(np.argmax(ucb))
+            x_dep    = action_set[best_idx]
+            y_t      = env.step(x_dep, t)
+
+            # Update subspace estimate: accumulate (y*x)(y*x)^T
+            yx = y_t * x_dep
+            M_sum   += np.outer(yx, yx)
+            n_total += 1
+
+            # Periodically update subspace from accumulated data
+            if n_total >= self.pca_warmup and n_total % self.subspace_update_freq == 0:
+                M_hat = M_sum / n_total
+                eig_vals, eig_vecs = np.linalg.eigh(M_hat)
+                U_hat_new = eig_vecs[:, -r:]
+
+                # Check if subspace changed significantly — if so, reset regression
+                P_old = U_hat @ U_hat.T
+                P_new = U_hat_new @ U_hat_new.T
+                if np.linalg.norm(P_new - P_old, 'fro') > 0.3:
+                    V_r = self.lam * np.eye(r)
+                    b_r = np.zeros(r)
+
+                U_hat = U_hat_new
+
+            # Update ridge regression in current subspace
+            z_dep = U_hat.T @ x_dep
+            V_r  += np.outer(z_dep, z_dep)
+            b_r  += z_dep * y_t
+
+            r_t = float(x_dep @ env.theta[t])
+            metrics.control_regret[t] = r_opt - r_t
+            metrics.costed_regret[t]  = r_opt - r_t
+
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# SOTA Baseline: VOFUL (Kim & Paik 2022 spirit)
+# ---------------------------------------------------------------------------
+
+class VOFUL:
+    """
+    Variance-aware Optimistic algorithm for Low-rank linear bandits.
+
+    Captures the core idea of Kim & Paik (2022): use variance-weighted
+    action-reward covariance to estimate the low-rank subspace, giving
+    tighter subspace recovery than unweighted PCA, then exploit via
+    r-dimensional ridge UCB.
+
+    The variance weighting helps when different actions have different
+    signal-to-noise ratios.  Formally:
+        M_hat = (1/n) sum_t w_t * (y_t * x_t)(y_t * x_t)^T
+    where w_t = 1 / (||x_t||^2 + sigma^2) normalizes by expected variance.
+
+    Like LowOFUL, assumes STATIONARY subspace.  No oracle segment boundaries.
+    """
+
+    def __init__(
+        self,
+        env: "LowRankLDSEnvironment",
+        lam: float = 1.0,
+        delta: float = 0.05,
+        seed: int = 0,
+        pca_warmup: int = 30,
+        subspace_update_freq: int = 20,
+    ):
+        self.env    = env
+        self.lam    = lam
+        self.delta  = delta
+        self.rng    = np.random.default_rng(seed)
+        self.pca_warmup = pca_warmup
+        self.subspace_update_freq = subspace_update_freq
+
+        self.d = env.d
+        self.r = env.r
+        self.L_x       = env.L_x
+        self.sigma_eps = env.sigma_eps
+        self.S         = env.S
+
+    def _beta_r(self, n_exploit: int) -> float:
+        arg = max(1.0 + n_exploit * self.L_x ** 2 / self.lam, 1.0 + 1e-12)
+        return (
+            self.sigma_eps * np.sqrt(self.r * np.log(arg / self.delta))
+            + np.sqrt(self.lam) * self.S
+        )
+
+    def run(self) -> "RunMetrics":
+        env = self.env
+        d, r, T = self.d, self.r, env.T
+        metrics = RunMetrics(name="VOFUL", T=T)
+
+        # Variance-weighted outer product accumulator
+        M_sum     = np.zeros((d, d))
+        w_sum     = 0.0
+        n_total   = 0
+        U_hat     = np.eye(d, r)
+
+        # Ridge regression in learned subspace
+        V_r       = self.lam * np.eye(r)
+        b_r       = np.zeros(r)
+
+        for t in range(T):
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt      = env.optimal_reward(action_set, t)
+
+            Z = action_set @ U_hat
+
+            a_hat  = np.linalg.solve(V_r, b_r)
+            beta_t = self._beta_r(n_total)
+
+            V_inv_Z = np.linalg.solve(V_r, Z.T).T
+            ellip   = np.sqrt(np.einsum('ij,ij->i', Z, V_inv_Z))
+            ucb     = Z @ a_hat + beta_t * ellip
+
+            best_idx = int(np.argmax(ucb))
+            x_dep    = action_set[best_idx]
+            y_t      = env.step(x_dep, t)
+
+            # Variance-weighted subspace update
+            x_norm_sq = float(np.dot(x_dep, x_dep))
+            w_t = 1.0 / (x_norm_sq + self.sigma_eps ** 2)
+            yx = y_t * x_dep
+            M_sum   += w_t * np.outer(yx, yx)
+            w_sum   += w_t
+            n_total += 1
+
+            # Periodically update subspace
+            if n_total >= self.pca_warmup and n_total % self.subspace_update_freq == 0:
+                M_hat = M_sum / w_sum
+                eig_vals, eig_vecs = np.linalg.eigh(M_hat)
+                U_hat_new = eig_vecs[:, -r:]
+
+                P_old = U_hat @ U_hat.T
+                P_new = U_hat_new @ U_hat_new.T
+                if np.linalg.norm(P_new - P_old, 'fro') > 0.3:
+                    V_r = self.lam * np.eye(r)
+                    b_r = np.zeros(r)
+
+                U_hat = U_hat_new
+
+            z_dep = U_hat.T @ x_dep
+            V_r  += np.outer(z_dep, z_dep)
+            b_r  += z_dep * y_t
+
+            r_t = float(x_dep @ env.theta[t])
+            metrics.control_regret[t] = r_opt - r_t
+            metrics.costed_regret[t]  = r_opt - r_t
+
+        return metrics

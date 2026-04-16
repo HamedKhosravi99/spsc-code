@@ -11,7 +11,15 @@
       "Bash(awk '/^\\\\\\\\begin\\\\{\\(theorem|proposition|lemma|remark|corollary|definition|assumption|equation|align|figure|table\\)/{print NR\": \"$0}' \"/c/Users/hamed/Documents/GitHub/lowrank-bandits/paper/main_conf.tex\")",
       "Bash(awk ':*)",
       "Bash(pdflatex -interaction=nonstopmode main_conf.tex)",
-      "Bash(bibtex main_conf)"
+      "Bash(bibtex main_conf)",
+      "Bash(ls -lh /c/Users/hamed/Documents/GitHub/lowrank-bandits/exps/experiment*.py)",
+      "Bash(ls *)",
+      "Bash(wc -l /c/Users/hamed/Documents/GitHub/lowrank-bandits/exps/*.py /c/Users/hamed/Documents/GitHub/lowrank-bandits/exps/environments/*.py)",
+      "Bash(python *)",
+      "Bash(head -5 /c/Users/hamed/AppData/Local/Temp/claude/C--Users-hamed-Documents-GitHub-lowrank-bandits/c56bc193-ad93-4e61-b15f-6634a7cb9be6/tasks/btpwt2nf6.output)",
+      "Bash(head -5 /c/Users/hamed/AppData/Local/Temp/claude/C--Users-hamed-Documents-GitHub-lowrank-bandits/c56bc193-ad93-4e61-b15f-6634a7cb9be6/tasks/bxlfxeiyd.output)",
+      "Bash(find . -type f \\\\\\( -name \"*.tex\" -o -name \"*.bib\" -o -name \"*.sty\" -o -name \"*.cls\" \\\\\\) -exec ls -lh {} \\\\;)",
+      "Bash(awk '{print $9, \"\\(\" $5 \"\\)\"}')"
     ]
   }
 }
