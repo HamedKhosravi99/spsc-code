@@ -32,7 +32,10 @@
       "Bash(powershell *)",
       "Bash(powershell.exe *)",
       "Bash(sort -k5 -nr)",
-      "Bash(kill 1731 1474)"
+      "Bash(kill 1731 1474)",
+      "Bash(pdflatex -interaction=nonstopmode -halt-on-error journal.tex)",
+      "Bash(pdflatex -interaction=nonstopmode journal.tex)",
+      "Bash(bibtex journal *)"
     ]
   }
 }
