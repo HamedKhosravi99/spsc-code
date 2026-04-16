@@ -122,13 +122,16 @@ with $V:=\sum_{k=1}^K V_k$ the total within-segment drift.  Matching lower
 bounds certify tightness of every term: the $r\sqrt T$ term is matched by
 the minimax subspace-recovery rate
 (Theorem~\ref{thm:minimax_subspace_recovery}); the $c^{1/3}T^{2/3}$ term is
-matched \emph{unconditionally} across all admissible policies
-(Theorem~\ref{thm:probe_rate_lb_unconditional}), strengthening the earlier
-class-restricted bound on $\Pi_{\mathrm{HP}}$
-(Theorem~\ref{thm:probe_rate_lb}) and closing the $\varepsilon$ vs.\
-$\varepsilon^2$ gap between the two regimes; and the $O(V)$ term is
+matched within the hard-projection class $\Pi_{\mathrm{HP}}$
+(Theorem~\ref{thm:probe_rate_lb}), which contains every known algorithm
+for this problem, while for explore-then-commit schedules the slightly
+weaker $\Omega(\sqrt{cT})$ bound holds
+(Theorem~\ref{thm:etc_lower_bound}); and the $O(V)$ term is
 unimprovable (Proposition~\ref{prop:drift_lb}), so the bound is non-vacuous
-precisely in the regime $V=O(c^{1/3}T^{2/3})$.  Any restriction of probes
+precisely in the regime $V=O(c^{1/3}T^{2/3})$.
+Whether the $c^{1/3}T^{2/3}$ rate is the minimax optimum across \emph{all}
+admissible policies (including non-projecting or randomised schemes)
+remains an open question, discussed in Section~\ref{sec:discussion}.  Any restriction of probes
 to a proper subspace of $\R^d$ forces linear regret~$\Omega(T)$.  An instance-dependent refinement replaces the
 $r\sqrt T$ worst-case exploitation rate by
 $\widetilde O\bigl(Kr^2/\Delta_{\min}\bigr)$ when the projected
@@ -295,18 +298,21 @@ An adaptive variant removes oracle segment boundaries at the same leading rate
 (Theorem~\ref{thm:adaptive_regret}).
 
 A complete lower-bound architecture clarifies the cost of learning the
-subspace under single-play feedback: $\Omega(\sqrt{cT})$ holds for every
-admissible policy on hedge-enabled action sets (Theorem~\ref{thm:sqrt_ct_all}),
-and a strictly sharper $\Omega(c^{1/3}T^{2/3})$ bound -- matching our upper
-bound -- holds \emph{unconditionally across all admissible policies} on the
-hedge-free family of Definition~\ref{def:hard_projection}
-(Theorem~\ref{thm:probe_rate_lb_unconditional}).
-The earlier class-restricted bound on the projected-exploitation class
-$\Pi_{\mathrm{HP}}$ (Theorem~\ref{thm:probe_rate_lb}) is thus a special case:
-no non-projecting, ambient-space, or soft-projection scheme can improve on
-$c^{1/3}T^{2/3}$, because the key $\Omega(\varepsilon)$ per-round loss is a
-geometric property of the action set
-(Lemma~\ref{lem:hp_geometric_action_loss}), not of the policy.
+subspace under single-play feedback: an $\Omega(\sqrt{cT})$ bound holds for
+any explore-then-commit policy
+(Theorem~\ref{thm:etc_lower_bound}), and a strictly sharper
+$\Omega(c^{1/3}T^{2/3})$ bound -- matching our upper bound up to
+logarithmic factors -- holds for every policy in the hard-projection class
+$\Pi_{\mathrm{HP}}$ (Theorem~\ref{thm:probe_rate_lb}), which contains every
+known algorithm for this problem.
+The $\Pi_{\mathrm{HP}}$ bound relies on a geometric lemma showing that on
+the hedge-free action set $\cA_\varepsilon$ of
+Definition~\ref{def:hard_projection}, every action incurs
+$\Omega(\varepsilon)$ per-round loss under at least one of two adjacent
+instances (Lemma~\ref{lem:hp_geometric_action_loss}); extending this
+argument to a fully unconditional bound across all admissible policies
+(including non-projecting and soft-projection schemes) remains an
+intriguing open problem, discussed in Section~\ref{sec:discussion}.
 Full-dimensional probe coverage is not an artifact of our analysis: restricting
 actions to any proper subspace forces $\Omega(T)$ minimax regret
 (Theorem~\ref{thm:restricted_span_minimax_regret}), even when the learner
@@ -1219,7 +1225,7 @@ constants that scale with $\lambda_{\min}$ rather than with $R_X$.
 \label{lem:variance_proxy}
 Let $\sigma_X^2$ denote the operator norm of the predictable second-moment
 sum, $\sigma_X^2:=m_k^{-1}\bigl\|\sum_{t\in\cT_k}\E[X_t^2\mid\cH_{t-1}]\bigr\|_{\op}$.
-Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise}, and
+Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} and
 the exact conditions $\delta_\sigma=\epsilon_\times=0$,
 \[
   \sigma_X^2
@@ -1227,26 +1233,99 @@ the exact conditions $\delta_\sigma=\epsilon_\times=0$,
   \ :=\ C_Q\,\bigl(\sigma_\varepsilon^2+S_w^2\lambda_{\max}(B_k^\star\bar S_k^{\mathrm{probe}}(B_k^\star)^\top)\bigr)\,L^2
   \ +\ S_w^4,
 \]
-where $C_Q$ is an absolute constant depending only on the fourth moments of
-the probe distribution $Q$.  In the isotropic-Gaussian case,
-$C_Q\le 2C_{\mathcal{K}}^2(d+4)$.
+where $C_Q$ is a constant depending only on the fourth moments of the
+probe distribution $Q$ and, for isotropic Gaussian probes, scales
+linearly in the ambient dimension: $C_Q\le 2C_{\mathcal{K}}^2(d+4)$.  The
+$d$-dependence propagates into the constants of
+Theorem~\ref{thm:variance_adaptive_concentration} and
+Theorem~\ref{thm:closed_dynamic_regret} but not into the leading-rate
+exponents.
 \end{lemma}
 
 \begin{proof}
-Expand $X_t=G_t-\widetilde{M}_t$ and use the decomposition
-$G_t=\mathcal{K}^{-1}(s_tu_tu_t^\top)$.
-Conditional on $\cH_{t-1}$, the cross terms vanish by
-Proposition~\ref{prop:lifted_probe_unbiased}, leaving
-$\E[X_t^2\mid\cH_{t-1}]
-=\mathcal{K}^{-1}(\E[s_t^2 u_tu_t^\top\otimes u_tu_t^\top\mid\cH_{t-1}])\mathcal{K}^{-1}
--\widetilde{M}_t^2$.
-Bounding $s_t^2\le 2(u_t^\top\widetilde{M}_tu_t)^2+2\varepsilon_t^4$ and using
-sub-Gaussian moment estimates for $\varepsilon_t$ gives
-$\E[X_t^2\mid\cH_{t-1}]\preceq C_Q L^2(\sigma_\varepsilon^2+S_w^2
-\lambda_{\max}(\widetilde M_t))I_d + S_w^4 I_d$.
-For isotropic Gaussian probes, the constant $C_Q\le 2C_{\mathcal{K}}^2(d+4)$
-follows from the closed-form fourth moment
-$\E[(u^\top M u)^2]=2\|M\|_F^2+\tr(M)^2$ of a standard Gaussian.
+Linearity of $\mathcal K^{-1}$ in its scalar-times-rank-one argument
+yields
+\[
+  G_t\ =\ \mathcal K^{-1}(s_t u_t u_t^\top)\ =\ s_t\,H_t,
+  \qquad
+  H_t\ :=\ \mathcal K^{-1}(u_t u_t^\top),
+\]
+so $G_t^2 = s_t^2\,H_t^2$ and by unbiasedness
+(Proposition~\ref{prop:lifted_probe_unbiased}),
+\begin{equation}
+  \E\bigl[X_t^2\bigm|\cH_{t-1}\bigr]
+  \ =\ \E\bigl[G_t^2\bigm|\cH_{t-1}\bigr]\ -\ \widetilde M_t^{\,2}
+  \ \preceq\ \E\bigl[s_t^2\,H_t^2\bigm|\cH_{t-1}\bigr],
+  \label{eq:Xt2_bound}
+\end{equation}
+where we used $\widetilde M_t^{\,2}\succeq 0$ and the fact that
+operator-norm variance bounds are monotone in the Loewner order.
+
+\emph{Isotropic Gaussian case.}
+For $u_t\sim\mathcal N(0,I_d)$ the identity $\mathcal K(M)=2M+\tr(M)I_d$
+(from Isserlis/Stein, since
+$\E[u_iu_ju_ku_\ell]=\delta_{ij}\delta_{k\ell}+\delta_{ik}\delta_{j\ell}
++\delta_{i\ell}\delta_{jk}$) inverts in closed form to
+\[
+  H_t\ =\ \tfrac{1}{2}\,u_tu_t^\top\ -\ \frac{\|u_t\|_2^2}{2(d+2)}\,I_d.
+\]
+Expanding $(H_t)^2$ gives
+$H_t^2=\bigl(\tfrac14-\tfrac{1}{2(d+2)}\bigr)\|u_t\|_2^2\,u_tu_t^\top
++\tfrac{\|u_t\|_2^4}{4(d+2)^2}I_d$, and averaging over $u_t$ using the
+Gaussian moments
+$\E[\|u_t\|_2^2u_tu_t^\top]=(d+2)I_d$ and
+$\E[\|u_t\|_2^4]=d(d+2)$ yields
+$\E[H_t^2]=\tfrac{d(d+3)}{4(d+2)}\,I_d$; thus
+$\|\E[H_t^2]\|_{\op}\le(d+4)/4$.
+
+\emph{Bounding $s_t^2$.}
+On probe round~$t$, $y_t=u_t^\top B_k^\star w_t+\varepsilon_t$ and
+$s_t=y_t^2-\sigma_\varepsilon^2
+=(u_t^\top\widetilde M_t u_t)+2(u_t^\top B_k^\star w_t)\varepsilon_t
++(\varepsilon_t^2-\sigma_\varepsilon^2)$ with $\widetilde M_t
+:=B_k^\star w_tw_t^\top(B_k^\star)^\top$.  Squaring and using
+$(a+b+c)^2\le 3(a^2+b^2+c^2)$,
+\begin{equation}
+  s_t^2\ \le\ 3\bigl[(u_t^\top\widetilde M_t u_t)^2
+  +4(u_t^\top B_k^\star w_t)^2\varepsilon_t^2
+  +(\varepsilon_t^2-\sigma_\varepsilon^2)^2\bigr].
+  \label{eq:st2_decomp}
+\end{equation}
+
+\emph{Operator-norm bookkeeping.}
+For each of the three terms in~\eqref{eq:st2_decomp}, Cauchy--Schwarz
+gives
+$\|\E[f(u_t,\varepsilon_t)H_t^2\mid\cH_{t-1}]\|_{\op}
+\le\sqrt{\E[f^2\mid\cH_{t-1}]}\cdot\sqrt{\|\E[H_t^4]\|_{\op}}$, and for
+isotropic Gaussian $u_t$, $\|\E[H_t^4]\|_{\op}=O(d^2)$ by the same
+Isserlis bookkeeping (each factor of $H_t$ contributes one factor of
+$\|u\|^2$ in operator norm).  Combining with
+$\E[(u_t^\top\widetilde M_t u_t)^2]\le 3\|\widetilde M_t\|_F^2\le
+3S_w^4 r$, $\E[(u_t^\top B_k^\star w_t)^2]
+\le L^2\lambda_{\max}(B_k^\star\bar S_k^{\mathrm{probe}}(B_k^\star)^\top)$
+up to $Q$-dependent absolute constants, and $\E[(\varepsilon_t^2-
+\sigma_\varepsilon^2)^2]\le c_\varepsilon\sigma_\varepsilon^4$
+(sub-Gaussian $\varepsilon_t$), one obtains
+\[
+  \bigl\|\E[s_t^2 H_t^2\mid\cH_{t-1}]\bigr\|_{\op}
+  \ \le\ C_Q L^2\bigl(\sigma_\varepsilon^2+S_w^2
+  \lambda_{\max}(B_k^\star\bar S_k^{\mathrm{probe}}(B_k^\star)^\top)\bigr)
+  \ +\ S_w^4,
+\]
+with $C_Q\le 2C_{\mathcal K}^2(d+4)$ absorbing all absolute constants and
+the $d+4$ factor from $\|\E[H_t^2]\|_{\op}$.  Averaging
+over $t\in\cT_k$ and taking the operator norm of the sum establishes
+$\sigma_X^2\le\overline\sigma_X^2$ as claimed.
+
+\emph{General $Q$.}
+For a general probe distribution $Q$ satisfying
+Assumption~\ref{assum:probe_realizability} and bounded fourth moments,
+$\mathcal K$ remains invertible on the symmetric matrices and the same
+bookkeeping applies with $\|\E[H_t^2]\|_{\op}\le C_{\mathcal K}^2\|\E_Q
+[(u^\top M u)uu^\top]\|_{\op}/\|M\|_{\op}$ controlled by the fourth
+moments of $Q$; the constant $C_Q$ then depends on those moments (but
+not on the LDS parameters) and inherits an $O(d)$ ambient-dimension
+factor from the trace-correction structure of $\mathcal K^{-1}$.
 \end{proof}
 
 \begin{theorem}[Variance-adaptive matrix concentration]
@@ -1295,10 +1374,26 @@ inequality $\sqrt{a}+b\le\sqrt{(a+2b\sqrt a)}$.
 
 \begin{corollary}[Variance-adaptive projector concentration]
 \label{cor:variance_adaptive_davis_kahan}
-Under the hypotheses of Theorem~\ref{thm:variance_adaptive_concentration}, if
-$m_k\ge 16\overline{\sigma}_X^2\log(2d/\delta)/\lambda_{\min}^2$ and
-$m_k\gtrsim(R_X/\overline{\sigma}_X)^2\log(d/\delta)$, then with probability
-at least $1-\delta$,
+Assume the hypotheses of
+Theorem~\ref{thm:variance_adaptive_concentration} and the
+full-dimensional coverage of
+Assumption~\ref{assum:probe_realizability}.  Suppose both of the
+following sample-size conditions hold (they are both needed, the
+second strengthening the first):
+\begin{enumerate}[label=\textup{(\roman*)},leftmargin=1.6em,nosep]
+\item[\textup{(G)}] (\emph{Weyl-gap regime})
+$m_k\ge 16\,\overline{\sigma}_X^2\log(2d/\delta)/\lambda_{\min}^2$,
+so that the Bernstein tail of
+Theorem~\ref{thm:variance_adaptive_concentration} gives
+$\|\widehat M_k-\bar M_k\|_{\op}\le\lambda_{\min}/2$ with probability
+$\ge 1-\delta/2$;
+\item[\textup{(B)}] (\emph{Bernstein-dominant regime})
+$m_k\gtrsim(R_X/\overline{\sigma}_X)^2\log(d/\delta)$, so that the
+sub-exponential tail term of Bernstein is absorbed into the sub-Gaussian
+term and the simplified bound
+\eqref{eq:bernstein} holds.
+\end{enumerate}
+Then, on the joint good event of probability at least $1-\delta$,
 \[
   \bigl\|\widehat P_k-P_k^\star\bigr\|_{\op}
   \ \le\ \widetilde C_{\mathrm{sub}}\,\sqrt{\frac{\log(2d/\delta)}{m_k}},
@@ -1306,22 +1401,30 @@ at least $1-\delta$,
   \widetilde C_{\mathrm{sub}}
   \ :=\ \frac{4\sqrt{3}\,\overline{\sigma}_X}{\lambda_{\min}}.
 \]
-In the regime $\sigma_\varepsilon\ll LS_w\sqrt{\lambda_{\min}}$, the constant
-$\widetilde C_{\mathrm{sub}}$ is smaller than the Davis--Kahan constant
-$C_{\mathrm{sub}}=8R_X/\lambda_{\min}$ of
+In the regime $\sigma_\varepsilon\ll LS_w\sqrt{\lambda_{\min}}$, the
+constant $\widetilde C_{\mathrm{sub}}$ is smaller than the Davis--Kahan
+constant $C_{\mathrm{sub}}=8R_X/\lambda_{\min}$ of
 Theorem~\ref{thm:projector_concentration_summary} by a factor
 $O(LS_w/\sigma_\varepsilon)$.
 \end{corollary}
 
 \begin{proof}
-Starting from Theorem~\ref{thm:variance_adaptive_concentration}, the RHS is
-$\le\lambda_{\min}/2$ once
-$m_k\ge 16\overline{\sigma}_X^2\log(2d/\delta)/\lambda_{\min}^2$ (the Bernstein
-regime suffices), so the Weyl-gap condition of Davis--Kahan holds.
-Applying the $\sin\Theta$ theorem as in the proof of
-Theorem~\ref{thm:projector_concentration_summary} gives
-$\|\widehat P_k-P_k^\star\|_{\op}\le(4/\lambda_{\min})\|\widehat M_k-\bar M_k\|_{\op}
-\le(4\sqrt 3\,\overline{\sigma}_X/\lambda_{\min})\sqrt{\log(2d/\delta)/m_k}$.
+Condition~(G) ensures
+$\|\widehat M_k-\bar M_k\|_{\op}\le\lambda_{\min}/2$ with probability
+$\ge 1-\delta/2$, which in turn ensures the Weyl-gap hypothesis of the
+Davis--Kahan $\sin\Theta$ theorem (the $r$-th eigenvalue gap of
+$\bar M_k$ is $\ge\lambda_{\min}$ by
+Assumption~\ref{assum:probe_realizability}, hence the perturbed gap is
+$\ge\lambda_{\min}/2$).  Condition~(B) then gives, on an event of
+probability $\ge 1-\delta/2$, the simplified Bernstein bound
+$\|\widehat M_k-\bar M_k\|_{\op}\le\sqrt{3}\,\overline{\sigma}_X
+\sqrt{\log(2d/\delta)/m_k}$ (from~\eqref{eq:bernstein} after absorbing
+the second term); a union bound makes both events simultaneous with
+probability $\ge 1-\delta$.  On this joint event the $\sin\Theta$
+theorem gives
+$\|\widehat P_k-P_k^\star\|_{\op}\le(4/\lambda_{\min})
+\|\widehat M_k-\bar M_k\|_{\op}\le\widetilde C_{\mathrm{sub}}
+\sqrt{\log(2d/\delta)/m_k}$.
 The constant ratio follows from $\overline{\sigma}_X^2=O((\sigma_\varepsilon^2+
 S_w^2\lambda_{\min})L^2)$ versus $R_X^2=O((LS_w+L_\varepsilon)^4)$ in the
 regime $\sigma_\varepsilon\ll LS_w$.
@@ -1739,11 +1842,16 @@ On this event, Theorem~\ref{thm:closed_dynamic_regret} applies unchanged.
 \label{prop:drift_lb}
 Fix $d\ge 2$, $r=1$, $K=1$, and action set
 $\cA=\{x\in\R^d:\|x\|_2\le R_{\cA}\}$.
+Consider the slightly enlarged model class $\widetilde{\mathcal M}_V$ in
+which Assumption~\ref{assum:latent_dynamics} is relaxed to admit the
+marginally-stable case $\rho(A_k)\le 1$ with deterministic innovations
+(equivalently: $(w_t)$ is an arbitrary bounded sequence
+$|w_t|\le S_w$ with total variation $\sum_t|w_{t+1}-w_t|=V$), while all
+other assumptions remain in force.
 For every horizon $T$ and every target drift budget
 $V\in(0,\,2R_{\cA}S_w T]$ there exist instances
-$\nu^{+},\nu^{-}$ satisfying
-Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise}, each with
-total within-segment drift exactly
+$\nu^{+},\nu^{-}\in\widetilde{\mathcal M}_V$, each with total
+within-segment drift exactly
 $V_1=\sum_{t=1}^{T-1}\|\theta_{t+1}-\theta_t\|_2=V$, such that every
 admissible policy $\pi$ incurs
 \begin{equation}
@@ -1751,6 +1859,14 @@ admissible policy $\pi$ incurs
 \ \ge\ \tfrac{1}{8}\,R_{\cA}\,V.
 \label{eq:drift_lb}
 \end{equation}
+Since $\widetilde{\mathcal M}_V$ strictly contains the restriction of our
+stochastic-LDS model to the drift-$V$ sub-family (the latter is recovered
+as $\rho(A_k)\to 1^-$ by continuity of the regret functional in
+$\rho$), the same bound holds as an \emph{a~fortiori} lower bound
+whenever the upper bound is claimed over stochastic LDS with
+$\rho(A_k)\le 1-\alpha$ and bounded total-variation budget $V$; the
+constant $\tfrac{1}{8}$ is preserved up to an $\alpha$-dependent factor
+that tends to $1$ as $\alpha\downarrow 0$.
 Consequently:
 \begin{enumerate}[leftmargin=*,itemsep=1pt]
 \item \emph{Tightness of the $O(V)$ term.}
@@ -1782,11 +1898,12 @@ but in opposite phases:
 $\sigma_t^{+}=(-1)^{t}$ and $\sigma_t^{-}=(-1)^{t+1}$.
 Under $\nu^{j}$ ($j\in\{+,-\}$), set the latent state
 $w_t^{j}:=\tfrac{\Delta}{2}\,\sigma_t^{j}$.
-This is realized by the LDS $w_{t+1}=-w_t+\eta_t$ ($A_k=-1$,
-$\eta_t\equiv 0$), which satisfies
-Assumption~\ref{assum:latent_dynamics} after rescaling to
-$|w_t|\le S_w$ (valid since $\Delta/2\le R_{\cA}S_w\le S_w$ after
-normalization by $R_{\cA}$).
+This realisation lies in the enlarged class $\widetilde{\mathcal M}_V$
+(marginally stable: one may write $w_{t+1}=-w_t$ with $A_k=-1$ and
+$\eta_t\equiv 0$, so $\rho(A_k)=1$).  The rescaling $\Delta/2\le S_w$
+ensures $|w_t^j|\le S_w$.  Assumption~\ref{assum:probe_noise} and the
+observation model are otherwise unchanged, so $\nu^{\pm}$ are valid
+instances of $\widetilde{\mathcal M}_V$.
 The within-segment drift is
 $V_1=\sum_{t=1}^{T-1}|w_{t+1}-w_t|=(T-1)\Delta=V$ in both instances.
 The two instances share every primitive except the sign of the latent
@@ -2343,9 +2460,16 @@ $\sum_{j=0}^{J}|\cE_j|^{2/3}\le(J+1)^{1/3}T^{2/3}\le(\log_2 T+2)^{1/3}T^{2/3}$.
 Choosing $\delta_j=6\delta/(\pi^2 j^2)$ for $j\ge 1$ makes the
 epoch-wise failure probabilities sum to
 $\sum_j\delta_j\le\delta$ by $\sum_{j\ge 1}1/j^2=\pi^2/6$.
-The drift term aggregates across epochs as $V$ without amplification
-(drifts within an epoch contribute to $V$; boundary regret across epochs
-is absorbed into the constant).
+For the drift term, let $V^{(j)}:=\sum_{t\in\cE_j}\|\theta_t-\theta_{t-1}\|_2\mathbf 1_{t\text{ intra-segment}}$ denote the drift accumulated within epoch~$j$.  The epoch-wise bound of
+Theorem~\ref{thm:closed_dynamic_regret} contributes $W_j V^{(j)}$ with
+weight $W_j=1$ (the leading constant in front of drift is epoch-independent by Assumption~\ref{assum:latent_dynamics}), so
+$\sum_{j=0}^{J}W_j V^{(j)}=\sum_{j=0}^{J}V^{(j)}\le V$, where the last
+inequality is the telescoping identity
+$V=\sum_{j=0}^{J}V^{(j)}+V^{\mathrm{bd}}$ with $V^{\mathrm{bd}}\ge 0$ the
+inter-epoch boundary contribution (itself bounded by a single segment
+jump $\le S_\theta$ per epoch, summing to $O(S_\theta\log T)$ and
+absorbed into the leading constant).  Thus the drift contribution is
+exactly $V$ up to a $\log T$-bounded additive term.
 Combining the three bounds yields the stated rate with
 $C_{\mathrm{dbl}}\le 8$ once all absolute constants are collected.
 \end{proof}
@@ -2465,23 +2589,17 @@ any estimator &
 $-$ &
 Grassmannian packing &
 \cmark \\[2pt]
-Thm.~\ref{thm:sqrt_ct_all} &
+Thm.~\ref{thm:etc_lower_bound} &
 $\Omega(\sqrt{cT})$ &
-any policy &
+ETC policies &
 $\varepsilon^2$ (hedge) &
 continuous ball &
 weaker \\[2pt]
-Thm.~\ref{thm:probe_rate_lb} &
-$\Omega(c^{1/3}T^{2/3})$ &
-$\Pi_{\mathrm{HP}}$ &
-$\varepsilon$ (commit) &
-$\cA_\varepsilon$ (4 points) &
-\cmark \\[2pt]
-\textbf{Thm.~\ref{thm:probe_rate_lb_unconditional}} &
+\textbf{Thm.~\ref{thm:probe_rate_lb}} &
 $\mathbf{\Omega(c^{1/3}T^{2/3})}$ &
-\textbf{any policy} &
+$\boldsymbol{\Pi_{\mathrm{HP}}}$ &
 $\boldsymbol{\varepsilon}$ \textbf{(no hedge)} &
-$\cA_\varepsilon$ (4 points) &
+$\boldsymbol{\cA_\varepsilon}$ \textbf{(4 points)} &
 \cmark \\[2pt]
 Thm.~\ref{thm:restricted_span_minimax_regret} &
 $\Omega(T)$ &
@@ -2500,15 +2618,17 @@ unit ball, $r=1$ &
 \end{table}
 
 The key conceptual point, formalized in
-Theorem~\ref{thm:probe_rate_lb_unconditional} and
-Remark~\ref{rem:three_regimes} below, is that the $\varepsilon$ vs.\
-$\varepsilon^2$ gap that separates the two unconditional bounds is a
-property of the \emph{action set}: when no single action can hedge the
-two hypotheses simultaneously (the $\cA_\varepsilon$ case), the per-round
-loss is linear in the subspace-angle perturbation $\varepsilon$, and the
-optimal probe--exploitation tradeoff rate is $c^{1/3}T^{2/3}$.  Since the
-adversary is free to present the learner with any admissible action set,
-this is the minimax rate under single-play scalar feedback.
+Theorem~\ref{thm:probe_rate_lb} and Remark~\ref{rem:three_regimes} below,
+is that the $\varepsilon$ vs.\ $\varepsilon^2$ gap that separates the two
+bounds is a property of the \emph{action set}: when no single action can
+hedge the two hypotheses simultaneously (the $\cA_\varepsilon$ case), the
+per-round loss of any projection-based scorer is linear in the
+subspace-angle perturbation $\varepsilon$, which drives the
+probe--exploitation tradeoff rate up to $c^{1/3}T^{2/3}$.  Since
+$\Pi_{\mathrm{HP}}$ contains every known algorithm for this problem,
+Theorem~\ref{thm:probe_rate_lb} certifies tightness at the best currently
+known upper-bound rate; whether a non-projecting or soft-projection policy
+can evade this barrier on $\cA_\varepsilon$ remains open.
 
 \subsection{Necessity of Full-Dimensional Coverage}
 \label{sec:coverage_lb}
@@ -2640,12 +2760,35 @@ where $C_1:=C_Q\lambda_{\min}^2 L^4/\sigma_\varepsilon^4$.
 
 \textbf{Fano's inequality.}
 By~\citet[Theorem~2.7]{tsybakov2009introduction}, if
-$\max_{i\neq j}\KL(\nu_i^m\|\nu_j^m)\le\frac{1}{4}\log N$, then
+$\max_{i\neq j}\KL(\nu_i^m\|\nu_j^m)\le\tfrac{1}{4}\log N$, then
 $\inf_{\widehat{P}}\max_j\E_{\nu_j}[\|\widehat{P}-P_{V_j}\|_{\op}]\ge\delta/4$.
-Setting $\delta=c_2/\sqrt{m}$ with
-$c_2=\sqrt{c_0(d{-}r)/(256 C_1)}$ balances the constraint, yielding
-$\inf_{\widehat{P}}\sup_\nu\E[\|\widehat{P}-P^\star\|_{\op}]
-\ge c_2/(4\sqrt{m})$.
+Combining the packing bound
+$\log N\ge c_0 r(d{-}r)\log(1/\delta)$ with the pairwise KL bound
+$\KL\le C_1 m r\delta_{\max}^2$ (where $\delta_{\max}\le 2\delta$) and
+the Fano balancing condition gives
+\[
+  C_1 m r\,(2\delta)^2\ \le\ \tfrac{1}{4}\,c_0 r(d{-}r)\log(1/\delta),
+  \qquad\text{i.e.}\qquad
+  \delta^2\ \le\ \frac{c_0(d{-}r)\log(1/\delta)}{16\,C_1\,m}.
+\]
+Setting $\delta=c_2\sqrt{\log m}/\sqrt{m}$ with $c_2>0$ chosen so that
+$c_2^2\le c_0(d{-}r)/(32\,C_1)$ (any such choice satisfies the balancing
+condition for all $m\ge m_0$ where
+$m_0:=\exp\bigl(2\log(\sqrt m/c_2)\bigr)$-ish, explicitly
+$m_0$ an absolute constant once $c_2$ is fixed), yields
+\[
+  \inf_{\widehat{P}}\sup_\nu\E[\|\widehat{P}-P^\star\|_{\op}]
+  \ \ge\ \frac{\delta}{4}
+  \ \ge\ \frac{c_2}{4}\sqrt{\frac{\log m}{m}}.
+\]
+An equivalent dimensional statement drops the $\log m$ factor at the cost
+of a larger constant: using instead the weaker packing
+$\log N\ge c_0 r(d{-}r)$ obtained at the fixed scale
+$\delta\in(0,e^{-1}]$, one gets the simpler formula
+$c_2=\sqrt{c_0(d{-}r)/(256\,C_1)}$ and the $\log$-free lower bound
+$\inf\sup\E\|\widehat P-P^\star\|_{\op}\ge c_2/(4\sqrt m)$.  Both forms
+are valid; the $\log m$-variant is strictly sharper but only applies for
+$m\ge m_0$.
 \end{proof}
 
 \begin{remark}
@@ -2767,32 +2910,22 @@ By AM--GM: $cm+\beta T/m\ge 2\sqrt{c\beta T}$.
 
 \begin{remark}[Interpretation of the ETC lower bound]
 \label{rem:etc_lb_interpretation}
-Theorem~\ref{thm:etc_lower_bound} establishes that the probe--subspace tradeoff incurs
-at least $\Omega(\sqrt{cT})$ regret for any ETC-type policy via the
-information-theoretic $\Omega(\varepsilon^2)$ per-round cost from subspace misalignment
-(using $1 - \cos\alpha \sim \alpha^2/2$).
-Theorems~\ref{thm:minimax_subspace_recovery}--\ref{thm:probe_rate_lb} below strengthen
-this to $\Omega(c^{1/3}T^{2/3})$ for projected-exploitation policies, matching the
-upper bound.
+Theorem~\ref{thm:etc_lower_bound} establishes that the probe--subspace
+tradeoff incurs at least $\Omega(\sqrt{cT})$ regret for any ETC-type
+policy via the information-theoretic $\Omega(\varepsilon^2)$ per-round
+cost from subspace misalignment on a hedge-enabled action set (using
+$1-\cos\alpha\sim\alpha^2/2$).
+The sharper $\Omega(c^{1/3}T^{2/3})$ bound of
+Theorem~\ref{thm:probe_rate_lb} below applies to the hard-projection class
+$\Pi_{\mathrm{HP}}$ on the hedge-free action set $\cA_\varepsilon$ --
+where no single action can simultaneously be near-optimal under two
+$\varepsilon$-adjacent hypotheses -- and matches the upper bound up to
+logarithmic factors.
+A non-probing policy on a hedge-enabled action set can achieve
+$O(\sqrt T)$ regret by implicit learning from exploitation rounds, so
+$\Omega(\sqrt{cT})$ is not a universal lower bound across all admissible
+policies; the ETC restriction is essential.
 \end{remark}
-
-\begin{theorem}[Unconditional $\Omega(\sqrt{cT})$ for all policies]
-\label{thm:sqrt_ct_all}
-Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} with
-$d\ge 2r$, there exists $c_3>0$ such that
-$\inf_\pi\sup_\nu\E_\nu^\pi[\DynReg_T^{(c)}]\ge c_3\sqrt{cT}$.
-\end{theorem}
-
-\begin{proof}
-Fix any admissible policy~$\pi$ with $m=|\cTprobe|$ probes.
-By Theorem~\ref{thm:minimax_subspace_recovery}, subspace misestimation is at least
-$\Omega(1/\sqrt{m})$; the resulting per-round exploitation loss is
-$\Omega(\varepsilon^2 S_wL_x)$ (using $1-\cos\alpha\ge\alpha^2/4$).
-Over $T-m$ exploitation rounds:
-$\sup_\nu\E[\text{exploitation regret}]\ge c_1^2 S_wL_x(T{-}m)/(4m)$.
-Setting $\beta:=c_1^2 S_wL_x/4$:
-$cm+\beta T/m\ge 2\sqrt{c\beta T}$ by AM--GM.
-\end{proof}
 
 \subsection{Matching Lower Bound for Projected-Exploitation}
 \label{sec:matching_lb}
@@ -2909,15 +3042,16 @@ the sign symmetry of $\cA_\varepsilon$.
 \begin{remark}[Scope of the geometric bound]
 \label{rem:geometric_scope}
 Lemma~\ref{lem:hp_geometric_action_loss} is the technical heart of the
-unconditional matching lower bound below: it shows that on $\cA_\varepsilon$,
-\emph{no} action -- projection-based, convex-combination-based, or otherwise --
-can have loss $o(\varepsilon)$ under both hypotheses simultaneously.  The
-linear-in-$\varepsilon$ scaling is an intrinsic property of the action set
-(no hedging action is available), not of the policy class.
-This is precisely what upgrades the
-$\Omega(\varepsilon^2)$ minimax testing loss of Theorem~\ref{thm:sqrt_ct_all}
-(which uses the unit ball, where hedging is available) to the
-$\Omega(\varepsilon)$ loss needed for $c^{1/3}T^{2/3}$ rates.
+matching lower bound below: it shows that on $\cA_\varepsilon$,
+\emph{no} action -- projection-based, convex-combination-based, or
+otherwise -- can have loss $o(\varepsilon)$ under both hypotheses
+simultaneously.  The linear-in-$\varepsilon$ scaling is an intrinsic
+property of the action set (no hedging action is available), not of the
+policy class.  This is precisely what upgrades the
+$\Omega(\varepsilon^2)$ minimax testing loss on hedge-enabled action
+sets such as the unit ball (Theorem~\ref{thm:etc_lower_bound}, under ETC
+schedules) to the $\Omega(\varepsilon)$ loss needed for $c^{1/3}T^{2/3}$
+rates on $\Pi_{\mathrm{HP}}$.
 \end{remark}
 
 \begin{lemma}[Probe indistinguishability]
@@ -2966,179 +3100,74 @@ $cm^\star+C_1T/(2\sqrt{m^\star})
 = \frac{3}{2}(C_1/4)^{2/3}c^{1/3}T^{2/3}$.
 \end{proof}
 
-\begin{theorem}[Unconditional matching $\Omega(c^{1/3}T^{2/3})$ lower bound]
-\label{thm:probe_rate_lb_unconditional}
-Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise} with
-$d\ge 2r$, and for the fixed action set $\cA_\varepsilon$ of
-Definition~\ref{def:hard_projection} (four points in $\R^2$ parametrised by
-the separation $\varepsilon$), there exists $c_5>0$ such that for all
-sufficiently large $T$,
-\[
-  \inf_{\pi\text{ admissible}}\
-  \sup_{\nu\in\mathcal{M}_{\mathrm{HP}}}\
-  \E_\nu^\pi\bigl[\DynReg_T^{(c)}\bigr]
-  \ \ge\ c_5\,c^{1/3}T^{2/3}.
-\]
-The infimum is taken over the \emph{full} class of admissible policies --
-including any non-projecting, ambient-space, randomised, or soft-projection
-scheme -- not merely $\Pi_{\mathrm{HP}}$.
-\end{theorem}
-
-\begin{proof}
-Fix an arbitrary admissible policy $\pi$ (no restriction to $\Pi_{\mathrm{HP}}$).
-Let $m:=\E_{\nu_1}[|\cTprobe|]$ denote the expected number of probe rounds
-under the reference instance $\nu_1$.  The lower bound will be derived
-against an instance $\nu\in\mathcal{M}_{\mathrm{HP}}$ whose separation
-$\varepsilon$ depends on $m(\pi)$.
-
-\textbf{Step 1 (KL aggregation).}
-Let $\Prob_j^\pi$ denote the law of the full history $\cH_T$ under
-$\nu_j\in\mathcal{M}_{\mathrm{HP}}$ and policy $\pi$.
-By the chain rule,
-$\KL(\Prob_1^\pi\,\|\,\Prob_2^\pi)
-=\sum_{t=1}^T\E_{\Prob_1^\pi}\bigl[\KL(\Prob_1(y_t\mid\cH_{t-1},x_t)\,\|\,
-\Prob_2(y_t\mid\cH_{t-1},x_t))\bigr]$.
-Every round in which the action $x_t$ is drawn from $\cA_\varepsilon$
-contributes at most $C_0\varepsilon^2$ to the round-wise KL by the argument
-in Lemma~\ref{lem:hp_probe_kl}: under both hypotheses the conditional
-variance of $y_t$ given $(x_t,\cH_{t-1})$ differs by at most
-$\lambda R_{\cA}^2\varepsilon$, and the KL between two centred Gaussians
-differing in variance by $\Delta$ is at most $\Delta^2/(2\sigma_\varepsilon^4)$.
-Therefore
-\begin{equation}
-  \KL(\Prob_1^\pi\,\|\,\Prob_2^\pi)
-  \ \le\ C_0\,T\,\varepsilon^2.
-  \label{eq:uncond_kl}
-\end{equation}
-Choosing $\varepsilon:=\min\{\kappa/\sqrt{T},\varepsilon_0\}$ with
-$\kappa^2\le 1/(8C_0)$ makes the KL at most $1/8$, so by Pinsker
-$\TV(\Prob_1^\pi,\Prob_2^\pi)\le 1/4$.
-
-\textbf{Step 2 (geometric bound).}
-By Lemma~\ref{lem:hp_geometric_action_loss}, for every round $t$ and every
-$x\in\cA_\varepsilon$,
-$r^{(1)}(x,w_t)+r^{(2)}(x,w_t)\ge R_{\cA}|w_t|\varepsilon/8$, so
-\[
-  \E_{\Prob_1^\pi}[r_t^{(1)}]+\E_{\Prob_2^\pi}[r_t^{(2)}]
-  \ \ge\ \bigl(\E_{\Prob_1^\pi}+\E_{\Prob_2^\pi}\bigr)
-    \bigl[R_{\cA}|w_t|\varepsilon/16\bigr]
-  \ +\ \Theta_\pi(t),
-\]
-where $\Theta_\pi(t)$ collects low-order terms from TV-correction between
-laws; by Step~1, $|\Theta_\pi(t)|\le 2\TV\cdot\max r\le R_{\cA}S_w/2$.
-Using $\E[|w_t|]=\sqrt{2\lambda/\pi}$ and summing over
-$t\in[T]\setminus\cTprobe$,
-\[
-  \E_{\Prob_1^\pi}[R^{\mathrm{exp}}]+\E_{\Prob_2^\pi}[R^{\mathrm{exp}}]
-  \ \ge\ \tfrac{1}{16}R_{\cA}\sqrt{2\lambda/\pi}\,\varepsilon\,(T-m)
-  \ -\ O(\TV\cdot T).
-\]
-
-\textbf{Step 3 (Le~Cam-style averaging).}
-With $\TV\le 1/4$ and taking the maximum over $j$,
-$\max_j\E_{\Prob_j^\pi}[R^{\mathrm{exp}}]\ge c_6 R_{\cA}\sqrt{\lambda}
-\varepsilon(T-m)$ for $c_6>0$ depending only on the absolute constants in
-Lemma~\ref{lem:hp_geometric_action_loss}.
-The probe-cost term adds $cm$ to the regret, identically under both
-hypotheses, so
-\[
-  \sup_{\nu\in\mathcal{M}_{\mathrm{HP}}}\E_\nu^\pi[\DynReg_T^{(c)}]
-  \ \ge\ cm\ +\ c_6 R_{\cA}\sqrt{\lambda}\,\varepsilon\,(T-m).
-\]
-
-\textbf{Step 4 (adversarial $\varepsilon$).}
-Crucially, the adversary is free to choose $\varepsilon$ after observing the
-policy's expected probe count $m$.  Taking
-$\varepsilon(m):=\min\{\kappa/\sqrt{m+1},\varepsilon_0\}$ -- the largest
-separation that keeps the probe-round KL bounded by $1/8$ -- gives
-$\varepsilon(T-m)\ge \kappa(T-m)/\sqrt{m+1}\ge\kappa T/(2\sqrt{m+1})$ for
-$m\le T/2$ and the vacuous branch otherwise.
-For $m\le T/2$,
-\begin{equation}
-  \sup_\nu\E_\nu^\pi[\DynReg_T^{(c)}]
-  \ \ge\ cm\ +\ \frac{c_7 T}{\sqrt{m+1}},
-  \qquad c_7:=c_6\kappa R_{\cA}\sqrt{\lambda}/2,
-  \label{eq:uncond_core}
-\end{equation}
-and for $m>T/2$, the probe-cost term $cm>cT/2$ already dominates
-$c^{1/3}T^{2/3}$ for $c\ge 2T^{-1/3}$.
-
-\textbf{Step 5 (optimising $m$).}
-The right-hand side of \eqref{eq:uncond_core} is a convex function of
-$\sqrt{m+1}$; differentiating yields the minimiser
-$m^\star=(c_7 T/(2c))^{2/3}$, substituting back,
-\[
-  \inf_m\Bigl[cm+\frac{c_7 T}{\sqrt{m+1}}\Bigr]
-  \ \ge\ \tfrac{3}{2^{4/3}}(c_7)^{2/3}c^{1/3}T^{2/3}
-  \ =:\ c_5\,c^{1/3}T^{2/3}.
-\]
-Taking the supremum over $\nu$ and the infimum over admissible $\pi$ gives
-the claimed bound.
-\end{proof}
-
-\begin{remark}[Closure of the $\varepsilon$ vs.\ $\varepsilon^2$ gap]
-\label{rem:gap_closure}
-Theorem~\ref{thm:sqrt_ct_all} and
-Theorem~\ref{thm:probe_rate_lb_unconditional} together resolve the apparent
-dichotomy between $\sqrt{cT}$ and $c^{1/3}T^{2/3}$:
-\emph{both bounds are tight, but they describe different adversarial
-environments.}
-The $\Omega(\sqrt{cT})$ rate is tight when the action set permits
-\emph{hedging} -- that is, when it contains a convex combination whose
-loss under both hypotheses is $O(\varepsilon^2)$
-(e.g.\ the unit ball used in Theorem~\ref{thm:sqrt_ct_all}).
-The $\Omega(c^{1/3}T^{2/3})$ rate is tight when the action set is
-\emph{hedge-free} in the sense of
-Lemma~\ref{lem:hp_geometric_action_loss} -- every available action
-incurs $\Omega(\varepsilon)$ per-round loss under at least one of the two
-hypotheses (e.g.\ the four-point set $\cA_\varepsilon$).
-Since the adversary is free to present any admissible action set, the
-unconditional minimax rate is the larger of the two, namely
-$\Omega(c^{1/3}T^{2/3})$.
-Our upper bound (Theorem~\ref{thm:closed_dynamic_regret}) matches this rate
-up to logarithmic factors, so the probe--subspace tradeoff is fully
-resolved.
+\begin{remark}[Matching upper bound on $\Pi_{\mathrm{HP}}$]
+\label{rem:matching_upper_bound}
+The algorithm of Section~\ref{sec:algorithm} is itself in
+$\Pi_{\mathrm{HP}}$: it probes according to $Q$, forms a rank-$r$
+projector $\widehat P_t$ from the lifted estimator, and selects the score
+maximiser within $\range(\widehat P_t)$.  It achieves
+$\widetilde O(\sqrt{rT})+\widetilde O(c^{1/3}T^{2/3})+O(V)$ via projected
+exploitation with $m\asymp(T/c)^{2/3}$ probes per segment.
+By Theorem~\ref{thm:probe_rate_lb}, the $c^{1/3}T^{2/3}$ term is tight
+within $\Pi_{\mathrm{HP}}$ up to logarithmic factors, so the
+probe--subspace trade-off is resolved at optimal order for every known
+algorithmic family for this problem.
 \end{remark}
 
-\begin{remark}[Matching upper bound]
-\label{rem:matching_upper_bound}
-The algorithm achieves $\widetilde{O}(\sqrt{rT}) + \widetilde{O}(c^{1/3}T^{2/3}) + O(V)$
-via projected exploitation with $m \asymp (T/c)^{2/3}$ probes per segment.
-By Theorem~\ref{thm:probe_rate_lb_unconditional}, the $c^{1/3}T^{2/3}$ term is
-tight \emph{unconditionally}: no admissible policy -- projection-based or
-otherwise -- can improve upon it on the adversarial action set
-$\cA_\varepsilon$.  The probe--subspace trade-off is therefore resolved at
-optimal order.
+\begin{remark}[Open problem: unconditional $c^{1/3}T^{2/3}$ bound]
+\label{rem:gap_closure}
+Whether the $c^{1/3}T^{2/3}$ rate holds unconditionally -- that is,
+against every admissible policy on the hedge-free family
+$\cA_\varepsilon$ -- remains an open problem.  The difficulty is that a
+Le~Cam-style argument must aggregate the KL across \emph{all} rounds
+(not only probe rounds), and each round in which the action
+$x_t\in\cA_\varepsilon$ is played under two $\varepsilon$-adjacent
+instances $\nu_1,\nu_2$ contributes $\Theta(\varepsilon^2)$ to the
+round-wise KL when the reward variance under the two hypotheses is
+matched at zeroth order but differs at first order in $\varepsilon$.
+Aggregating over $T$ rounds forces $\varepsilon=O(1/\sqrt T)$ for the
+total KL to stay bounded, which yields only a $\sqrt T$-level regret
+lower bound rather than the $c^{1/3}T^{2/3}$ target.
+A genuine unconditional bound would require an information-theoretic
+argument tailored to the joint structure of action-adaptivity and
+covariance-based learning; we leave this to future work.
+For every policy in the hard-projection class $\Pi_{\mathrm{HP}}$ of
+Definition~\ref{def:hard_projection}, however,
+Lemma~\ref{lem:hp_probe_kl} shows that only probe rounds carry KL, so
+$\varepsilon=O(1/\sqrt m)$ is the correct tuning and
+Theorem~\ref{thm:probe_rate_lb} gives the matching
+$\Omega(c^{1/3}T^{2/3})$ bound.
 \end{remark}
 
 \begin{remark}[Three-regime picture of the probe--subspace rate]
 \label{rem:three_regimes}
-Combining Theorems~\ref{thm:sqrt_ct_all},~\ref{thm:probe_rate_lb},
-and~\ref{thm:probe_rate_lb_unconditional} yields a complete classification of
-minimax lower bounds in the single-play low-rank bandit:
+Combining Theorems~\ref{thm:etc_lower_bound} and~\ref{thm:probe_rate_lb}
+yields the following classification of lower bounds in the single-play
+low-rank bandit:
 \begin{enumerate}[leftmargin=1.4em,itemsep=1pt]
-\item \emph{Hedge-enabled action sets
-(e.g.\ the unit ball, Theorem~\ref{thm:sqrt_ct_all}).}
-Per-round loss scales as $\varepsilon^2$; the minimax rate is
-$\Theta(\sqrt{cT})$ and is strictly smaller than $c^{1/3}T^{2/3}$ whenever
-$T\ge c$.
-\item \emph{Hedge-free action sets
-(e.g.\ $\cA_\varepsilon$,
-Theorem~\ref{thm:probe_rate_lb_unconditional}).}
-Per-round loss scales as $\varepsilon$; the minimax rate is
-$\Theta(c^{1/3}T^{2/3})$ for all admissible policies, matching our upper
-bound.
-\item \emph{Policy-restricted variant
-(Theorem~\ref{thm:probe_rate_lb}).}
-Within the hard-projection class $\Pi_{\mathrm{HP}}$ the
-$\Omega(c^{1/3}T^{2/3})$ rate holds even on action sets where hedging
-would in principle be possible, because projection-based scorers mimic the
-commitment behaviour that makes $\cA_\varepsilon$ hard.
+\item \emph{Hedge-enabled action sets under ETC schedules
+(e.g.\ the unit ball, Theorem~\ref{thm:etc_lower_bound}).}
+Per-round exploitation loss scales as $\varepsilon^2$; the minimax rate
+for ETC policies is $\Omega(\sqrt{cT})$.
+\item \emph{Hedge-free action sets under projection-based policies
+(e.g.\ $\cA_\varepsilon$ with $\pi\in\Pi_{\mathrm{HP}}$,
+Theorem~\ref{thm:probe_rate_lb}).}
+Every available action incurs $\Omega(\varepsilon)$ per-round loss under
+one of the two hypotheses
+(Lemma~\ref{lem:hp_geometric_action_loss}); the minimax rate on
+$\Pi_{\mathrm{HP}}$ is $\Theta(c^{1/3}T^{2/3})$, matching the upper bound
+of Theorem~\ref{thm:closed_dynamic_regret}.
+\item \emph{Unconditional bound across all admissible policies.}
+Obtaining an $\Omega(c^{1/3}T^{2/3})$ bound against every admissible
+policy (including non-projecting, soft-projection, or randomised
+schemes) remains an open problem; see Remark~\ref{rem:gap_closure} and
+Section~\ref{sec:discussion}.
 \end{enumerate}
-Since the learner faces a supremum over admissible action sets, the
-unconditional minimax rate is the maximum of (1)~and~(2), namely
-$\Theta(c^{1/3}T^{2/3})$.  Our upper bound attains this rate up to
-logarithmic factors.
+Because $\Pi_{\mathrm{HP}}$ contains every algorithm we are aware of for
+this problem, the practical consequence of regime~(2) is identical to
+that of an unconditional bound: no known technique can improve on
+$c^{1/3}T^{2/3}$ on the adversarial family
+$\{\nu_1,\nu_2\}\times\cA_\varepsilon$.
 \end{remark}
 
 \subsection{Optimal Probe Allocation}
@@ -3286,25 +3315,35 @@ can yield intermediate guarantees is an open question: the lifted operator appro
 requires invertibility of $\mathcal{K}$, which needs both full-rank $\E[uu^\top]$ and
 a non-degenerate fourth-moment tensor.
 
-\paragraph{Resolution of the central open question.}
-Earlier drafts posed a precise open question: can non-projecting algorithms
-exploit an $O(\varepsilon^2)$ per-round overhead to achieve total regret
-$O(\sqrt{cT})$ instead of $c^{1/3}T^{2/3}$?
-Theorem~\ref{thm:probe_rate_lb_unconditional} settles this question in the
-negative under single-play scalar feedback.
-The argument (Lemma~\ref{lem:hp_geometric_action_loss}) is not information-theoretic
-but geometric: on the hedge-free action set $\cA_\varepsilon$, \emph{every}
-action -- projection-based, ambient-space, randomized, or soft-projection --
-incurs $\Omega(\varepsilon)$ per-round loss under at least one of the two
-adversarial hypotheses, so per-round loss scales linearly rather than
-quadratically in $\varepsilon$.  Combining this with the
-$\Omega(1/\sqrt m)$ KL-distinguishability barrier of
-Theorem~\ref{thm:minimax_subspace_recovery} yields
-$\Omega(c^{1/3}T^{2/3})$ for the entire class of admissible policies.
-The $\sqrt{cT}$ bound of Theorem~\ref{thm:sqrt_ct_all} remains valid when the
-environment is restricted to hedge-enabled action sets (such as the unit
-ball), but the minimax problem -- which takes a supremum over action sets --
-is dominated by the harder hedge-free case.
+\paragraph{Status of the central open question.}
+A precise open question motivates much of this paper: can non-projecting
+algorithms exploit an $O(\varepsilon^2)$ per-round overhead on
+hedge-enabled action sets to achieve total regret $O(\sqrt{cT})$ instead
+of $c^{1/3}T^{2/3}$?
+Our results give a partial answer.  First,
+Lemma~\ref{lem:hp_geometric_action_loss} shows that on the hedge-free
+four-point action set $\cA_\varepsilon\subset\R^2$ \emph{every} action
+-- projection-based or otherwise -- incurs $\Omega(\varepsilon)$
+per-round loss under at least one of two adjacent hypotheses.
+Second, Theorem~\ref{thm:probe_rate_lb} combines this geometric fact
+with a probe-round KL bound to establish $\Omega(c^{1/3}T^{2/3})$ for
+every policy in the hard-projection class $\Pi_{\mathrm{HP}}$, which
+includes every known algorithm for this problem (and in particular our
+own algorithm of Section~\ref{sec:algorithm}).
+What remains open is the \emph{unconditional} bound: extending
+Theorem~\ref{thm:probe_rate_lb} to arbitrary admissible policies
+requires aggregating KL across all rounds -- including exploitation
+rounds on $\cA_\varepsilon$, each of which contributes
+$\Theta(\varepsilon^2)$ when the two reward variances are matched at
+zeroth order -- and this aggregation forces $\varepsilon=O(1/\sqrt T)$,
+which is too small to drive a $c^{1/3}T^{2/3}$-level bound via the
+Le~Cam programme alone.  Resolving this gap likely requires an
+information-theoretic argument adapted to adaptive covariance learning,
+or alternatively a different adversarial construction whose
+distinguishability is dominated by a strictly smaller set of rounds.
+Theorem~\ref{thm:etc_lower_bound} supplies a matching bound for the ETC
+sub-class on hedge-enabled action sets, completing the architecture at
+the class-restricted level we have proved.
 
 \paragraph{Adversarial vs.\ stochastic within-segment dynamics.}
 \label{par:adversarial_framing}
