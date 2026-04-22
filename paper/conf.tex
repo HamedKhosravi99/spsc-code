@@ -359,50 +359,17 @@ to the statistical gain.
 \end{algorithm}
 
 \paragraph{Adaptive variant (unknown boundaries).}
-SPSC-Adaptive (Alg.~\ref{alg:spsc_adaptive}) removes the oracle
-assumption by detecting segment changes online. It maintains two
-non-overlapping rolling-window estimators $\widehat M_t^{\mathrm{recent}},
-\widehat M_t^{\mathrm{past}}$ of the probe-time second moment and
-triggers a subspace reset whenever the detector statistic
-\begin{equation}
-S_t := \bigl\|\widehat M_t^{\mathrm{recent}} - \widehat M_t^{\mathrm{past}}\bigr\|_\op
-\label{eq:detector}
-\end{equation}
-exceeds a calibrated threshold $b$. After a fire the algorithm enters
-a \textsc{recovery} phase that deploys $m_{\mathrm{relearn}}$
-consecutive probes to build a fresh subspace from scratch and then
-returns to \textsc{normal} probe-exploitation interleaving. The
-threshold is chosen so that, with probability $1-\delta_{\mathrm{FA}}$,
-no false alarm occurs across the horizon, while every true change of
-size $\Delta_k \ge 2b$ is detected within delay
-$D_{\max} = 2n/\mu + \tau_{\mathrm{burn}}$.
-
-\begin{algorithm}[t]
-\caption{\textbf{SPSC-Adaptive}: unknown boundaries via CUSUM-style detection}
-\label{alg:spsc_adaptive}
-\begin{algorithmic}[1]
-\State \textbf{Input:} probe rate $\mu\in(0,1)$, detection window $n$,
-       threshold $b$, burn-in $\tau_{\mathrm{burn}}$, relearning budget $m_{\mathrm{relearn}}$, $W$, $\lambda$.
-\State $\mathtt{phase}\leftarrow\textsc{recovery}$;\ $\mathtt{rec}\leftarrow 0$;\ $\widehat M_{\mathrm{acc}}\leftarrow 0$.
-\For{$t=1,\dots,T$}
-  \If{$\mathtt{phase} = \textsc{recovery}$}\Comment{block-probe to rebuild subspace}
-      \State probe: draw $u_t$, play $x_t=u_t$, observe $y_t$; update $\widehat M_{\mathrm{acc}}$; $\mathtt{rec}\mathrel{+}= 1$.
-      \If{$\mathtt{rec} = m_{\mathrm{relearn}}$}
-          \State $\widehat U\leftarrow \TopEig_r(\widehat M_{\mathrm{acc}}/m_{\mathrm{relearn}})$;\ reset buffers;\ $\mathtt{phase}\leftarrow\textsc{normal}$.
-      \EndIf
-  \Else\Comment{interleave probes at rate $\mu$}
-      \If{Bernoulli($\mu$) probe round}
-          \State update lifted estimator $\widehat M_{\mathrm{acc}}$ and refresh rolling windows.
-          \If{$S_t > b$ (Eq.~\ref{eq:detector}) and detector is armed}
-              \State $\mathtt{phase}\leftarrow\textsc{recovery}$;\ $\mathtt{rec}\leftarrow 0$;\ reset.
-          \EndIf
-      \Else
-          \State windowed projected ridge-UCB step as in Alg.~\ref{alg:spsc} (exploit branch).
-      \EndIf
-  \EndIf
-\EndFor
-\end{algorithmic}
-\end{algorithm}
+SPSC-Adaptive removes the oracle-boundary assumption by detecting
+segment changes online: it maintains two non-overlapping rolling-window
+estimators $\widehat M_t^{\mathrm{recent}}, \widehat M_t^{\mathrm{past}}$ of
+the probe-time second moment and triggers a subspace reset whenever
+$S_t := \|\widehat M_t^{\mathrm{recent}} - \widehat M_t^{\mathrm{past}}\|_\op$
+exceeds a calibrated threshold $b$. The threshold is chosen so that,
+with probability $1-\delta_{\mathrm{FA}}$, no false alarm occurs across
+the horizon, while every true change of size $\Delta_k \ge 2b$ is
+detected within delay $D_{\max} = 2n/\mu + \tau_{\mathrm{burn}}$. Full
+pseudocode, tuning, and the CUSUM analysis are in
+Appendix~\ref{app:adaptive_algo}.
 
 %% ============================================================
 \section{Regret guarantees}
@@ -424,20 +391,9 @@ The three terms correspond to (i) projected exploitation in $\R^r$,
 (ii) the probe--subspace tradeoff from balancing $cm_k$ against the
 $O(m_k^{-1/2})$ subspace-error price, and (iii) the irreducible
 within-segment drift cost.
+Proof in \S\ref{app:proof_main} (concentration chain in
+\S\ref{app:concentration_proof}).
 \end{theorem}
-
-\begin{proof}[Proof sketch]
-(i) In the projected $r$-dim space, windowed ridge-UCB with radius
-$\beta^{(r,W)}\propto\sqrt{r}$ and the elliptical potential lemma give
-per-segment exploitation regret
-$\le 2\beta_k^{(r,W)}\sqrt{2rn_k L_W}$, summing to $\tilO(r\sqrt{KT})$.
-(ii) Subspace-error contribution per segment is $O(\varepsilon_k n_k)
-\le O(n_k/\sqrt{m_k})$, plus probe cost $cm_k$. Minimising in $m_k$
-yields $m_k^\star\propto \ell_k^{2/3}$ and total cost
-$\tilO(T^{2/3})$. (iii) The windowed estimator pays at most
-$2R_\cA WV$ for within-segment drift, matching the $O(V)$ term.
-Full proof in the companion manuscript (supplementary material).
-\end{proof}
 
 The leading $\tilO(r\sqrt{T})$ term beats the ambient baseline
 $\tilO(d\sqrt{T})$ whenever $r \ll d$; the $\tilO(T^{2/3})$ term is
@@ -452,7 +408,7 @@ If the true rank $r$ is unknown, thresholding $\widehat M_k$
 at $\tau_k = 2R_X\sqrt{\log(2d/\delta)/m_k}$ recovers the true rank
 with probability $\ge 1-\delta$ whenever the population eigengap
 exceeds $4\tau_k$, and the bound \eqref{eq:main_bound} applies
-unchanged.
+unchanged. Proof in \S\ref{app:proof_adaptive_rank}.
 \end{corollary}
 
 \begin{theorem}[Adaptive SPSC]
@@ -462,7 +418,7 @@ Alg.~\ref{alg:spsc_adaptive} achieves the same leading rate
 $\tilO(r\sqrt{T}) + \tilO(T^{2/3}) + O(V)$
 with $O(K)$ lower-order overhead for detection delay and recovery
 phases, and false alarms occur with probability at most
-$\delta_{\mathrm{FA}}$.
+$\delta_{\mathrm{FA}}$. Proof in \S\ref{app:proof_adaptive}.
 \end{theorem}
 
 \begin{theorem}[Class-conditional lower bound in $\Pi_{\mathrm{HP}}$]
@@ -483,6 +439,7 @@ Thus the $T^{2/3}$ probe--subspace tradeoff is tight \emph{within}
 $\Pi_{\mathrm{HP}}$. The statement is class-conditional: it does not
 preclude a non-projecting policy achieving a better tradeoff, and
 constructing or ruling out such a policy is left open.
+Proof in \S\ref{app:proof_lb}.
 \end{theorem}
 
 \emph{Remarks on scope.} The present paper states only the algorithmic
@@ -521,20 +478,16 @@ cost $c{=}0.1$.
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.86\textwidth]{experiment1_synthetic_phase.png}
-  \caption{\textbf{Phase-transition boundary.} Empirical SPSC/LinUCB
-  costed-regret ratio over the $(d,r)$ grid at $T{=}5{,}000$. The
-  crossover $d-r=T^{1/6}$ (dashed) accurately separates the
-  SPSC-wins region (left, ratio $<1$) from the ambient-wins
-  region (right); per-rank curves track $\sqrt{r/d}$ (dotted),
-  matching Theorem~\ref{thm:spsc_regret}.}
+  \caption{\textbf{Phase-transition boundary.} SPSC/LinUCB costed-regret
+  ratio across the $(d,r)$ grid. The crossover $d-r=T^{1/6}$ (dashed)
+  separates SPSC-wins (ratio $<1$) from ambient-wins; per-rank curves
+  track $\sqrt{r/d}$ (dotted), matching Theorem~\ref{thm:spsc_regret}.}
   \label{fig:synthetic-phase}
 \end{figure}
 
-Figure~\ref{fig:synthetic-phase} shows SPSC achieves $13$--$34\%$
-regret reductions whenever $d\ge 45$, and every $r$-curve tracks
-$\sqrt{r/d}$. The crossover is strikingly sharp, giving a
-rule-of-thumb: use SPSC when $d-r\gtrsim T^{1/6}$, ambient LinUCB
-otherwise.
+SPSC achieves $13$--$34\%$ reductions whenever $d\ge 45$ with every
+$r$-curve tracking $\sqrt{r/d}$: use SPSC when
+$d-r\gtrsim T^{1/6}$, ambient LinUCB otherwise.
 
 \subsection{Real-data multi-baseline comparison}
 \label{sec:exp_real}
@@ -584,47 +537,38 @@ MovieLens,      $r{=}10$ & 1.00           & 1.00           & \textbf{0.97} & \te
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{experiment_pendigits_extended.png}
-\caption{\textbf{Pendigits operating-regime grid}
-($T{=}5{,}000$, $K{=}10$, 10 seeds). SPSC and SPSC-Adaptive dominate
-every non-oracle baseline once $d{\ge}55$ and $r{\ge}10$; at $r{=}1$ or
-$d{=}5$ (probe-cost-dominant regime), LinUCB/Restart-LinUCB win,
-consistent with $d-r\gtrsim T^{1/6}$.}
+\caption{\textbf{Pendigits operating-regime grid.}
+SPSC and SPSC-Adaptive dominate every non-oracle baseline once
+$d{\ge}55$ and $r{\ge}10$; at $r{=}1$ or $d{=}5$ LinUCB/Restart-LinUCB
+win, consistent with $d-r\gtrsim T^{1/6}$.}
 \label{fig:pendigits-regime}
 \end{figure}
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.95\textwidth]{experiment_real_satimage_double_rings.png}
-\caption{\textbf{Satimage operating-regime rings}
-($T{=}5{,}000$, $K{=}10$, 10 seeds). Inner/outer rings are SPSC/
-SPSC-Adaptive normalized costed regret vs.\ the best non-oracle
-baseline per $(d,r)$ cell; green means SPSC wins, matching the
-predicted crossover.}
+\caption{\textbf{Satimage operating-regime rings.}
+Inner/outer rings are SPSC/SPSC-Adaptive normalized costed regret
+vs.\ the best non-oracle baseline per $(d,r)$ cell; green means SPSC
+wins, matching the predicted crossover.}
 \label{fig:satimage-regime}
 \end{figure}
 
-On Pendigits, the best cell is $(d{=}105, r{=}10)$: SPSC-Adaptive
-attains $1693{\pm}38$ costed regret vs.\ LinUCB's $3184$ ($-47\%$)
-and Restart-LinUCB's $3152$ ($-46\%$).
-On Satimage, the best cell is $(d{=}105, r{=}10)$: SPSC-Adaptive
-attains $1112{\pm}49$ vs.\ LinUCB's $3484$ ($-68\%$); the closest
-competitor, VOFUL at $2361{\pm}78$, is still $+53\%$ above SPSC-Adaptive.
-On Covertype at $d{=}105, r{=}20$: SPSC-Adaptive $4507{\pm}46$ vs.\
-Restart-LinUCB $5313$ ($-15\%$). Non-low-rank baselines (LinUCB,
-SW-LinUCB, D-LinUCB, Restart-LinUCB) are by construction insensitive
-to $r$ and produce constant regret along each row of the grid.
-Figure~\ref{fig:satimage-winct} aggregates Satimage over all 16
-$(d,r)$ cells: SPSC wins against every non-oracle baseline on the
-large majority of cells.
+At the best cell $(d{=}105, r{=}10)$, SPSC-Adaptive beats LinUCB by
+$-47\%$ on Pendigits and $-68\%$ on Satimage (where the closest
+competitor, VOFUL, is still $+53\%$ above SPSC-Adaptive); at
+$(d{=}105, r{=}20)$ on Covertype it beats Restart-LinUCB by $-15\%$.
+Non-low-rank baselines are by construction $r$-insensitive.
+Figure~\ref{fig:satimage-winct} aggregates Satimage across all 16
+cells: SPSC wins against every non-oracle baseline on the majority.
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.82\textwidth]{satimage_wincount.png}
 \caption{\textbf{Aggregate comparison on Satimage.}
-(a)~Win count: number of $(d,r)$ cells (out of 16) where SPSC
-achieves lower costed regret than each non-oracle baseline.
-(b)~Average SPSC/baseline ratio; values ${<}1$ = SPSC advantage.
-Closest competitor (SW-LinUCB) still yields a $6\%$ average reduction.}
+(a)~Win count across 16 cells per non-oracle baseline.
+(b)~Average SPSC/baseline ratio (${<}1$ = SPSC advantage). Closest
+competitor (SW-LinUCB) still yields a $6\%$ average reduction.}
 \label{fig:satimage-winct}
 \end{figure}
 
@@ -646,22 +590,19 @@ consistent with the robustness predicted by the general bound
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=0.86\textwidth]{experiment_warfarin_extended.png}
-\caption{\textbf{Warfarin clinical dosing} ($d{=}93$, $K{=}8$,
-$T{=}5{,}000$, 10 seeds, 10 baselines).
+\caption{\textbf{Warfarin clinical dosing.}
 SPSC reduces regret by $26$--$32\%$ and SPSC-Adaptive by
-$49$--$69\%$ vs.\ LinUCB uniformly across $r\in\{1,2,3,5,10\}$.
-SPSC-Adaptive is the best non-oracle method at every rank, beating
-the best competitor (LowOFUL, $1441$--$1491$) by $30$--$58\%$.
-Probe overhead is $\le 3.6\%$.}
+$49$--$69\%$ vs.\ LinUCB uniformly across $r\in\{1,2,3,5,10\}$;
+SPSC-Adaptive beats the best competitor (LowOFUL) by $30$--$58\%$,
+with probe overhead $\le 3.6\%$.}
 \label{fig:warfarin}
 \end{figure}
 
 \begin{table}[!htbp]
 \centering
-\caption{\textbf{Warfarin} representative cell ($d{=}93, r{=}3$):
-mean\,$\pm$\,SE costed regret over 10 seeds. SPSC-Adaptive beats the
-best competitor by $3.8$\% at this rank and by $15$--$30$\% at
-adjacent ranks (Table~\ref{tab:app-warfarin}).}
+\caption{\textbf{Warfarin} representative cell ($r{=}3$).
+SPSC-Adaptive beats the best competitor by $3.8$\% at this rank and
+by $15$--$30$\% at adjacent ranks (Table~\ref{tab:app-warfarin}).}
 \label{tab:warfarin_body}
 \small
 \begin{tabular}{lrr}
@@ -678,6 +619,8 @@ Restart-LinUCB                          & $1977 \pm 15$  & $-1.5\%$\\
 SW-LinUCB~\citep{cheung2019learning}    & $2096 \pm 18$  & $+4.5\%$\\
 D-LinUCB~\citep{russac2019weighted}     & $2175 \pm 22$  & $+8.4\%$\\
 LinUCB~\citep{abbasi2011improved}       & $2006 \pm 17$  & ---\\
+LinTS~\citep{agrawal2013thompson}       & $1949 \pm 20$  & $-2.8\%$\\
+SW-LinTS                                & $2060 \pm 22$  & $+2.7\%$\\
 \bottomrule
 \end{tabular}
 \end{table}
@@ -705,8 +648,7 @@ subspace online matters.
 \begin{table}[!htbp]
 \centering
 \caption{\textbf{Adapted stationary low-rank methods} (oracle restarts).
-Costed regret, mean $\pm$ SE over 10 seeds; $d{=}60, r{=}5, K{=}10,
-T{=}5{,}000$. SPSC-Adaptive does \emph{not} require oracle boundaries.}
+SPSC-Adaptive does \emph{not} require oracle boundaries.}
 \label{tab:boss_jedra}
 \small
 \begin{tabular}{lrr}
@@ -736,24 +678,19 @@ reverses sharply.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.76\textwidth]{../exps/experiment_synthetic_extended.png}
-\caption{\textbf{SPSC-Alg.\ 1 vs.\ SPSC-Adaptive.} Sweep~1 (top):
-$d$-sweep with correct oracle boundaries. Sweep~2 (bottom): oracle quality.
-With $K_{\mathrm{real}}{=}5$ true boundaries, we feed Alg.~\ref{alg:spsc}
-$K_{\mathrm{oracle}}\in\{5,10,15,20,30,50\}$ evenly-spaced boundaries;
-extras are false alarms. Alg.~\ref{alg:spsc} resets at every boundary
-and is data-starved; Alg.~\ref{alg:spsc_adaptive} ignores the oracle and
-relies on its detector, so it is unaffected---so Adaptive is preferred
-when boundary information is unreliable.}
+\includegraphics[width=0.76\textwidth]{experiment_synthetic_extended.png}
+\caption{\textbf{SPSC-Alg.\ 1 vs.\ SPSC-Adaptive.} Top: $d$-sweep with
+correct oracle boundaries. Bottom: oracle quality---with
+$K_{\mathrm{real}}{=}5$ true boundaries, Alg.~\ref{alg:spsc} is fed
+$K_{\mathrm{oracle}}\in\{5,\ldots,50\}$ (extras are false alarms) and
+degrades; Alg.~\ref{alg:spsc_adaptive} ignores the oracle and is flat.}
 \label{fig:adaptive}
 \end{figure}
 
-Figure~\ref{fig:adaptive} shows SPSC-Adaptive is robust to oracle
-misspecification: its regret is flat as $K_{\mathrm{oracle}}$ grows,
-while Alg.~\ref{alg:spsc} degrades monotonically and can be $3\times$
-worse at $K_{\mathrm{oracle}}{=}50$. In practice, nobody hands you the
-true change points, and a detector-based reset is strictly safer than
-a schedule.
+SPSC-Adaptive's regret is flat as $K_{\mathrm{oracle}}$ grows, while
+Alg.~\ref{alg:spsc} degrades monotonically and is $3\times$ worse at
+$K_{\mathrm{oracle}}{=}50$---a detector-based reset is strictly safer
+than a schedule when boundaries are unknown.
 
 \subsection{Rank misspecification, probe-rate sensitivity, and take-away}
 \label{sec:exp_sensitivity}
@@ -771,14 +708,11 @@ near period $20$--$30$, matching the theoretical
 $m_k^\star\propto \ell_k^{2/3}$; late-segment subspace error
 correlates monotonically with regret.
 \textbf{Additional datasets.} MNIST, Fashion-MNIST, and MovieLens
-($d\!\in\!\{55,105,200\}$, $r\!\in\!\{5,10,20\}$, $K{=}10, T{=}5{,}000$)
-follow the same pattern
-(Appendix~\ref{app:percell}, Tables~\ref{tab:app-mnist}--\ref{tab:app-movielens}):
-SPSC wins in every cell at $d\ge 105$, with the strongest gain at
-$(d{=}105,r{=}20)$ on MNIST ($-26\%$ vs.\ LinUCB) and Fashion-MNIST
-($-29\%$); MovieLens (only approximately low-rank) is the hardest
-benchmark yet SPSC-Adaptive remains the best non-oracle method in
-every cell.
+follow the same pattern (Appendix~\ref{app:percell}): SPSC wins in
+every cell at $d\ge 105$, peaking at $(d{=}105,r{=}20)$ on MNIST
+($-26\%$) and Fashion-MNIST ($-29\%$); on the harder
+approximately-low-rank MovieLens, SPSC-Adaptive is still the best
+non-oracle method in every cell.
 \textbf{Take-away.} Across eight benchmarks, SPSC delivers
 $\sqrt{r/d}$-style intrinsic-rank savings whenever
 $d-r\gtrsim T^{1/6}$, and never catastrophically fails outside
@@ -814,50 +748,73 @@ verifiable rule-of-thumb consistent with the theory.
 \clearpage
 \appendix
 
-\section{Appendix overview}
-\label{app:overview}
+\section*{Appendix: Table of Contents}
+\label{app:toc}
 
-This appendix supplements the conference body with proofs and the
-full experimental record. Section~\ref{app:proofs} gives self-contained
-proofs of Theorems~\ref{thm:spsc_regret}--\ref{thm:spsc_lb} and
-Corollary~\ref{cor:rank_adaptive}, with the core lifted-moment
-concentration derived from scratch in \S\ref{app:concentration_proof}.
-Section~\ref{app:necessity} proves that each of the three probe-side
-conditions is individually necessary for identifiability, and
-Section~\ref{app:truncation} discharges the bounded-probe assumption
-by truncation of sub-Gaussian probes.
-Section~\ref{app:setup} gives the
-per-dataset setup (construction of segments, feature maps,
-hyperparameters, compute). Section~\ref{app:percell} reports the
-per-cell mean\,$\pm$\,SE costed regret for every $(d,r)$ cell on every
-benchmark in the main body. Section~\ref{app:sensitivity} contains the
-sensitivity and robustness experiments (probe-rate ablation, rank
-misspecification, noise robustness, changepoint frequency, drift
-speed, necessity of full-dimensional coverage, subspace recovery
-rate). Section~\ref{app:sota_compare} gives the Russac et al.\
-benchmark and the Satimage aggregate win counts.
-Section~\ref{app:warfarin_ablation} gives the Warfarin random-subspace
-decomposition. Section~\ref{app:boss_jedra_detail} details the
-BOSS/Jedra oracle-restart adaptation. A companion manuscript,
-included as supplementary material, contains the finite-sample
-variance-adaptive concentration, minimax $1/\sqrt m$ subspace
-recovery, instance-dependent refinements, and the full
-hard-projection lower-bound program.
+\begingroup
+\hypersetup{linkcolor=blue}
+
+\newcommand{\tocentry}[3]{%
+  \noindent\textbf{#1.}\;\hyperref[#2]{#3}\dotfill\hyperref[#2]{p.\,\pageref*{#2}}\par\vspace{2pt}%
+}
+\newcommand{\tocsubentry}[3]{%
+  \noindent\hspace{1.2em}#1\;\hyperref[#2]{#3}\dotfill\hyperref[#2]{p.\,\pageref*{#2}}\par\vspace{1pt}%
+}
+
+\tocentry{A}{app:proofs}{Proofs}
+  \tocsubentry{A.1}{app:prelim}{Preliminaries and notation}
+  \tocsubentry{A.2}{app:concentration_proof}{Concentration of the lifted probe moment}
+  \tocsubentry{A.3}{app:proof_main}{Proof of Theorem~\ref{thm:spsc_regret} (costed dynamic regret)}
+  \tocsubentry{A.4}{app:proof_adaptive_rank}{Proof of Corollary~\ref{cor:rank_adaptive} (rank-adaptive)}
+  \tocsubentry{A.5}{app:proof_adaptive}{Proof of Theorem~\ref{thm:spsc_adaptive} (SPSC-Adaptive)}
+  \tocsubentry{A.6}{app:proof_lb}{Proof of Theorem~\ref{thm:spsc_lb} (class-conditional lower bound)}
+\tocentry{B}{app:necessity}{Necessity of the probe-side conditions}
+\tocentry{C}{app:truncation}{Sub-Gaussian probes via truncation}
+\tocentry{D}{app:adaptive_algo}{SPSC-Adaptive: algorithm and discussion}
+\tocentry{E}{app:setup}{Experimental setup}
+\tocentry{F}{app:percell}{Per-cell tables: every dataset, every cell}
+\tocentry{G}{app:sensitivity}{Sensitivity and robustness studies}
+\tocentry{H}{app:sota_compare}{Russac benchmark and Satimage aggregates}
+\tocentry{I}{app:warfarin_ablation}{Warfarin: random-subspace ablation}
+\tocentry{J}{app:boss_jedra_detail}{BOSS/Jedra adaptation}
+
+\endgroup
+
+\vspace{0.5em}
+\noindent
+A companion manuscript, included as supplementary material, contains
+the finite-sample variance-adaptive concentration, minimax
+$1/\sqrt m$ subspace recovery, instance-dependent refinements, and
+the full hard-projection lower-bound program.
 
 \section{Proofs}
 \label{app:proofs}
 
-We prove the four statements in \S\ref{sec:theory}: the costed dynamic
-regret bound for SPSC (Thm.~\ref{thm:spsc_regret}), the rank-adaptive
-corollary (Cor.~\ref{cor:rank_adaptive}), the adaptive SPSC bound
-under CUSUM detection (Thm.~\ref{thm:spsc_adaptive}), and the
-class-conditional lower bound inside $\Pi_{\mathrm{HP}}$
-(Thm.~\ref{thm:spsc_lb}). The load-bearing concentration result for
-the lifted probe moment is derived from scratch in
-\S\ref{app:concentration_proof}; the windowed self-normalised bound
-and elliptical potential are stated as F2 and F3 with citations.
-Constants that do not affect leading order are absorbed into
-$\tilO(\cdot)$.
+This section proves the four statements of \S\ref{sec:theory} in
+dependency order:
+\begin{enumerate}[leftmargin=*,itemsep=1pt,topsep=2pt]
+  \item \S\ref{app:prelim} fixes notation and establishes the
+    probe-time excitation lemma that all proofs depend on.
+  \item \S\ref{app:concentration_proof} derives the load-bearing
+    lifted-probe concentration from scratch: closed-form inverse of the
+    probe operator $\mathcal K$, quadratic-measurement identity, matrix
+    Bernstein/Freedman, and the projector error via Davis--Kahan.
+  \item \S\ref{app:proof_main} proves the main costed regret bound
+    (Thm.~\ref{thm:spsc_regret}) via a three-piece decomposition
+    (projected exploitation, probe--subspace tradeoff, drift).
+  \item \S\ref{app:proof_adaptive_rank} derives the rank-adaptive
+    corollary (Cor.~\ref{cor:rank_adaptive}) via Weyl's inequality on
+    the matrix-Bernstein bound.
+  \item \S\ref{app:proof_adaptive} lifts the guarantee to
+    SPSC-Adaptive (Thm.~\ref{thm:spsc_adaptive}) by controlling the
+    CUSUM detector.
+  \item \S\ref{app:proof_lb} proves the class-conditional lower bound
+    inside $\Pi_{\mathrm{HP}}$ (Thm.~\ref{thm:spsc_lb}) via a four-step
+    Le Cam construction.
+\end{enumerate}
+The windowed self-normalised bound (F2) and the elliptical potential
+lemma (F3) are cited rather than reproduced. Constants that do not
+affect leading order are absorbed into $\tilO(\cdot)$.
 
 \subsection{Preliminaries and notation}
 \label{app:prelim}
@@ -1188,7 +1145,7 @@ the $\tilO$ notation; the constant $B$ in the theorem statement uses
 the same $\log(d/\delta)$ factor up to absolute constants.)\qed
 
 \subsection{Proof of Corollary~\ref{cor:rank_adaptive}}
-\label{app:proof_rank}
+\label{app:proof_adaptive_rank}
 
 By Theorem~\ref{thm:matrix_bernstein_conf}, with probability
 $\ge 1-\delta$ every eigenvalue of $\widehat M_k$ is within
@@ -1442,6 +1399,94 @@ $\log(T/\delta)$ factor absorbed into $\tilO(\cdot)$.
 
 A fully sub-Gaussian argument without truncation is possible
 \citep[cf.][]{tropp2015introduction} but yields the same rate.
+
+\section{SPSC-Adaptive: algorithm and discussion}
+\label{app:adaptive_algo}
+
+This appendix gives the pseudocode for SPSC-Adaptive, explains the
+design choices (detector form, threshold, recovery phase, burn-in),
+and ties the tuning back to the guarantee of
+Theorem~\ref{thm:spsc_adaptive}. The main-body algorithm
+(Alg.~\ref{alg:spsc}) assumes oracle segment boundaries; SPSC-Adaptive
+recovers them from probe data.
+
+\paragraph{Detector.}
+At each probe round the algorithm maintains two non-overlapping
+rolling-window estimators of the lifted second moment:
+$\widehat M_t^{\mathrm{recent}}$ over the last $n$ probes and
+$\widehat M_t^{\mathrm{past}}$ over the segment-accumulated probes
+preceding that window. The statistic
+\begin{equation}
+S_t := \bigl\|\widehat M_t^{\mathrm{recent}} - \widehat M_t^{\mathrm{past}}\bigr\|_\op
+\label{eq:detector}
+\end{equation}
+is compared to a threshold $b$; whenever $S_t > b$ the algorithm
+declares a change and enters a \textsc{recovery} phase.
+
+\paragraph{Recovery phase.}
+Recovery deploys $m_{\mathrm{relearn}}$ consecutive probe rounds with
+no exploitation. The block-probe design achieves two things: (i) by
+Proposition~\ref{prop:segment_factorization_conf}, $m_{\mathrm{relearn}}$
+back-to-back probes produce a subspace estimate $\widehat U$ with
+projector error
+$\|\widehat P - P^\star\|_\op = O(1/\sqrt{m_{\mathrm{relearn}}})$ on a
+$1-\delta$ event; (ii) by zeroing out stale buffers it prevents the
+windowed ridge estimator from carrying information from the previous
+regime into the new one. After $m_{\mathrm{relearn}}$ rounds the
+algorithm transitions back to \textsc{normal} probe--exploitation
+interleaving with probe rate $\mu$.
+
+\paragraph{Threshold calibration and detection delay.}
+Under $H_0$ (no change), matrix Freedman applied to the two windows
+gives $\Pr(S_t > 2\eta_{\mathrm{det}}) \le \delta_{\mathrm{FA}}/T$ with
+$\eta_{\mathrm{det}} = C_{\mathrm{sub}}\sqrt{\log(dT/\delta_{\mathrm{FA}})/n}$;
+choosing $b = 2\eta_{\mathrm{det}}$ and union-bounding gives at most
+$\delta_{\mathrm{FA}}$ false alarms across the horizon. Under $H_1$ at
+time $\tau_k$, a separation $\Delta_k \ge 2b$ forces a fire within
+delay $D_{\max} = 2n/\mu + \tau_{\mathrm{burn}}$ — the $2n/\mu$ term is
+the time for the recent window to refill with post-change probes, and
+$\tau_{\mathrm{burn}}$ is a short arm-in period after recovery that
+prevents the detector from firing on its own freshly-reset state.
+The overall regret overhead is $2R_\cA S_w\sum_k D_k = O(K
+W_{\mathrm{det}})$, which is lower-order in the rate of
+Theorem~\ref{thm:spsc_adaptive}.
+
+\begin{algorithm}[H]
+\caption{\textbf{SPSC-Adaptive}: unknown boundaries via CUSUM-style detection}
+\label{alg:spsc_adaptive}
+\begin{algorithmic}[1]
+\State \textbf{Input:} probe rate $\mu\in(0,1)$, detection window $n$,
+       threshold $b$, burn-in $\tau_{\mathrm{burn}}$, relearning budget $m_{\mathrm{relearn}}$, $W$, $\lambda$.
+\State $\mathtt{phase}\leftarrow\textsc{recovery}$;\ $\mathtt{rec}\leftarrow 0$;\ $\widehat M_{\mathrm{acc}}\leftarrow 0$.
+\For{$t=1,\dots,T$}
+  \If{$\mathtt{phase} = \textsc{recovery}$}\Comment{block-probe to rebuild subspace}
+      \State probe: draw $u_t$, play $x_t=u_t$, observe $y_t$; update $\widehat M_{\mathrm{acc}}$; $\mathtt{rec}\mathrel{+}= 1$.
+      \If{$\mathtt{rec} = m_{\mathrm{relearn}}$}
+          \State $\widehat U\leftarrow \TopEig_r(\widehat M_{\mathrm{acc}}/m_{\mathrm{relearn}})$;\ reset buffers;\ $\mathtt{phase}\leftarrow\textsc{normal}$.
+      \EndIf
+  \Else\Comment{interleave probes at rate $\mu$}
+      \If{Bernoulli($\mu$) probe round}
+          \State update lifted estimator $\widehat M_{\mathrm{acc}}$ and refresh rolling windows.
+          \If{$S_t > b$ (Eq.~\ref{eq:detector}) and detector is armed}
+              \State $\mathtt{phase}\leftarrow\textsc{recovery}$;\ $\mathtt{rec}\leftarrow 0$;\ reset.
+          \EndIf
+      \Else
+          \State windowed projected ridge-UCB step as in Alg.~\ref{alg:spsc} (exploit branch).
+      \EndIf
+  \EndIf
+\EndFor
+\end{algorithmic}
+\end{algorithm}
+
+\paragraph{Tuning used in experiments.}
+Across all experiments reported in \S\ref{sec:experiments} and the
+appendix we use $\mu=0.1$, $n=W_{\mathrm{det}}=50$,
+$\tau_{\mathrm{burn}}=100$, $m_{\mathrm{relearn}}=30$, and
+$b$ set from the CUSUM threshold $\mathtt{cusum\_threshold}=3.0$.
+These are held fixed across datasets and $(d,r)$ cells; no
+per-dataset retuning is done. Sensitivity to the probe rate $\mu$
+and the detection window $n$ is reported in
+\S\ref{app:sensitivity}.
 
 \section{Experimental setup}
 \label{app:setup}

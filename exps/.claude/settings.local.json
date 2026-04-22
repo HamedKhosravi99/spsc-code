@@ -88,7 +88,20 @@
       "Bash(cp paper/journal.tex paper/journal.pdf paper/journal.aux paper/journal.bbl paper/journal.blg paper/journal.log paper/references.bib journal/paper/)",
       "Bash(cp requirements.txt source/)",
       "Bash(cp requirements.txt conference/)",
-      "Bash(cp requirements.txt journal/)"
+      "Bash(cp requirements.txt journal/)",
+      "Bash(grep -n \"Proof sketch\\\\|begin{proof}\\\\|end{proof}\\\\|\\\\\\\\\\\\\\\\appendix\\\\|Algorithm 2\\\\|alg:adaptive\\\\|\\\\\\\\\\\\\\\\section{\\\\|\\\\\\\\\\\\\\\\subsection{\" conf.tex)",
+      "Bash(grep -n -A2 \"\\\\\\\\\\\\\\\\appendix\" main.tex)",
+      "Bash(grep -n \"\\\\\\\\\\\\\\\\appendix\\\\|\\\\\\\\\\\\\\\\clearpage\\\\|\\\\\\\\\\\\\\\\newpage\" conf.tex)",
+      "Bash(pdftotext -layout conf.pdf /tmp/conf.txt)",
+      "Bash(awk 'BEGIN{p=1} /\\\\f/{p++} /Appendix: Table of Contents/{print p; exit}' /tmp/conf.txt)",
+      "Bash(awk 'BEGIN{p=1} /\\\\f/{p++} /Appendix: Table of Contents/{print \"Main body ends at page\",p-1; exit}' /tmp/conf.txt)",
+      "Bash(awk 'BEGIN{p=1} /\\\\f/{p++} /^References$/{print \"References starts at page\", p; exit}')",
+      "Bash(awk 'BEGIN{p=1} /\\\\f/{p++} /References/{print \"Page:\", p, $0}' /tmp/conf_out.txt)",
+      "Bash(awk 'BEGIN{p=1} /\\\\f/{p++} /References/{print \"Page:\", p; exit}' /tmp/conf_out.txt)",
+      "Bash(grep *)",
+      "Bash(awk 'BEGIN{p=1} /\\\\f/{p++} /^\\\\s*References\\\\s*$/{print \"References page:\", p; exit}')",
+      "Bash(pdftotext -layout /c/Users/hamed/Documents/GitHub/lowrank-bandits/paper/conf.pdf -)",
+      "Bash(awk 'BEGIN{p=1} /\\\\f/{p++} /References/{print \"Page:\", p; exit}' /tmp/out.txt)"
     ]
   }
 }
