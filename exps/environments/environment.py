@@ -43,6 +43,8 @@ class LowRankLDSEnvironment:
         n_actions: int = 80,
         seed: int = 42,
         sigma_eta: float = 0.04,
+        piecewise_constant: bool = False,
+        feature_decay: float = 0.0,
     ):
         self.d = d
         self.r = r
@@ -52,9 +54,9 @@ class LowRankLDSEnvironment:
         self.spectral_radius = spectral_radius
         self.n_actions = n_actions
         self.rng = np.random.default_rng(seed)
-        # sigma_eta: innovation std. Small value + high spectral_radius = slowly-varying theta,
-        # which lets ridge regression track theta_t AND lets the LDS cover all r subspace dims.
         self.sigma_eta = sigma_eta
+        self.piecewise_constant = piecewise_constant
+        self.feature_decay = feature_decay
 
         # Derived constants (accessible to algorithm for concentration bounds)
         self.L_x = 1.0       # action/probe norm bound (unit sphere)
@@ -142,13 +144,20 @@ class LowRankLDSEnvironment:
 
             # Initialize latent state
             wt = self.rng.multivariate_normal(np.zeros(self.r), Sigma_k)
-            for step in range(n_k):
-                self.w[t] = wt
-                self.theta[t] = Bk @ wt
-                t += 1
-                if step < n_k - 1:
-                    eta = self.rng.multivariate_normal(np.zeros(self.r), Sigma_k)
-                    wt = Ak @ wt + eta
+
+            if self.piecewise_constant:
+                for step in range(n_k):
+                    self.w[t] = wt
+                    self.theta[t] = Bk @ wt
+                    t += 1
+            else:
+                for step in range(n_k):
+                    self.w[t] = wt
+                    self.theta[t] = Bk @ wt
+                    t += 1
+                    if step < n_k - 1:
+                        eta = self.rng.multivariate_normal(np.zeros(self.r), Sigma_k)
+                        wt = Ak @ wt + eta
 
         self.S = float(np.max(np.linalg.norm(self.theta, axis=1)))
 
@@ -160,9 +169,14 @@ class LowRankLDSEnvironment:
         """
         Return an n_actions × d matrix of unit-sphere actions for round t.
         Fresh randomness so actions don't repeat.
+        If feature_decay > 0, coordinates are scaled by (i+1)^{-feature_decay}
+        before re-normalizing, concentrating energy in low-index dimensions.
         """
         _rng = rng if rng is not None else self.rng
         raw = _rng.standard_normal((self.n_actions, self.d))
+        if self.feature_decay > 0:
+            scale = np.arange(1, self.d + 1, dtype=float) ** (-self.feature_decay)
+            raw *= scale[np.newaxis, :]
         norms = np.linalg.norm(raw, axis=1, keepdims=True)
         return raw / norms
 

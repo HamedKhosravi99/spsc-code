@@ -1,19 +1,7 @@
 """
 Pendigits Operating Regime: Extended SOTA Comparison (10 methods).
-
-Extends experiment_pendigits_operating_regime.py by adding:
-  4. SPSC-Adaptive  (Algorithm 4 — no oracle segment boundaries)
-  5. SW-LinUCB      (Cheung+ '19)
-  6. D-LinUCB       (Russac+ '19)
-  7. Restart-LinUCB
-  8. LowOFUL        (Jun+ '19 — stationary low-rank)
-  9. VOFUL           (Kim+ '22 — variance-aware low-rank)
- 10. LowRank-Reward
-
-Same grid, same parameters as the original. Bumped seeds from 1 to 10
-for proper statistical comparisons.
-
-Grid: d in {5, 55, 105, 155}, r in {1, 10, 20, 30}
+Grid: d in {5, 55, 105}, r in {1, 10, 20, 30}, 10 seeds.
+Prints per-seed per-method output with wall time.
 """
 
 import os, sys, time, numpy as np
@@ -32,8 +20,7 @@ from algorithm import (
 OUT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # ---------------------------------------------------------------------------
-# Parameters — IDENTICAL to experiment_pendigits_operating_regime.py
-# (except N_SEEDS bumped from 1 to 10 for proper SE)
+# Parameters
 # ---------------------------------------------------------------------------
 N_SEEDS     = 10
 SEG_SIZE    = 500
@@ -44,20 +31,13 @@ LAM         = 0.01
 DELTA       = 0.05
 PROBE_COST  = 0.02
 
-D_VALUES = [5, 55, 105, 155]
+D_VALUES = [5, 55, 105]
 R_VALUES = [1, 10, 20, 30]
 
 METHOD_NAMES = [
-    "Oracle-LinUCB",
-    "SPSC-Alg1",
-    "SPSC-Adaptive",
-    "LowOFUL",
-    "VOFUL",
-    "LowRank-Reward",
-    "SW-LinUCB",
-    "D-LinUCB",
-    "Restart-LinUCB",
-    "LinUCB",
+    "Oracle-LinUCB", "SPSC-Alg1", "SPSC-Adaptive",
+    "LowOFUL", "VOFUL", "LowRank-Reward",
+    "SW-LinUCB", "D-LinUCB", "Restart-LinUCB", "LinUCB",
 ]
 
 METHOD_LABELS = {
@@ -97,156 +77,93 @@ def make_env(seed, d, r):
     )
 
 
-def run_cell(d, r):
-    """Run all 10 methods on one (d, r) cell."""
-    results = {m: [] for m in METHOD_NAMES}
-
-    for seed in range(N_SEEDS):
-        # --- SPSC Algorithm 1 ---
-        env = make_env(seed, d, r)
+def run_method(name, seed, d, r):
+    env = make_env(seed, d, r)
+    if name == "SPSC-Alg1":
         m = SPSC_Algorithm1(env, probe_every=PROBE_EVERY, probe_cost=PROBE_COST,
                             window=WINDOW, lam=LAM, delta=DELTA, seed=seed,
                             normalize_gamma_by_d=True).run()
-        results["SPSC-Alg1"].append(m.cumulative_control_regret[-1])
-
-        # --- SPSC Adaptive ---
-        env = make_env(seed, d, r)
+    elif name == "SPSC-Adaptive":
         m = SPSC_Adaptive(env, probe_every=PROBE_EVERY, probe_cost=PROBE_COST,
                           window=WINDOW, lam=LAM, delta=DELTA, seed=seed,
                           m_relearn=30, det_window=50, cusum_threshold=3.0,
                           warmup=100).run()
-        results["SPSC-Adaptive"].append(m.cumulative_control_regret[-1])
-
-        # --- LinUCB ---
-        env = make_env(seed, d, r)
+    elif name == "LinUCB":
         m = LinUCB(env, lam=LAM, delta=DELTA, seed=seed + 1000).run()
-        results["LinUCB"].append(m.cumulative_control_regret[-1])
-
-        # --- D-LinUCB ---
-        env = make_env(seed, d, r)
-        m = LinUCB(env, lam=LAM, delta=DELTA, seed=seed + 2000,
-                   forgetting_factor=0.998).run()
-        results["D-LinUCB"].append(m.cumulative_control_regret[-1])
-
-        # --- SW-LinUCB ---
-        env = make_env(seed, d, r)
-        m = SWLinUCB(env, window=WINDOW, lam=LAM, delta=DELTA,
-                     seed=seed + 3000).run()
-        results["SW-LinUCB"].append(m.cumulative_control_regret[-1])
-
-        # --- Oracle LinUCB ---
-        env = make_env(seed, d, r)
+    elif name == "Oracle-LinUCB":
         m = OracleLinUCB(env, window=10000, lam=LAM, delta=DELTA,
-                         seed=seed + 4000).run()
-        results["Oracle-LinUCB"].append(m.cumulative_control_regret[-1])
-
-        # --- Restart-LinUCB ---
-        env = make_env(seed, d, r)
+                         seed=seed + 2000).run()
+    elif name == "D-LinUCB":
+        m = LinUCB(env, lam=LAM, delta=DELTA, seed=seed + 3000,
+                   forgetting_factor=0.998).run()
+    elif name == "SW-LinUCB":
+        m = SWLinUCB(env, window=WINDOW, lam=LAM, delta=DELTA,
+                     seed=seed + 4000).run()
+    elif name == "Restart-LinUCB":
         T_env = env.T
         m = RestartLinUCB(env, restart_period=T_env // N_SEGMENTS,
                           lam=LAM, delta=DELTA, seed=seed + 5000).run()
-        results["Restart-LinUCB"].append(m.cumulative_control_regret[-1])
-
-        # --- LowRank-Reward ---
-        env = make_env(seed, d, r)
+    elif name == "LowRank-Reward":
         m = LowRankRewardUCB(env, window=WINDOW, pca_warmup=50,
                               lam=LAM, delta=DELTA, seed=seed + 6000).run()
-        results["LowRank-Reward"].append(m.cumulative_control_regret[-1])
-
-        # --- LowOFUL ---
-        env = make_env(seed, d, r)
+    elif name == "LowOFUL":
         m = LowOFUL(env, lam=LAM, delta=DELTA, seed=seed + 7000,
                      pca_warmup=30, subspace_update_freq=20).run()
-        results["LowOFUL"].append(m.cumulative_control_regret[-1])
-
-        # --- VOFUL ---
-        env = make_env(seed, d, r)
+    elif name == "VOFUL":
         m = VOFUL(env, lam=LAM, delta=DELTA, seed=seed + 8000,
                   pca_warmup=30, subspace_update_freq=20).run()
-        results["VOFUL"].append(m.cumulative_control_regret[-1])
+    return m.cumulative_control_regret[-1]
+
+
+def run_cell(d, r):
+    """Run all 10 methods x N_SEEDS seeds with per-seed per-method printing."""
+    results = {m: [] for m in METHOD_NAMES}
+
+    for seed in range(N_SEEDS):
+        print(f"\n  -- seed {seed+1}/{N_SEEDS} --", flush=True)
+        for name in METHOD_NAMES:
+            t0 = time.time()
+            val = run_method(name, seed, d, r)
+            results[name].append(val)
+            elapsed = time.time() - t0
+            print(f"    {METHOD_LABELS[name]:<30}  regret = {val:>8.0f}   [{elapsed:.1f}s]",
+                  flush=True)
 
     return {m: np.array(results[m]) for m in METHOD_NAMES}
 
 
-# ---------------------------------------------------------------------------
-# Tables
-# ---------------------------------------------------------------------------
-def print_tables(all_results):
+def print_cell_summary(res, d, r):
+    """Print aggregated table for one cell."""
     n = N_SEEDS
+    lin_mean = res["LinUCB"].mean()
+    best_comp_mean = min(res[m].mean() for m in COMPETITORS)
+    best_method = min(COMPETITORS, key=lambda m: res[m].mean())
 
-    for d in D_VALUES:
-        for r in R_VALUES:
-            res = all_results.get((d, r))
-            if res is None:
-                continue
+    print()
+    print("=" * 110)
+    print(f"  Pendigits d={d}, r={r}   ({n} seeds)   lam={LAM}, pe={PROBE_EVERY}, W={WINDOW}")
+    print("-" * 110)
+    print(f"  {'Method':<30}  {'Mean':>8}  {'SE':>8}  {'vs LinUCB':>10}  {'vs Best':>10}  {'Note':>12}")
+    print("-" * 110)
 
-            print()
-            print("=" * 130)
-            print(f"  Pendigits d={d}, r={r}   ({n} seeds)")
-            print("-" * 130)
-            print(f"  {'Method':<30}  {'Mean':>10}  {'SE':>10}  "
-                  f"{'vs LinUCB':>10}  {'vs Best':>10}  {'Note':>12}")
-            print("-" * 130)
+    for method in METHOD_NAMES:
+        arr = res[method]
+        mean = arr.mean()
+        se = arr.std() / np.sqrt(n)
+        vs_lin = (mean / max(lin_mean, 1e-8) - 1) * 100
+        vs_best = (mean / max(best_comp_mean, 1e-8) - 1) * 100
 
-            lin_mean = res["LinUCB"].mean()
-            best_comp_mean = min(res[m].mean() for m in COMPETITORS)
-            best_method = min(COMPETITORS, key=lambda m: res[m].mean())
+        if method in ("SPSC-Alg1", "SPSC-Adaptive"):
+            tag = "<<< WINS" if mean < best_comp_mean else ""
+        elif method == "Oracle-LinUCB":
+            tag = "(oracle)"
+        else:
+            tag = "* best" if method == best_method else ""
 
-            for method in METHOD_NAMES:
-                arr = res[method]
-                mean = arr.mean()
-                se = arr.std() / np.sqrt(n)
-                vs_lin = (mean / max(lin_mean, 1e-8) - 1) * 100
-                vs_best = (mean / max(best_comp_mean, 1e-8) - 1) * 100
-
-                if method in ("SPSC-Alg1", "SPSC-Adaptive"):
-                    tag = "<<< WINS" if mean < best_comp_mean else ""
-                elif method == "Oracle-LinUCB":
-                    tag = "(oracle)"
-                else:
-                    tag = "* best" if method == best_method else ""
-
-                print(f"  {METHOD_LABELS[method]:<30}  {mean:>10.1f}  {se:>10.1f}  "
-                      f"{vs_lin:>+10.1f}%  {vs_best:>+10.1f}%  {tag:>12}")
-
-    # Ratio summary
-    print("\n" + "=" * 100)
-    print("SPSC-Alg1 / LinUCB ratio (* = SPSC wins):")
-    header = f"{'d\\\\r':>6}"
-    for r in R_VALUES:
-        header += f"  {'r='+str(r):>8}"
-    print(header)
-    print("-" * (6 + 10 * len(R_VALUES)))
-    for d in D_VALUES:
-        row = f"{d:>6}"
-        for r in R_VALUES:
-            res = all_results.get((d, r))
-            if res is None:
-                row += f"  {'--':>8}"
-            else:
-                ratio = res["SPSC-Alg1"].mean() / max(res["LinUCB"].mean(), 1e-8)
-                marker = "*" if ratio < 1.0 else " "
-                row += f"  {ratio:>7.3f}{marker}"
-        print(row)
-
-    print(f"\nSPSC-Adaptive / LinUCB ratio (* = Adaptive wins):")
-    header = f"{'d\\\\r':>6}"
-    for r in R_VALUES:
-        header += f"  {'r='+str(r):>8}"
-    print(header)
-    print("-" * (6 + 10 * len(R_VALUES)))
-    for d in D_VALUES:
-        row = f"{d:>6}"
-        for r in R_VALUES:
-            res = all_results.get((d, r))
-            if res is None:
-                row += f"  {'--':>8}"
-            else:
-                ratio = res["SPSC-Adaptive"].mean() / max(res["LinUCB"].mean(), 1e-8)
-                marker = "*" if ratio < 1.0 else " "
-                row += f"  {ratio:>7.3f}{marker}"
-        print(row)
-    print("=" * 100)
+        print(f"  {METHOD_LABELS[method]:<30}  {mean:>8.0f}  {se:>8.0f}  "
+              f"{vs_lin:>+10.1f}%  {vs_best:>+10.1f}%  {tag:>12}")
+    print("=" * 110)
+    sys.stdout.flush()
 
 
 # ---------------------------------------------------------------------------
@@ -309,11 +226,11 @@ def make_bar_figure(all_results, out_path):
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
     print("=" * 80)
-    print("Pendigits Extended SOTA (10 methods)")
+    print("Pendigits Grid (10 methods, 10 seeds)")
     print(f"  d = {D_VALUES}")
     print(f"  r = {R_VALUES}")
-    print(f"  lam={LAM}, probe_every={PROBE_EVERY}, window={WINDOW}")
-    print(f"  N_SEEDS={N_SEEDS}, SEG_SIZE={SEG_SIZE}, N_SEGMENTS={N_SEGMENTS}")
+    print(f"  SEG_SIZE={SEG_SIZE}, N_SEGMENTS={N_SEGMENTS}, "
+          f"lam={LAM}, probe_every={PROBE_EVERY}, window={WINDOW}, c={PROBE_COST}")
     print("=" * 80)
 
     all_results = {}
@@ -328,28 +245,67 @@ if __name__ == "__main__":
                 all_results[(d, r)] = None
                 continue
 
-            t0 = time.time()
-            print(f"\n[{cell_idx}/{total_cells}] Running d={d}, r={r} "
-                  f"(10 methods x {N_SEEDS} seeds) ...", flush=True)
+            t_cell = time.time()
+            print(f"\n\n[{cell_idx}/{total_cells}] ========== d={d}, r={r} ==========",
+                  flush=True)
 
             res = run_cell(d, r)
-            elapsed = time.time() - t0
             all_results[(d, r)] = res
+            print(f"\n  Cell completed in {time.time()-t_cell:.1f}s")
+            print_cell_summary(res, d, r)
 
-            spsc_m = res["SPSC-Alg1"].mean()
-            adapt_m = res["SPSC-Adaptive"].mean()
-            lin_m = res["LinUCB"].mean()
-            loful_m = res["LowOFUL"].mean()
-            voful_m = res["VOFUL"].mean()
-            winner = "SPSC" if spsc_m < lin_m else "LinUCB"
+    # Final ratio summary
+    print("\n" + "=" * 100)
+    print("FINAL SUMMARY: SPSC-Alg1 / LinUCB ratio (* = SPSC wins)")
+    header = f"{'d\\\\r':>6}"
+    for r in R_VALUES:
+        header += f"  {'r='+str(r):>10}"
+    print(header)
+    print("-" * (6 + 12 * len(R_VALUES)))
+    for d in D_VALUES:
+        row = f"{d:>6}"
+        for r in R_VALUES:
+            res = all_results.get((d, r))
+            if res is None:
+                row += f"  {'--':>10}"
+            else:
+                ratio = res["SPSC-Alg1"].mean() / max(res["LinUCB"].mean(), 1e-8)
+                marker = "*" if ratio < 1.0 else " "
+                row += f"  {ratio:>9.3f}{marker}"
+        print(row)
 
-            print(f"  DONE in {elapsed:.1f}s")
-            print(f"    SPSC={spsc_m:.0f}  Adaptive={adapt_m:.0f}  "
-                  f"Lin={lin_m:.0f}  LowOFUL={loful_m:.0f}  VOFUL={voful_m:.0f}")
-            print(f"    SPSC/Lin={spsc_m/max(lin_m,1):.3f}  [{winner}]")
-            sys.stdout.flush()
+    print(f"\nSPSC-Adaptive / LinUCB ratio:")
+    print(header)
+    print("-" * (6 + 12 * len(R_VALUES)))
+    for d in D_VALUES:
+        row = f"{d:>6}"
+        for r in R_VALUES:
+            res = all_results.get((d, r))
+            if res is None:
+                row += f"  {'--':>10}"
+            else:
+                ratio = res["SPSC-Adaptive"].mean() / max(res["LinUCB"].mean(), 1e-8)
+                marker = "*" if ratio < 1.0 else " "
+                row += f"  {ratio:>9.3f}{marker}"
+        print(row)
 
-    print_tables(all_results)
+    print(f"\nSPSC-Alg1 / Best Competitor ratio:")
+    print(header)
+    print("-" * (6 + 12 * len(R_VALUES)))
+    for d in D_VALUES:
+        row = f"{d:>6}"
+        for r in R_VALUES:
+            res = all_results.get((d, r))
+            if res is None:
+                row += f"  {'--':>10}"
+            else:
+                best_comp = min(res[m].mean() for m in COMPETITORS)
+                ratio = res["SPSC-Alg1"].mean() / max(best_comp, 1e-8)
+                marker = "*" if ratio < 1.0 else " "
+                row += f"  {ratio:>9.3f}{marker}"
+        print(row)
+    print("=" * 100)
+
     make_bar_figure(all_results,
                     os.path.join(OUT_DIR, "experiment_pendigits_extended.png"))
     print("\nDone.")

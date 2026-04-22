@@ -2042,3 +2042,273 @@ class VOFUL:
             metrics.costed_regret[t]  = r_opt - r_t
 
         return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: BOSS-adapted (Duong et al. NeurIPS 2024)
+# Learn ONE shared subspace from initial exploration, then exploit forever.
+# Original BOSS assumes fixed subspace + known task boundaries + ellipsoid
+# actions. This adaptation runs in our continuous-action setting.
+# ---------------------------------------------------------------------------
+
+class BOSSAdapted:
+    """
+    BOSS-adapted: explore for m_explore steps to learn a fixed subspace,
+    then run projected LinUCB forever. Never updates subspace.
+    Fails when subspace changes (designed for stationary subspace).
+    """
+
+    def __init__(self, env, m_explore=200, lam=1.0, delta=0.05, seed=1):
+        self.env = env
+        self.m_explore = m_explore
+        self.lam = lam
+        self.delta = delta
+        self.rng = np.random.default_rng(seed)
+        self.sigma_eps = env.sigma_eps
+        self.S = env.S
+        self.L_x = env.L_x
+
+    def run(self):
+        env = self.env
+        d, r, T = env.d, env.r, env.T
+        metrics = RunMetrics(name="BOSS-adapted", T=T)
+
+        M_sum = np.zeros((d, d))
+        U_hat = np.eye(d, r)
+        V_r = self.lam * np.eye(r)
+        b_r = np.zeros(r)
+
+        for t in range(T):
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt = env.optimal_reward(action_set, t)
+
+            if t < self.m_explore:
+                z = self.rng.standard_normal(d)
+                u_t = np.sqrt(d) * z / (np.linalg.norm(z) + 1e-12)
+                y_t = env.step(u_t, t)
+
+                s_t = y_t ** 2 - self.sigma_eps ** 2
+                G_t = K_inverse(s_t * np.outer(u_t, u_t), d)
+                M_sum += G_t
+
+                if t >= 2:
+                    M_hat = M_sum / (t + 1)
+                    eig_vals, eig_vecs = np.linalg.eigh(M_hat)
+                    U_hat = eig_vecs[:, -r:]
+
+                r_t = float(u_t @ env.theta[t])
+                metrics.control_regret[t] = r_opt - r_t
+                metrics.costed_regret[t] = r_opt - r_t
+            else:
+                Z = action_set @ U_hat
+                a_hat = np.linalg.solve(V_r, b_r)
+                beta = self.sigma_eps * np.sqrt(
+                    r * np.log(max(1.0 + t * self.L_x**2 / self.lam, 2.0) / self.delta)
+                ) + np.sqrt(self.lam) * self.S
+                V_inv_Z = np.linalg.solve(V_r, Z.T).T
+                ellip = np.sqrt(np.einsum('ij,ij->i', Z, V_inv_Z))
+                ucb = Z @ a_hat + beta * ellip
+
+                x_dep = action_set[int(np.argmax(ucb))]
+                y_t = env.step(x_dep, t)
+
+                z_dep = U_hat.T @ x_dep
+                V_r += np.outer(z_dep, z_dep)
+                b_r += z_dep * y_t
+
+                r_t = float(x_dep @ env.theta[t])
+                metrics.control_regret[t] = r_opt - r_t
+                metrics.costed_regret[t] = r_opt - r_t
+
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: Jedra-adapted (Jedra et al. ICML 2024)
+# Spectral subspace recovery once, then exploit with projected LinUCB.
+# Original operates on discrete matrix bandits M_{i,j}. This adaptation
+# uses their spectral recovery idea in our continuous vector setting.
+# ---------------------------------------------------------------------------
+
+class JedraAdapted:
+    """
+    Jedra-adapted: two-phase spectral method.
+    Phase 1: uniform random exploration, build second-moment matrix, SVD.
+    Phase 2: projected LinUCB with FIXED subspace (never re-estimated).
+    Fails when subspace changes (designed for stationary low-rank matrix).
+    """
+
+    def __init__(self, env, m_explore=200, lam=1.0, delta=0.05, seed=1):
+        self.env = env
+        self.m_explore = m_explore
+        self.lam = lam
+        self.delta = delta
+        self.rng = np.random.default_rng(seed)
+        self.sigma_eps = env.sigma_eps
+        self.S = env.S
+        self.L_x = env.L_x
+
+    def run(self):
+        env = self.env
+        d, r, T = env.d, env.r, env.T
+        metrics = RunMetrics(name="Jedra-adapted", T=T)
+
+        X_buf = []
+        Y_buf = []
+        U_hat = np.eye(d, r)
+        V_r = self.lam * np.eye(r)
+        b_r = np.zeros(r)
+
+        for t in range(T):
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt = env.optimal_reward(action_set, t)
+
+            if t < self.m_explore:
+                idx = self.rng.integers(len(action_set))
+                x_dep = action_set[idx]
+                y_t = env.step(x_dep, t)
+                X_buf.append(x_dep)
+                Y_buf.append(y_t)
+
+                if t == self.m_explore - 1:
+                    X = np.array(X_buf)
+                    Y = np.array(Y_buf)
+                    M = (X.T * Y) @ X / len(Y)
+                    eig_vals, eig_vecs = np.linalg.eigh(M)
+                    U_hat = eig_vecs[:, -r:]
+
+                r_t = float(x_dep @ env.theta[t])
+                metrics.control_regret[t] = r_opt - r_t
+                metrics.costed_regret[t] = r_opt - r_t
+            else:
+                Z = action_set @ U_hat
+                a_hat = np.linalg.solve(V_r, b_r)
+                beta = self.sigma_eps * np.sqrt(
+                    r * np.log(max(1.0 + t * self.L_x**2 / self.lam, 2.0) / self.delta)
+                ) + np.sqrt(self.lam) * self.S
+                V_inv_Z = np.linalg.solve(V_r, Z.T).T
+                ellip = np.sqrt(np.einsum('ij,ij->i', Z, V_inv_Z))
+                ucb = Z @ a_hat + beta * ellip
+
+                x_dep = action_set[int(np.argmax(ucb))]
+                y_t = env.step(x_dep, t)
+
+                z_dep = U_hat.T @ x_dep
+                V_r += np.outer(z_dep, z_dep)
+                b_r += z_dep * y_t
+
+                r_t = float(x_dep @ env.theta[t])
+                metrics.control_regret[t] = r_opt - r_t
+                metrics.costed_regret[t] = r_opt - r_t
+
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: Linear Thompson Sampling (Agrawal & Goyal 2013)
+# ---------------------------------------------------------------------------
+
+class LinTS:
+    """
+    Linear Thompson Sampling in full ambient space R^d.
+    Samples theta from N(theta_hat, v^2 V^{-1}) and plays greedy.
+    Supports optional forgetting factor for D-LinTS variant.
+    """
+
+    def __init__(self, env, lam=1.0, delta=0.05, seed=1, forgetting_factor=1.0):
+        self.env = env
+        self.lam = lam
+        self.delta = delta
+        self.rng = np.random.default_rng(seed)
+        self.ff = forgetting_factor
+        self.S = env.S
+        self.sigma_eps = env.sigma_eps
+        self.L_x = env.L_x
+
+    def run(self):
+        env = self.env
+        d, T = env.d, env.T
+        metrics = RunMetrics(name="LinTS", T=T)
+
+        V = self.lam * np.eye(d)
+        b = np.zeros(d)
+
+        for t in range(T):
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt = env.optimal_reward(action_set, t)
+
+            theta_hat = np.linalg.solve(V, b)
+            v = self.sigma_eps * np.sqrt(d * np.log(max(t + 1, 2) / self.delta))
+            try:
+                V_inv = np.linalg.solve(V, np.eye(d))
+                theta_tilde = self.rng.multivariate_normal(theta_hat, v**2 * V_inv)
+            except np.linalg.LinAlgError:
+                theta_tilde = theta_hat
+
+            scores = action_set @ theta_tilde
+            x_dep = action_set[int(np.argmax(scores))]
+            y = env.step(x_dep, t)
+
+            V = self.ff * V + np.outer(x_dep, x_dep)
+            b = self.ff * b + x_dep * y
+
+            r_t = float(x_dep @ env.theta[t])
+            metrics.control_regret[t] = r_opt - r_t
+            metrics.costed_regret[t] = r_opt - r_t
+
+        return metrics
+
+
+# ---------------------------------------------------------------------------
+# Baseline: Sliding-Window Linear Thompson Sampling
+# ---------------------------------------------------------------------------
+
+class SWLinTS:
+    """Sliding-window Linear Thompson Sampling."""
+
+    def __init__(self, env, window=200, lam=1.0, delta=0.05, seed=1):
+        self.env = env
+        self.W = window
+        self.lam = lam
+        self.delta = delta
+        self.rng = np.random.default_rng(seed)
+        self.sigma_eps = env.sigma_eps
+
+    def run(self):
+        env = self.env
+        d, T = env.d, env.T
+        metrics = RunMetrics(name="SW-LinTS", T=T)
+        buf = []
+
+        for t in range(T):
+            action_set = env.get_action_set(t, rng=self.rng)
+            r_opt = env.optimal_reward(action_set, t)
+
+            win = [(xs, ys) for xs, ys, s in buf if s >= t - self.W]
+            V = self.lam * np.eye(d)
+            b = np.zeros(d)
+            for xs, ys in win:
+                V += np.outer(xs, xs)
+                b += xs * ys
+
+            theta_hat = np.linalg.solve(V, b)
+            v = self.sigma_eps * np.sqrt(d * np.log(max(t + 1, 2) / self.delta))
+            try:
+                V_inv = np.linalg.solve(V, np.eye(d))
+                theta_tilde = self.rng.multivariate_normal(theta_hat, v**2 * V_inv)
+            except np.linalg.LinAlgError:
+                theta_tilde = theta_hat
+
+            scores = action_set @ theta_tilde
+            x_dep = action_set[int(np.argmax(scores))]
+            y = env.step(x_dep, t)
+
+            buf.append((x_dep, y, t))
+            if len(buf) > self.W + 10:
+                buf = [(xs, ys, s) for xs, ys, s in buf if s >= t - self.W]
+
+            r_t = float(x_dep @ env.theta[t])
+            metrics.control_regret[t] = r_opt - r_t
+            metrics.costed_regret[t] = r_opt - r_t
+
+        return metrics

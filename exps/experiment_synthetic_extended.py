@@ -1,19 +1,9 @@
 """
-Synthetic Operating-Regime Benchmark: Extended SOTA Comparison (10 methods).
+Experiment 1 Extended: Synthetic operating-regime benchmark (10 methods).
 
-Extends experiment1_synthetic_final.py by adding:
-  4. SPSC-Adaptive  (Algorithm 4 — no oracle segment boundaries)
-  5. SW-LinUCB      (Cheung+ '19)
-  6. D-LinUCB       (Russac+ '19)
-  7. Restart-LinUCB
-  8. LowOFUL        (Jun+ '19 — stationary low-rank)
-  9. VOFUL           (Kim+ '22 — variance-aware low-rank)
- 10. LowRank-Reward
-
-Same grid, same parameters, same seeds as the original experiment
-so results are directly comparable.
-
-Grid: d in {5, 10, 20, 30, 45, 60, 80, 100}, r in {1, 3, 5, 10, 15, 20}
+IDENTICAL to experiment1_synthetic_final.py but adds 7 more baselines:
+  SPSC-Adaptive, SW-LinUCB, D-LinUCB, Restart-LinUCB,
+  LowRank-Reward, LowOFUL, VOFUL
 """
 
 import os, sys, time, numpy as np
@@ -21,22 +11,20 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 from matplotlib.colors import TwoSlopeNorm
+from matplotlib.patches import FancyArrowPatch
 
 sys.path.insert(0, os.path.dirname(__file__))
 from environments import LowRankLDSEnvironment
 from algorithm import (
     SPSC_Algorithm1, SPSC_Adaptive, LinUCB, OracleLinUCB,
     SWLinUCB, RestartLinUCB, LowRankRewardUCB, LowOFUL, VOFUL,
-    RunMetrics,
 )
-
-OUT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 # =========================================================================
 # Parameters — IDENTICAL to experiment1_synthetic_final.py
 # =========================================================================
-DS = [5, 50, 100, 500]
-RS = [1, 10, 25, 50, 100]
+DS = [5, 10, 20, 30, 45, 60, 80, 100]
+RS = [1, 3, 5, 10, 15, 20]
 K = 10
 T = 5000
 SIGMA_EPS = 0.3
@@ -52,437 +40,310 @@ FEATURE_DECAY = 1.5
 N_SEEDS = 10
 T_SIXTH = T ** (1.0 / 6.0)
 
-# All 10 methods
-METHOD_NAMES = [
-    "Oracle-LinUCB",
-    "SPSC-Alg1",
-    "SPSC-Adaptive",
-    "LowOFUL",
-    "VOFUL",
-    "LowRank-Reward",
-    "SW-LinUCB",
-    "D-LinUCB",
-    "Restart-LinUCB",
-    "LinUCB",
-]
-
-METHOD_LABELS = {
-    "Oracle-LinUCB":    "Oracle LinUCB",
-    "SPSC-Alg1":        "SPSC Alg.1 (ours)",
-    "SPSC-Adaptive":    "SPSC Adaptive (ours)",
-    "LowOFUL":          "LowOFUL (Jun+ '19)",
-    "VOFUL":            "VOFUL (Kim+ '22)",
-    "LowRank-Reward":   "LowRank-Reward",
-    "SW-LinUCB":        "SW-LinUCB (Cheung+ '19)",
-    "D-LinUCB":         "D-LinUCB (Russac+ '19)",
-    "Restart-LinUCB":   "Restart-LinUCB",
-    "LinUCB":           "LinUCB (Abbasi+ '11)",
-}
-
-METHOD_COLORS = {
-    "Oracle-LinUCB":    "#2ca02c",
-    "SPSC-Alg1":        "#1f77b4",
-    "SPSC-Adaptive":    "#17becf",
-    "LowOFUL":          "#e377c2",
-    "VOFUL":            "#bcbd22",
-    "LowRank-Reward":   "#7f7f7f",
-    "SW-LinUCB":        "#9467bd",
-    "D-LinUCB":         "#ff7f0e",
-    "Restart-LinUCB":   "#8c564b",
-    "LinUCB":           "#d62728",
-}
+OUT_DIR = os.path.dirname(os.path.abspath(__file__))
 
 COMPETITORS = ["LinUCB", "D-LinUCB", "SW-LinUCB", "Restart-LinUCB",
                "LowRank-Reward", "LowOFUL", "VOFUL"]
 
 
-def make_env(seed, d, r):
-    return LowRankLDSEnvironment(
-        d=d, r=r, K=K, T=T, sigma_eps=SIGMA_EPS,
-        spectral_radius=SPEC_RAD, n_actions=N_ACTIONS,
-        sigma_eta=SIGMA_ETA, seed=seed * 100,
-    )
-
-
-def run_method(name, seed, d, r):
-    """Run a single method for a single seed, return final costed regret."""
-    env = make_env(seed, d, r)
-    if name == "SPSC-Alg1":
-        m = SPSC_Algorithm1(env, probe_every=PROBE_EVERY, probe_cost=PROBE_COST,
-                            window=WINDOW, lam=LAM, delta=DELTA, seed=seed,
-                            normalize_gamma_by_d=True).run()
-    elif name == "SPSC-Adaptive":
-        m = SPSC_Adaptive(env, probe_every=PROBE_EVERY, probe_cost=PROBE_COST,
-                          window=WINDOW, lam=LAM, delta=DELTA, seed=seed,
-                          m_relearn=30, det_window=50, cusum_threshold=3.0,
-                          warmup=100).run()
-    elif name == "LinUCB":
-        m = LinUCB(env, lam=LAM, delta=DELTA, seed=seed + 1000).run()
-    elif name == "Oracle-LinUCB":
-        m = OracleLinUCB(env, window=WINDOW, lam=LAM, delta=DELTA,
-                         seed=seed + 2000).run()
-    elif name == "D-LinUCB":
-        m = LinUCB(env, lam=LAM, delta=DELTA, seed=seed + 3000,
-                   forgetting_factor=0.998).run()
-    elif name == "SW-LinUCB":
-        m = SWLinUCB(env, window=WINDOW, lam=LAM, delta=DELTA,
-                     seed=seed + 4000).run()
-    elif name == "Restart-LinUCB":
-        m = RestartLinUCB(env, restart_period=T // K,
-                          lam=LAM, delta=DELTA, seed=seed + 5000).run()
-    elif name == "LowRank-Reward":
-        m = LowRankRewardUCB(env, window=WINDOW, pca_warmup=50,
-                              lam=LAM, delta=DELTA, seed=seed + 6000).run()
-    elif name == "LowOFUL":
-        m = LowOFUL(env, lam=LAM, delta=DELTA, seed=seed + 7000,
-                     pca_warmup=30, subspace_update_freq=20).run()
-    elif name == "VOFUL":
-        m = VOFUL(env, lam=LAM, delta=DELTA, seed=seed + 8000,
-                  pca_warmup=30, subspace_update_freq=20).run()
-    return m.cumulative_costed_regret[-1]
-
-
-def run_cell(d, r, n_seeds):
-    """Run all 10 methods x n_seeds with per-seed per-method timing printed."""
-    results = {m: [] for m in METHOD_NAMES}
-
-    for seed in range(n_seeds):
-        print(f"\n  -- seed {seed+1}/{n_seeds} --", flush=True)
-        for name in METHOD_NAMES:
-            t0 = time.time()
-            val = run_method(name, seed, d, r)
-            results[name].append(val)
-            elapsed = time.time() - t0
-            print(f"    {METHOD_LABELS[name]:<30}  regret = {val:>10.1f}   [{elapsed:.1f}s]",
-                  flush=True)
-
-    return {m: np.array(results[m]) for m in METHOD_NAMES}
+def final_stats(runs, attr="cumulative_costed_regret"):
+    v = np.array([getattr(r, attr)[-1] for r in runs])
+    return v.mean(), v.std() / np.sqrt(len(v))
 
 
 # =========================================================================
-# Tables
+# Run grid
 # =========================================================================
-def print_tables(all_results, d_vals, r_vals):
-    print("\n" + "=" * 140)
-    print("DETAILED RESULTS")
-    print("=" * 140)
+results = {}
 
-    for d in d_vals:
-        for r in r_vals:
-            res = all_results.get((d, r))
-            if res is None:
-                continue
+print(f"Synthetic Operating-Regime Benchmark (Extended — 10 methods)")
+print(f"T={T} K={K} pe={PROBE_EVERY} W={WINDOW} lam={LAM} fd={FEATURE_DECAY}")
+print(f"Grid: d={DS}, r={RS}, seeds={N_SEEDS}")
+print(f"T^(1/6)={T_SIXTH:.2f}")
+print("-" * 80)
 
-            n = len(res["LinUCB"])
-            print()
-            print("=" * 130)
-            print(f"  d={d}, r={r}   ({n} seed{'s' if n>1 else ''})")
-            print("-" * 130)
-            print(f"  {'Method':<30}  {'Mean':>10}  {'SE':>10}  "
-                  f"{'vs LinUCB':>10}  {'vs Best':>10}  {'Note':>12}")
-            print("-" * 130)
+for d in DS:
+    for r in RS:
+        if r >= d:
+            continue
+        t0 = time.time()
+        res = {"SPSC": [], "SPSC-Adaptive": [], "LinUCB": [], "Oracle": [],
+               "SW-LinUCB": [], "D-LinUCB": [], "Restart-LinUCB": [],
+               "LowRank-Reward": [], "LowOFUL": [], "VOFUL": []}
+        for seed in range(N_SEEDS):
+            kw = dict(K=K, T=T, sigma_eps=SIGMA_EPS, spectral_radius=SPEC_RAD,
+                      n_actions=N_ACTIONS, sigma_eta=SIGMA_ETA, seed=seed * 100,
+                      piecewise_constant=True, feature_decay=FEATURE_DECAY)
 
-            lin_mean = res["LinUCB"].mean()
-            best_comp_mean = min(res[m].mean() for m in COMPETITORS)
-            best_method = min(COMPETITORS, key=lambda m: res[m].mean())
+            # --- Original 3 methods (unchanged) ---
+            env = LowRankLDSEnvironment(d=d, r=r, **kw)
+            res["SPSC"].append(SPSC_Algorithm1(
+                env, probe_every=PROBE_EVERY, probe_cost=PROBE_COST,
+                window=WINDOW, lam=LAM, delta=DELTA, seed=seed,
+                normalize_gamma_by_d=True).run())
+            env2 = LowRankLDSEnvironment(d=d, r=r, **kw)
+            res["LinUCB"].append(LinUCB(
+                env2, lam=LAM, delta=DELTA, seed=seed).run())
+            env3 = LowRankLDSEnvironment(d=d, r=r, **kw)
+            res["Oracle"].append(OracleLinUCB(
+                env3, window=WINDOW, lam=LAM, delta=DELTA, seed=seed).run())
 
-            for method in METHOD_NAMES:
-                arr = res[method]
-                mean = arr.mean()
-                se = arr.std() / np.sqrt(max(n, 1))
-                vs_lin = (mean / max(lin_mean, 1e-8) - 1) * 100
-                vs_best = (mean / max(best_comp_mean, 1e-8) - 1) * 100
+            # --- 7 new methods ---
+            env4 = LowRankLDSEnvironment(d=d, r=r, **kw)
+            res["SPSC-Adaptive"].append(SPSC_Adaptive(
+                env4, probe_every=PROBE_EVERY, probe_cost=PROBE_COST,
+                window=WINDOW, lam=LAM, delta=DELTA, seed=seed,
+                m_relearn=30, det_window=50, cusum_threshold=3.0,
+                warmup=100).run())
+            env5 = LowRankLDSEnvironment(d=d, r=r, **kw)
+            res["D-LinUCB"].append(LinUCB(
+                env5, lam=LAM, delta=DELTA, seed=seed + 3000,
+                forgetting_factor=0.998).run())
+            env6 = LowRankLDSEnvironment(d=d, r=r, **kw)
+            res["SW-LinUCB"].append(SWLinUCB(
+                env6, window=WINDOW, lam=LAM, delta=DELTA,
+                seed=seed + 4000).run())
+            env7 = LowRankLDSEnvironment(d=d, r=r, **kw)
+            res["Restart-LinUCB"].append(RestartLinUCB(
+                env7, restart_period=T // K,
+                lam=LAM, delta=DELTA, seed=seed + 5000).run())
+            env8 = LowRankLDSEnvironment(d=d, r=r, **kw)
+            res["LowRank-Reward"].append(LowRankRewardUCB(
+                env8, window=WINDOW, pca_warmup=50,
+                lam=LAM, delta=DELTA, seed=seed + 6000).run())
+            env9 = LowRankLDSEnvironment(d=d, r=r, **kw)
+            res["LowOFUL"].append(LowOFUL(
+                env9, lam=LAM, delta=DELTA, seed=seed + 7000,
+                pca_warmup=30, subspace_update_freq=20).run())
+            env10 = LowRankLDSEnvironment(d=d, r=r, **kw)
+            res["VOFUL"].append(VOFUL(
+                env10, lam=LAM, delta=DELTA, seed=seed + 8000,
+                pca_warmup=30, subspace_update_freq=20).run())
 
-                if method in ("SPSC-Alg1", "SPSC-Adaptive"):
-                    tag = "<<< WINS" if mean < best_comp_mean else ""
-                elif method == "Oracle-LinUCB":
-                    tag = "(oracle)"
-                else:
-                    tag = "* best" if method == best_method else ""
+        results[(d, r)] = res
+        s, _ = final_stats(res["SPSC"])
+        a, _ = final_stats(res["SPSC-Adaptive"])
+        l, _ = final_stats(res["LinUCB"])
+        o, _ = final_stats(res["Oracle"])
+        sw, _ = final_stats(res["SW-LinUCB"])
+        dl, _ = final_stats(res["D-LinUCB"])
+        lo, _ = final_stats(res["LowOFUL"])
+        vo, _ = final_stats(res["VOFUL"])
+        best_comp = min(final_stats(res[m])[0] for m in COMPETITORS)
+        print(f"d={d:3d} r={r:2d} | SPSC={s:7.0f} Adpt={a:7.0f} Lin={l:7.0f} "
+              f"Orc={o:7.0f} SW={sw:7.0f} DL={dl:7.0f} LO={lo:7.0f} VO={vo:7.0f} | "
+              f"S/L={s/l:.3f} S/Best={s/max(best_comp,1):.3f} [{time.time()-t0:.0f}s]",
+              flush=True)
 
-                print(f"  {METHOD_LABELS[method]:<30}  {mean:>10.1f}  {se:>10.1f}  "
-                      f"{vs_lin:>+10.1f}%  {vs_best:>+10.1f}%  {tag:>12}")
+# =========================================================================
+# Collect ratio grids
+# =========================================================================
+valid = sorted(results.keys())
+d_vals = sorted(set(d for d, r in valid))
+r_vals = sorted(set(r for d, r in valid))
 
-    # Ratio summary: SPSC / LinUCB
-    print("\n" + "=" * 100)
-    print("SPSC-Alg1 / LinUCB ratio (* = SPSC wins):")
-    header = f"{'d\\\\r':>6}"
+ratio_grid = np.full((len(r_vals), len(d_vals)), np.nan)
+theory_grid = np.full((len(r_vals), len(d_vals)), np.nan)
+oracle_grid = np.full((len(r_vals), len(d_vals)), np.nan)
+
+for i, r in enumerate(r_vals):
+    for j, d in enumerate(d_vals):
+        if (d, r) not in results:
+            continue
+        s, _ = final_stats(results[(d, r)]["SPSC"])
+        l, _ = final_stats(results[(d, r)]["LinUCB"])
+        o, _ = final_stats(results[(d, r)]["Oracle"])
+        ratio_grid[i, j] = s / l if l > 0 else np.nan
+        theory_grid[i, j] = np.sqrt(r / d)
+        oracle_grid[i, j] = o / l if l > 0 else np.nan
+
+# =========================================================================
+# Figure — 4-panel (same as original)
+# =========================================================================
+fig = plt.figure(figsize=(18, 14))
+
+# --- Panel (a): Phase-transition heatmap ---
+ax1 = fig.add_subplot(2, 2, 1)
+norm1 = TwoSlopeNorm(vmin=0.3, vcenter=1.0, vmax=3.0)
+im1 = ax1.imshow(ratio_grid, cmap="RdYlBu_r", norm=norm1, aspect="auto",
+                  origin="lower")
+for i in range(len(r_vals)):
+    for j in range(len(d_vals)):
+        v = ratio_grid[i, j]
+        if np.isnan(v):
+            ax1.text(j, i, "—", ha="center", va="center", fontsize=8, color="gray")
+        else:
+            color = "white" if (v < 0.6 or v > 2.0) else "black"
+            ax1.text(j, i, f"{v:.2f}", ha="center", va="center",
+                     fontsize=9, fontweight="bold", color=color)
+ax1.set_xticks(range(len(d_vals)))
+ax1.set_xticklabels(d_vals)
+ax1.set_yticks(range(len(r_vals)))
+ax1.set_yticklabels(r_vals)
+ax1.set_xlabel("Ambient dimension $d$", fontsize=12)
+ax1.set_ylabel("Latent rank $r$", fontsize=12)
+ax1.set_title("(a) SPSC / LinUCB regret ratio\n(blue < 1 = SPSC wins)", fontsize=12)
+cb1 = plt.colorbar(im1, ax=ax1, shrink=0.85)
+cb1.set_label("Ratio", fontsize=10)
+
+for i, r in enumerate(r_vals):
+    boundary_d = r + T_SIXTH
+    if d_vals[0] <= boundary_d <= d_vals[-1]:
+        j_frac = np.interp(boundary_d, d_vals, range(len(d_vals)))
+        ax1.plot(j_frac, i, "k*", markersize=10, zorder=5)
+ax1.plot([], [], "k*", markersize=10, label=f"$d - r = T^{{1/6}} \\approx {T_SIXTH:.1f}$")
+ax1.legend(loc="upper left", fontsize=9)
+
+# --- Panel (b): Ratio vs d for each r (line plot) ---
+ax2 = fig.add_subplot(2, 2, 2)
+cmap = plt.cm.viridis
+colors = [cmap(i / max(len(r_vals) - 1, 1)) for i in range(len(r_vals))]
+
+for i, r in enumerate(r_vals):
+    ds_valid = []
+    rats_valid = []
+    thrs_valid = []
+    for j, d in enumerate(d_vals):
+        if not np.isnan(ratio_grid[i, j]):
+            ds_valid.append(d)
+            rats_valid.append(ratio_grid[i, j])
+            thrs_valid.append(theory_grid[i, j])
+    if ds_valid:
+        ax2.plot(ds_valid, rats_valid, "o-", color=colors[i], lw=2,
+                 markersize=6, label=f"$r={r}$", zorder=3)
+        ax2.plot(ds_valid, thrs_valid, "--", color=colors[i], lw=1,
+                 alpha=0.5, zorder=2)
+
+ax2.axhline(1.0, color="black", ls=":", lw=1.5, alpha=0.7)
+ax2.fill_between([d_vals[0], d_vals[-1]], 0, 1, alpha=0.06, color="blue",
+                  label="SPSC wins")
+ax2.fill_between([d_vals[0], d_vals[-1]], 1, 5, alpha=0.06, color="red",
+                  label="LinUCB wins")
+ax2.set_xlabel("Ambient dimension $d$", fontsize=12)
+ax2.set_ylabel("SPSC / LinUCB ratio", fontsize=12)
+ax2.set_title("(b) Regret ratio vs $d$\n(solid = empirical, dashed = $\\sqrt{r/d}$ theory)",
+              fontsize=12)
+ax2.legend(fontsize=8, ncol=2, loc="upper right")
+ax2.set_ylim(0, 4)
+ax2.set_xlim(d_vals[0] - 2, d_vals[-1] + 2)
+
+# --- Panel (c): Empirical ratio vs theory sqrt(r/d) scatter ---
+ax3 = fig.add_subplot(2, 2, 3)
+emp_all = []
+thr_all = []
+d_all = []
+r_all = []
+for i, r in enumerate(r_vals):
+    for j, d in enumerate(d_vals):
+        if not np.isnan(ratio_grid[i, j]):
+            emp_all.append(ratio_grid[i, j])
+            thr_all.append(theory_grid[i, j])
+            d_all.append(d)
+            r_all.append(r)
+
+emp_all = np.array(emp_all)
+thr_all = np.array(thr_all)
+d_all = np.array(d_all)
+
+sc = ax3.scatter(thr_all, emp_all, c=d_all, cmap="plasma", s=80,
+                  edgecolors="black", linewidths=0.5, zorder=3)
+ax3.plot([0, 1.5], [0, 1.5], "k--", lw=1, alpha=0.4, label="Empirical = Theory")
+ax3.axhline(1.0, color="gray", ls=":", lw=1, alpha=0.5)
+ax3.set_xlabel(r"Theory: $\sqrt{r/d}$", fontsize=12)
+ax3.set_ylabel("Empirical: SPSC / LinUCB", fontsize=12)
+ax3.set_title("(c) Theory vs empirical ratio\n(colored by $d$)", fontsize=12)
+cb3 = plt.colorbar(sc, ax=ax3, shrink=0.85)
+cb3.set_label("$d$", fontsize=10)
+ax3.legend(fontsize=9)
+ax3.set_xlim(0, 1.0)
+ax3.set_ylim(0, 4.0)
+
+# --- Panel (d): Regret comparison at r=10 ---
+ax4 = fig.add_subplot(2, 2, 4)
+r_target = 10
+ds_slice = [d for d in d_vals if (d, r_target) in results]
+spsc_vals = []
+lin_vals = []
+orc_vals = []
+for d in ds_slice:
+    s, _ = final_stats(results[(d, r_target)]["SPSC"])
+    l, _ = final_stats(results[(d, r_target)]["LinUCB"])
+    o, _ = final_stats(results[(d, r_target)]["Oracle"])
+    spsc_vals.append(s)
+    lin_vals.append(l)
+    orc_vals.append(o)
+
+x = np.arange(len(ds_slice))
+w = 0.28
+bars_s = ax4.bar(x - w, spsc_vals, w, label="SPSC", color="#1f77b4", edgecolor="black", lw=0.5)
+bars_l = ax4.bar(x, lin_vals, w, label="LinUCB", color="#d62728", edgecolor="black", lw=0.5)
+bars_o = ax4.bar(x + w, orc_vals, w, label="Oracle", color="#2ca02c", edgecolor="black", lw=0.5)
+
+ax4.set_xticks(x)
+ax4.set_xticklabels([f"$d$={d}" for d in ds_slice], fontsize=9)
+ax4.set_ylabel("Cumulative costed regret", fontsize=12)
+ax4.set_title(f"(d) Regret comparison at $r={r_target}$\n(SPSC overtakes LinUCB as $d$ grows)",
+              fontsize=12)
+ax4.legend(fontsize=9)
+
+for i in range(len(ds_slice)):
+    if spsc_vals[i] < lin_vals[i]:
+        ax4.annotate("SPSC\nwins", xy=(x[i] - w, spsc_vals[i]),
+                     xytext=(x[i] - w, spsc_vals[i] + 200),
+                     fontsize=7, ha="center", color="#1f77b4",
+                     arrowprops=dict(arrowstyle="->", color="#1f77b4", lw=0.8))
+        break
+
+fig.suptitle(
+    "Synthetic Operating-Regime Benchmark: Phase Transition (Extended 10 Methods)\n"
+    f"$T$={T}, $K$={K}, probe every {PROBE_EVERY}, "
+    f"feature decay={FEATURE_DECAY}, {N_SEEDS} seeds",
+    fontsize=14, fontweight="bold", y=1.01)
+
+plt.tight_layout()
+out_path = os.path.join(OUT_DIR, "experiment_synthetic_extended.png")
+plt.savefig(out_path, bbox_inches="tight", dpi=150)
+print(f"\nSaved: {out_path}")
+
+# =========================================================================
+# Summary table — extended
+# =========================================================================
+print("\n" + "=" * 130)
+print("SUMMARY (Extended — 10 methods)")
+print("=" * 130)
+print(f"{'d':>4} {'r':>3} | {'SPSC':>8} {'Adapt':>8} {'LinUCB':>8} {'Oracle':>8} "
+      f"{'SW-Lin':>8} {'D-Lin':>8} {'Restart':>8} {'LowRank':>8} {'LowOFUL':>8} {'VOFUL':>8} | "
+      f"{'S/L':>6} {'S/Best':>6} | {'verdict':>12}")
+print("-" * 130)
+for d in d_vals:
     for r in r_vals:
-        header += f"  {'r='+str(r):>8}"
-    print(header)
-    print("-" * (6 + 10 * len(r_vals)))
-    for d in d_vals:
-        row = f"{d:>6}"
-        for r in r_vals:
-            res = all_results.get((d, r))
-            if res is None:
-                row += f"  {'--':>8}"
-            else:
-                ratio = res["SPSC-Alg1"].mean() / max(res["LinUCB"].mean(), 1e-8)
-                marker = "*" if ratio < 1.0 else " "
-                row += f"  {ratio:>7.3f}{marker}"
-        print(row)
-
-    # SPSC / Best Competitor
-    print(f"\nSPSC-Alg1 / Best Competitor ratio (* = SPSC beats all):")
-    header = f"{'d\\\\r':>6}"
-    for r in r_vals:
-        header += f"  {'r='+str(r):>8}"
-    print(header)
-    print("-" * (6 + 10 * len(r_vals)))
-    for d in d_vals:
-        row = f"{d:>6}"
-        for r in r_vals:
-            res = all_results.get((d, r))
-            if res is None:
-                row += f"  {'--':>8}"
-            else:
-                best_comp = min(res[m].mean() for m in COMPETITORS)
-                ratio = res["SPSC-Alg1"].mean() / max(best_comp, 1e-8)
-                marker = "*" if ratio < 1.0 else " "
-                row += f"  {ratio:>7.3f}{marker}"
-        print(row)
-
-    # Adaptive / LinUCB
-    print(f"\nSPSC-Adaptive / LinUCB ratio (* = Adaptive wins):")
-    header = f"{'d\\\\r':>6}"
-    for r in r_vals:
-        header += f"  {'r='+str(r):>8}"
-    print(header)
-    print("-" * (6 + 10 * len(r_vals)))
-    for d in d_vals:
-        row = f"{d:>6}"
-        for r in r_vals:
-            res = all_results.get((d, r))
-            if res is None:
-                row += f"  {'--':>8}"
-            else:
-                ratio = res["SPSC-Adaptive"].mean() / max(res["LinUCB"].mean(), 1e-8)
-                marker = "*" if ratio < 1.0 else " "
-                row += f"  {ratio:>7.3f}{marker}"
-        print(row)
-
-    print("=" * 100)
-
-
-# =========================================================================
-# Phase-transition heatmap (extended)
-# =========================================================================
-def make_heatmap_figure(all_results, d_vals, r_vals, out_path):
-    fig, axes = plt.subplots(2, 2, figsize=(18, 14))
-
-    # --- Panel (a): SPSC-Alg1 / LinUCB ratio heatmap ---
-    ratio_grid = np.full((len(r_vals), len(d_vals)), np.nan)
-    for i, r in enumerate(r_vals):
-        for j, d in enumerate(d_vals):
-            res = all_results.get((d, r))
-            if res is None:
-                continue
-            ratio_grid[i, j] = res["SPSC-Alg1"].mean() / max(res["LinUCB"].mean(), 1e-8)
-
-    ax = axes[0, 0]
-    norm = TwoSlopeNorm(vmin=0.3, vcenter=1.0, vmax=3.0)
-    im = ax.imshow(ratio_grid, cmap="RdYlBu_r", norm=norm, aspect="auto", origin="lower")
-    for i in range(len(r_vals)):
-        for j in range(len(d_vals)):
-            v = ratio_grid[i, j]
-            if np.isnan(v):
-                ax.text(j, i, "--", ha="center", va="center", fontsize=8, color="gray")
-            else:
-                color = "white" if (v < 0.6 or v > 2.0) else "black"
-                ax.text(j, i, f"{v:.2f}", ha="center", va="center",
-                        fontsize=9, fontweight="bold", color=color)
-    ax.set_xticks(range(len(d_vals)))
-    ax.set_xticklabels(d_vals)
-    ax.set_yticks(range(len(r_vals)))
-    ax.set_yticklabels(r_vals)
-    ax.set_xlabel("Ambient dimension $d$", fontsize=12)
-    ax.set_ylabel("Latent rank $r$", fontsize=12)
-    ax.set_title("(a) SPSC Alg.1 / LinUCB\n(blue < 1 = SPSC wins)", fontsize=12)
-    plt.colorbar(im, ax=ax, shrink=0.85)
-
-    # Draw d - r = T^{1/6} boundary
-    for i, r in enumerate(r_vals):
-        boundary_d = r + T_SIXTH
-        if d_vals[0] <= boundary_d <= d_vals[-1]:
-            j_frac = np.interp(boundary_d, d_vals, range(len(d_vals)))
-            ax.plot(j_frac, i, "k*", markersize=10, zorder=5)
-    ax.plot([], [], "k*", markersize=10, label=f"$d - r = T^{{1/6}} \\approx {T_SIXTH:.1f}$")
-    ax.legend(loc="upper left", fontsize=9)
-
-    # --- Panel (b): SPSC-Adaptive / LinUCB ratio heatmap ---
-    adapt_grid = np.full((len(r_vals), len(d_vals)), np.nan)
-    for i, r in enumerate(r_vals):
-        for j, d in enumerate(d_vals):
-            res = all_results.get((d, r))
-            if res is None:
-                continue
-            adapt_grid[i, j] = res["SPSC-Adaptive"].mean() / max(res["LinUCB"].mean(), 1e-8)
-
-    ax = axes[0, 1]
-    im = ax.imshow(adapt_grid, cmap="RdYlBu_r", norm=norm, aspect="auto", origin="lower")
-    for i in range(len(r_vals)):
-        for j in range(len(d_vals)):
-            v = adapt_grid[i, j]
-            if np.isnan(v):
-                ax.text(j, i, "--", ha="center", va="center", fontsize=8, color="gray")
-            else:
-                color = "white" if (v < 0.6 or v > 2.0) else "black"
-                ax.text(j, i, f"{v:.2f}", ha="center", va="center",
-                        fontsize=9, fontweight="bold", color=color)
-    ax.set_xticks(range(len(d_vals)))
-    ax.set_xticklabels(d_vals)
-    ax.set_yticks(range(len(r_vals)))
-    ax.set_yticklabels(r_vals)
-    ax.set_xlabel("Ambient dimension $d$", fontsize=12)
-    ax.set_ylabel("Latent rank $r$", fontsize=12)
-    ax.set_title("(b) SPSC Adaptive / LinUCB\n(blue < 1 = Adaptive wins)", fontsize=12)
-    plt.colorbar(im, ax=ax, shrink=0.85)
-
-    # --- Panel (c): SPSC-Alg1 / Best Competitor heatmap ---
-    best_grid = np.full((len(r_vals), len(d_vals)), np.nan)
-    for i, r in enumerate(r_vals):
-        for j, d in enumerate(d_vals):
-            res = all_results.get((d, r))
-            if res is None:
-                continue
-            best_comp = min(res[m].mean() for m in COMPETITORS)
-            best_grid[i, j] = res["SPSC-Alg1"].mean() / max(best_comp, 1e-8)
-
-    ax = axes[1, 0]
-    im = ax.imshow(best_grid, cmap="RdYlBu_r", norm=norm, aspect="auto", origin="lower")
-    for i in range(len(r_vals)):
-        for j in range(len(d_vals)):
-            v = best_grid[i, j]
-            if np.isnan(v):
-                ax.text(j, i, "--", ha="center", va="center", fontsize=8, color="gray")
-            else:
-                color = "white" if (v < 0.6 or v > 2.0) else "black"
-                ax.text(j, i, f"{v:.2f}", ha="center", va="center",
-                        fontsize=9, fontweight="bold", color=color)
-    ax.set_xticks(range(len(d_vals)))
-    ax.set_xticklabels(d_vals)
-    ax.set_yticks(range(len(r_vals)))
-    ax.set_yticklabels(r_vals)
-    ax.set_xlabel("Ambient dimension $d$", fontsize=12)
-    ax.set_ylabel("Latent rank $r$", fontsize=12)
-    ax.set_title("(c) SPSC Alg.1 / Best Competitor\n(blue < 1 = SPSC beats all)", fontsize=12)
-    plt.colorbar(im, ax=ax, shrink=0.85)
-
-    # --- Panel (d): Regret bars for selected (d, r) cells ---
-    ax = axes[1, 1]
-    # Pick a winning slice: d=60, r=5 (or the biggest d-r gap available)
-    slice_cells = []
-    for d in [30, 60, 100]:
-        for r in [3, 5, 10]:
-            if all_results.get((d, r)) is not None:
-                res = all_results[(d, r)]
-                if res["SPSC-Alg1"].mean() < res["LinUCB"].mean():
-                    slice_cells.append((d, r))
-                    break
-        if len(slice_cells) >= 3:
-            break
-
-    if not slice_cells:
-        # Fallback: just pick cells with largest d-r
-        for d, r in sorted(all_results.keys(), key=lambda x: x[0]-x[1], reverse=True):
-            if all_results[(d, r)] is not None:
-                slice_cells.append((d, r))
-            if len(slice_cells) >= 3:
-                break
-
-    show_methods = ["SPSC-Alg1", "SPSC-Adaptive", "LinUCB", "SW-LinUCB",
-                    "D-LinUCB", "LowOFUL", "VOFUL"]
-    x = np.arange(len(slice_cells))
-    n_m = len(show_methods)
-    w = 0.8 / n_m
-
-    for mi, meth in enumerate(show_methods):
-        vals = [all_results[cell][meth].mean() for cell in slice_cells]
-        ses = [all_results[cell][meth].std() / np.sqrt(max(len(all_results[cell][meth]), 1)) for cell in slice_cells]
-        ax.bar(x + mi * w - 0.4 + w/2, vals, w, yerr=ses,
-               label=METHOD_LABELS[meth].split("(")[0].strip(),
-               color=METHOD_COLORS[meth], edgecolor="black", linewidth=0.3,
-               capsize=2)
-
-    ax.set_xticks(x)
-    ax.set_xticklabels([f"d={d}, r={r}" for d, r in slice_cells], fontsize=9)
-    ax.set_ylabel("Cumulative costed regret", fontsize=11)
-    ax.set_title("(d) Regret comparison (selected cells)", fontsize=12)
-    ax.legend(fontsize=7, ncol=2, loc="upper left")
-
-    fig.suptitle(
-        "Synthetic Extended SOTA: Phase Transition in SPSC vs All Baselines\n"
-        f"$T$={T}, $K$={K}, probe_every={PROBE_EVERY}, "
-        f"$\\lambda$={LAM}, feature_decay={FEATURE_DECAY}  ({N_SEEDS} seeds)",
-        fontsize=13, fontweight="bold", y=1.01,
-    )
-    plt.tight_layout()
-    plt.savefig(out_path, bbox_inches="tight", dpi=150)
-    print(f"Saved: {out_path}")
-
-
-# =========================================================================
-# Main
-# =========================================================================
-if __name__ == "__main__":
-    print("=" * 80)
-    print("Synthetic Extended SOTA (10 methods)")
-    print(f"  d = {DS}")
-    print(f"  r = {RS}")
-    print(f"  T={T}, K={K}, lam={LAM}, probe_every={PROBE_EVERY}, window={WINDOW}")
-    print(f"  feature_decay={FEATURE_DECAY}, N_SEEDS={N_SEEDS}")
-    print(f"  T^(1/6) = {T_SIXTH:.2f}")
-    print("=" * 80)
-
-    all_results = {}
-    d_run = []
-    r_run = []
-    total_cells = len(DS) * len(RS)
-    cell_idx = 0
-
-    for d in DS:
-        for r in RS:
-            cell_idx += 1
-            if r >= d:
-                print(f"\n[{cell_idx}/{total_cells}] d={d}, r={r} -- SKIPPED (r >= d)")
-                continue
-
-            # Use 1 seed for d=500 (too slow), full N_SEEDS for others
-            n_seeds = 1 if d >= 500 else N_SEEDS
-
-            t0 = time.time()
-            print(f"\n\n[{cell_idx}/{total_cells}] ========== d={d}, r={r}  "
-                  f"(10 methods x {n_seeds} seed{'s' if n_seeds>1 else ''}) ==========",
-                  flush=True)
-
-            res = run_cell(d, r, n_seeds)
-            elapsed = time.time() - t0
-            all_results[(d, r)] = res
-            if d not in d_run:
-                d_run.append(d)
-            if r not in r_run:
-                r_run.append(r)
-
-            spsc_m = res["SPSC-Alg1"].mean()
-            adapt_m = res["SPSC-Adaptive"].mean()
-            lin_m = res["LinUCB"].mean()
-            loful_m = res["LowOFUL"].mean()
-            voful_m = res["VOFUL"].mean()
-            best_comp = min(res[m].mean() for m in COMPETITORS)
-            winner = "SPSC" if spsc_m < lin_m else "LinUCB"
-
-            print(f"  DONE in {elapsed:.1f}s")
-            print(f"    SPSC={spsc_m:.0f}  Adaptive={adapt_m:.0f}  "
-                  f"Lin={lin_m:.0f}  LowOFUL={loful_m:.0f}  VOFUL={voful_m:.0f}")
-            print(f"    SPSC/Lin={spsc_m/max(lin_m,1):.3f}  "
-                  f"SPSC/Best={spsc_m/max(best_comp,1):.3f}  [{winner}]")
-            sys.stdout.flush()
-
-    d_run = sorted(d_run)
-    r_run = sorted(r_run)
-
-    print_tables(all_results, d_run, r_run)
-    make_heatmap_figure(all_results, d_run, r_run,
-                        os.path.join(OUT_DIR, "experiment_synthetic_extended.png"))
-    print("\nDone.")
+        if (d, r) not in results:
+            continue
+        res = results[(d, r)]
+        s, _ = final_stats(res["SPSC"])
+        a, _ = final_stats(res["SPSC-Adaptive"])
+        l, _ = final_stats(res["LinUCB"])
+        o, _ = final_stats(res["Oracle"])
+        sw, _ = final_stats(res["SW-LinUCB"])
+        dl, _ = final_stats(res["D-LinUCB"])
+        re_, _ = final_stats(res["Restart-LinUCB"])
+        lr, _ = final_stats(res["LowRank-Reward"])
+        lo, _ = final_stats(res["LowOFUL"])
+        vo, _ = final_stats(res["VOFUL"])
+        rat = s / l
+        best_comp = min(final_stats(res[m])[0] for m in COMPETITORS)
+        s_best = s / max(best_comp, 1)
+        if s < best_comp:
+            verdict = "SPSC wins"
+        elif a < best_comp:
+            verdict = "Adapt wins"
+        elif rat < 0.95:
+            verdict = "SPSC wins"
+        elif rat < 1.05:
+            verdict = "tie"
+        else:
+            verdict = "LinUCB wins"
+        print(f"{d:4d} {r:3d} | {s:8.0f} {a:8.0f} {l:8.0f} {o:8.0f} "
+              f"{sw:8.0f} {dl:8.0f} {re_:8.0f} {lr:8.0f} {lo:8.0f} {vo:8.0f} | "
+              f"{rat:6.3f} {s_best:6.3f} | {verdict:>12}")
+print("=" * 130)

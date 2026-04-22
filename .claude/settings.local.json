@@ -35,7 +35,24 @@
       "Bash(kill 1731 1474)",
       "Bash(pdflatex -interaction=nonstopmode -halt-on-error journal.tex)",
       "Bash(pdflatex -interaction=nonstopmode journal.tex)",
-      "Bash(bibtex journal *)"
+      "Bash(bibtex journal *)",
+      "WebSearch",
+      "WebFetch(domain:goldberg.berkeley.edu)",
+      "WebFetch(domain:eigentaste.berkeley.edu)",
+      "WebFetch(domain:grouplens.org)",
+      "Bash(pip install *)",
+      "WebFetch(domain:files.grouplens.org)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:arxiv.org)",
+      "WebFetch(domain:proceedings.mlr.press)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:proceedings.neurips.cc)",
+      "WebFetch(domain:duongnhatthang.github.io)",
+      "WebFetch(domain:openreview.net)",
+      "WebFetch(domain:www.itn.liu.se)",
+      "WebFetch(domain:icml.cc)",
+      "WebFetch(domain:ieeexplore.ieee.org)",
+      "Bash(curl -s -L \"https://arxiv.org/html/2402.15739v2\")"
     ]
   }
 }
