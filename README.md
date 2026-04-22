@@ -1,133 +1,109 @@
-# SPSC Experiment Code
+# Low-Rank Bandits
 
-Code for reproducing all experiments in:
+Research repository for
 
-> **Subspace Identifiability Boundaries for Piecewise Stationary Low Rank Bandits**
-> NeurIPS 2026 submission
+> **Optimism on a Moving Subspace: Priced-Probe Identification for Piecewise Low-Rank Bandits**
 
-## Setup
+The project studies bandit problems in which the reward vector lies in a
+low-rank subspace that can jump at unknown change points, and introduces
+**SPSC** (Single-Play Subspace-Calibrated Optimism) and its detector-based
+variant **SPSC-Adaptive**.
+
+The repository is split into three self-contained versions of the work —
+a short conference submission, a long journal draft, and the original
+long-form source paper — each with its own paper, code, and figures.
+
+## Repository layout
+
+```
+lowrank-bandits/
+├── conference/   # NeurIPS 2026 short paper
+│   ├── paper/    # conf.tex, appendix_tables.tex, references.bib, cells.json, ...
+│   ├── code/     # experiment scripts for the conference paper
+│   ├── figures/  # all figures referenced by conf.tex
+│   └── requirements.txt
+│
+├── journal/      # Journal-length paper (JMLR / Bernoulli target)
+│   ├── paper/    # journal.tex, references.bib
+│   ├── code/     # core.py + exp*.py scripts (self-contained)
+│   ├── figures/  # figures referenced by journal.tex
+│   └── requirements.txt
+│
+├── source/       # Long-form source paper (all theory + full experiment set)
+│   ├── paper/    # main.tex, references.bib, neurips_2026.sty
+│   ├── code/     # algorithm, environments, every experiment script
+│   ├── figures/  # figures referenced by main.tex
+│   └── requirements.txt
+│
+└── README.md     # this file
+```
+
+Each subfolder has its own `README.md` with build instructions and a
+figure-to-script mapping.
+
+## Main paper files
+
+| Version    | Main `.tex`            | Appendix                        | Bibliography          |
+|------------|------------------------|---------------------------------|-----------------------|
+| Conference | `conference/paper/conf.tex`    | in-file + `appendix_tables.tex` | `references.bib`      |
+| Journal    | `journal/paper/journal.tex`    | in-file                         | `references.bib`      |
+| Source     | `source/paper/main.tex`        | in-file                         | `references.bib`      |
+
+Build any of them with the standard LaTeX pipeline from inside the
+corresponding `paper/` directory:
 
 ```bash
+pdflatex <name>.tex
+bibtex   <name>
+pdflatex <name>.tex
+pdflatex <name>.tex
+```
+
+## What is in each version
+
+- **Conference (`conf.tex`)** — SPSC + SPSC-Adaptive, four headline
+  results (main regret bound, rank-adaptive corollary, adaptive-SPSC
+  regret, class-conditional lower bound), plus a compact proofs
+  appendix. Experiments cover the synthetic phase-transition benchmark,
+  six real-data grids (Covertype, Pendigits, Satimage, MNIST,
+  Fashion-MNIST, MovieLens), Warfarin clinical dosing, a BOSS/Jedra
+  comparison, and rank / probe-rate sensitivity studies.
+- **Journal (`journal.tex`)** — same algorithm, full theory: finite-sample
+  subspace recovery, variance-adaptive concentration, instance-dependent
+  bounds, ambient-space reference bound, expected / anytime / doubling
+  refinements, minimax subspace-recovery lower bound, KL-based ETC
+  lower bounds, matching `Ω(c^(1/3) T^(2/3))` in `Π_HP`, optimal probe
+  allocation, and model-class separation. Experiments are a small
+  theory-validating set.
+- **Source (`main.tex`)** — the long-form draft that both derivative
+  versions were extracted from; kept for provenance and for the full
+  experimental library.
+
+## Reproducing experiments
+
+From inside the chosen version:
+
+```bash
+cd <conference|journal|source>
 pip install -r requirements.txt
+cd code
+python run_all_experiments.py     # source
+python run_all.py                 # journal
+# or individual experiment scripts — see the per-folder README
 ```
 
-Python 3.9+ required. Dependencies: NumPy, SciPy, Matplotlib, scikit-learn.
+Datasets download automatically (`sklearn.datasets` / script caches).
 
-## Paper-to-Code Mapping
+## Status
 
-Every figure and table with experimental data in the paper is listed below with the script that generates it.
-
-### Main Paper (Section 6)
-
-| # | Paper Reference | Script | Output |
-|---|-----------------|--------|--------|
-| 1 | Fig 1: Synthetic phase transition | `experiment1_main_benchmark.py` (data) | `experiment1_main_benchmark.png` |
-| 1 | Fig 1: Phase-transition contour | `experiment1_final_figure.py` (plot) | `experiment1_synthetic_phase.png` |
-| 2 | Table 1: Covertype multi-baseline | `experiment_covertype.py` | `experiment_covertype.png` + printed tables |
-| 3 | Table 6 + Fig 11: Warfarin dosing | `experiment_real_bandit.py` (data) + `plot_warfarin.py` (plot) | `experiment_warfarin.png` |
-| 4 | Fig 7: Robustness A/B/C | `experiment_robustness_abc.py` | `experiment_robustness_abc.png` |
-
-### Appendix: Regime Characterization
-
-| # | Paper Reference | Script | Output |
-|---|-----------------|--------|--------|
-| 3 | Fig 5: Pendigits regime | `experiment_pendigits_operating_regime.py` | `experiment_pendigits_operating_regime.png` |
-| 4 | Fig 6: Satimage 7-method | `experiment_real_satimage_regime.py` | `experiment_real_satimage_double_rings.png` |
-| - | Fig 10: Satimage aggregate | `satimage_final_plots.py` | `satimage_wincount.png` |
-
-### Appendix: Mechanism Validation
-
-| # | Paper Reference | Script | Output |
-|---|-----------------|--------|--------|
-| 5 | Fig 4: Probe-rate ablation | `experiment3_probe_ablation.py` | `experiment3_probe_ablation.png` |
-| 6 | Fig 8: Subspace recovery rate | `experiment2_subspace_recovery.py` | `experiment2_subspace_recovery.png` |
-| 7 | Fig 9: Change-point adaptation | `experiment4_changepoint_recovery.py` | `experiment4_changepoint_recovery.png` |
-| 8 | Fig 10: Dimension scaling | `experiment5_dimension_scaling.py` | `experiment5_dimension_scaling.png` |
-
-### Appendix: Robustness and Sensitivity
-
-| # | Paper Reference | Script | Output |
-|---|-----------------|--------|--------|
-| 9-11 | Fig 7: Variance / cross-corr / coverage | `experiment_robustness_abc.py` | `experiment_robustness_abc.png` |
-| - | Fig 7b + Table 3: Rank misspecification | `experiment_rank_misspec.py` | `experiment_rank_misspec.png` |
-| 12 | Fig + Table: Noise robustness | `experiment6_noise_robustness.py` | `experiment6_noise_robustness.png` |
-| 13 | Fig + Table: Changepoint frequency | `experiment7_changepoint_frequency.py` | `experiment7_changepoint_frequency.png` |
-| 14 | Fig + Table: Drift speed | `experiment8_drift_speed.py` | `experiment8_drift_speed.png` |
-
-### Appendix: SOTA and Full Tables
-
-| # | Paper Reference | Script | Output |
-|---|-----------------|--------|--------|
-| 15 | Fig + Table: SOTA benchmark | `experiment9_sota_benchmark.py` | `experiment9_sota_benchmark.png` |
-| 16 | Tables 4-7: Covertype full | `experiment_covertype.py` | Printed tables |
-
-## File Inventory
-
-### Core (2 files)
-
-| File | Description |
-|------|-------------|
-| `algorithm.py` | SPSC Algorithm 1, LinUCB, Oracle-LinUCB, `K_inverse` operator |
-| `environment.py` | Synthetic `LowRankLDSEnvironment` |
-
-### Dataset Environments (5 files)
-
-| File | Used By | Dataset |
-|------|---------|---------|
-| `covertype_environment.py` | `experiment_covertype.py` | UCI Covertype (semi-synthetic) |
-| `real_covtype_environment_v2.py` | `experiment_rank_misspec.py` | Covertype (variable d) |
-| `real_pendigits_environment.py` | `experiment_pendigits_operating_regime.py` | UCI Pendigits |
-| `real_satimage_environment.py` | `experiment_real_satimage_regime.py` | UCI Satimage |
-| `warfarin_environment.py` | `experiment_real_bandit.py` | Warfarin clinical dosing (d=93) |
-
-All UCI datasets auto-download via `sklearn.datasets`. No manual download needed.
-
-### Experiment Scripts (18 files)
-
-See Paper-to-Code Mapping above.
-
-### Utilities (3 files)
-
-| File | Description |
-|------|-------------|
-| `run_all_experiments.py` | Batch runner (`--main`, `--synthetic`, `--real` flags) |
-| `requirements.txt` | Python dependencies |
-| `README.md` | This file |
-
-## Running Experiments
-
-```bash
-# Run everything
-python run_all_experiments.py
-
-# Main paper only (Exp 1-4)
-python run_all_experiments.py --main
-
-# Synthetic experiments only
-python run_all_experiments.py --synthetic
-
-# Real-data experiments only
-python run_all_experiments.py --real
-
-# Individual experiment
-python experiment6_noise_robustness.py
-```
-
-## Algorithm
-
-`algorithm.py` implements:
-
-- **SPSC_Algorithm1**: Algorithm 1 from the paper. Single-play probing with K-inverse lifted estimation, windowed ridge regression in the learned r-dimensional subspace.
-- **LinUCB**: Ambient-space ridge UCB (Abbasi-Yadkori et al., 2011).
-- **OracleLinUCB**: UCB with oracle subspace knowledge (performance ceiling).
-
-Nonstationary baselines (D-LinUCB, SW-LinUCB, Restart-LinUCB, LowRank-Reward) are implemented within individual experiment scripts.
-
-## Reproducibility
-
-- All experiments use explicit random seeds (default: 10 seeds; SOTA benchmark: 30 seeds).
-- NumPy 1.x was used for the paper. NumPy 2.x produces different RNG streams.
-- Qualitative conclusions are stable across platforms.
+- **Conference** — submitted draft for NeurIPS 2026. Main body fits in
+  10 pages; full appendix (proofs + per-cell tables + sensitivity
+  studies) compiles cleanly.
+- **Journal** — draft in progress. Theory is essentially complete;
+  `journal_exp5_drift_regime.png` is the one remaining figure to
+  generate.
+- **Source** — frozen long-form version used as the reference point
+  for both the conference and journal splits.
 
 ## License
 
