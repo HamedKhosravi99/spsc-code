@@ -74,7 +74,21 @@
       "Bash(grep -n \"\\\\\\\\\\\\\\\\op\\\\|DeclareMathOperator.*op\\\\|operatorname.*op\" conf.tex)",
       "Bash(grep -n \"^\\\\\\\\\\\\\\\\title\\\\|^\\\\\\\\\\\\\\\\newcommand\\\\|\\\\\\\\\\\\\\\\begin{theorem}\\\\|\\\\\\\\\\\\\\\\begin{proposition}\\\\|\\\\\\\\\\\\\\\\begin{lemma}\\\\|SPSC\\\\|lifted\\\\|Bernstein\\\\|Davis.*Kahan\\\\|quadratic.*identity\" main.tex)",
       "Bash(grep -n \"^\\\\\\\\\\\\\\\\title\\\\|^\\\\\\\\\\\\\\\\begin{document}\" main.tex conf.tex journal.tex)",
-      "Bash(grep -n \"^\\\\\\\\\\\\\\\\section\\\\|^\\\\\\\\\\\\\\\\subsection\" conf.tex)"
+      "Bash(grep -n \"^\\\\\\\\\\\\\\\\section\\\\|^\\\\\\\\\\\\\\\\subsection\" conf.tex)",
+      "Bash(grep -E \"^\\(Overfull \\\\\\\\\\\\\\\\hbox .* [4-9][0-9]+\\\\\\\\.\\)\")",
+      "Bash(sort -t. -k1 -n -r)",
+      "Bash(sort -u grep -oE \"includegraphics\\(\\\\[[^]]*\\\\]\\)?\\\\{[^}]+\\\\}\" paper/conf.tex)",
+      "Bash(sort -u grep -oE \"includegraphics\\(\\\\[[^]]*\\\\]\\)?\\\\{[^}]+\\\\}\" paper/journal.tex)",
+      "Read(//c/Users/hamed/Documents/GitHub/lowrank-bandits/paper/**)",
+      "Read(//tmp/**)",
+      "Read(//c/c/Users/hamed/Documents/GitHub/lowrank-bandits/exps/journal/**)",
+      "Read(//c/c/Users/hamed/Documents/GitHub/lowrank-bandits/exps/**)",
+      "Bash(cp paper/main.tex paper/references.bib paper/neurips_2026.sty source/paper/)",
+      "Bash(cp paper/conf.tex paper/conf.pdf paper/conf.aux paper/conf.bbl paper/conf.blg paper/conf.log paper/references.bib paper/neurips_2026.sty paper/cells.json paper/appendix_tables.tex paper/build_appendix_tables.py paper/results_raw.txt conference/paper/)",
+      "Bash(cp paper/journal.tex paper/journal.pdf paper/journal.aux paper/journal.bbl paper/journal.blg paper/journal.log paper/references.bib journal/paper/)",
+      "Bash(cp requirements.txt source/)",
+      "Bash(cp requirements.txt conference/)",
+      "Bash(cp requirements.txt journal/)"
     ]
   }
 }
