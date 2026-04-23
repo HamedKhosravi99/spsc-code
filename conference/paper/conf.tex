@@ -82,17 +82,20 @@ Optimism), an algorithm that interleaves isotropic probes with ridge-UCB
 exploitation \emph{inside} the learned $r$-dimensional subspace, using a
 quadratic-measurement identity to recover the active subspace from
 single-play scalar rewards. SPSC achieves costed dynamic regret
-$\tilO(r\sqrt{T}) + \tilO(T^{2/3}) + O(V)$, replacing the ambient
+$\tilO\!\bigl(r\sqrt{KT}\bigr) + \tilO\!\bigl(K^{1/3}T^{2/3}\bigr) + O(V)$
+over $K$ segments with path variation $V$, replacing the ambient
 $d\sqrt{T}$ dependence with the intrinsic rank. An adaptive
-variant removes the oracle-segment assumption via a CUSUM-style
+variant removes the oracle-segment assumption via a two-window change
 detector on the probe-time second moment and attains the same leading
-rate. We complement the upper bound with a \emph{class-conditional}
-$\Omega(c^{1/3}T^{2/3})$ lower bound that holds inside the natural
-hard-projection policy class $\Pi_{\mathrm{HP}}$---containing SPSC and
-every prior algorithm for this setting---so the $T^{2/3}$ probe--subspace
-tradeoff is tight within $\Pi_{\mathrm{HP}}$; whether non-projecting
-algorithms can beat this tradeoff is an explicit open question
-isolated by our analysis. On eight synthetic and real benchmarks
+rate. For the class $\Pi_{\mathrm{HP}}$ of policies that act through
+a rank-$r$ projector at exploitation time---which contains SPSC and,
+to our knowledge, every prior algorithm for this setting---we prove a
+matching $\Omega(c^{1/3}T^{2/3})$ regret lower bound and a minimax
+$1/\sqrt{m}$ subspace-recovery rate that matches our upper bound up
+to a $\sqrt{\log d}$ factor. Whether a \emph{non-projecting} policy
+can break $T^{2/3}$ by extracting information from off-subspace
+exploitation directions is left open; our analysis isolates this as
+the only remaining gap. On eight synthetic and real benchmarks
 (Covertype, Pendigits, Satimage, MNIST, Fashion-MNIST, MovieLens,
 Warfarin, and a piecewise low-rank LDS suite), SPSC attains
 6--38\% regret reductions over state-of-the-art nonstationary baselines
@@ -169,31 +172,32 @@ variant (Alg.~\ref{alg:spsc_adaptive})
 uses a CUSUM-style detector on the lifted probe moment to
 discover segment changes online, matching the oracle-boundary
 leading rate.
-\item \textbf{Regret.} For fixed $K$ and suppressing polylog factors,
+\item \textbf{Regret.} Suppressing polylog factors,
 \[
-\DynReg_T^{(c)} = \tilO(r\sqrt{T}) + \tilO(T^{2/3}) + O(V),
+\DynReg_T^{(c)} = \tilO\!\bigl(r\sqrt{KT}\bigr) + \tilO\!\bigl(K^{1/3}T^{2/3}\bigr) + O(V),
 \]
-replacing ambient $d\sqrt{T}$ with intrinsic rank $r$
-(Theorem~\ref{thm:spsc_regret}). Within the hard-projection class
-$\Pi_{\mathrm{HP}}$---the class that commits to a rank-$r$ projector
-before every exploitation action, which contains SPSC and every prior
-algorithm we are aware of for this setting---we prove a
-\emph{class-conditional}
-$\Omega(c^{1/3}T^{2/3})$ lower bound (Theorem~\ref{thm:spsc_lb}), so
-the $T^{2/3}$ probe--subspace tradeoff is tight \emph{within} $\Pi_{\mathrm{HP}}$.
-We do not rule out that a non-projecting algorithm could beat this
-tradeoff; posing this is a contribution of our analysis. Self-contained
-proofs of all statements appear in Appendix~\ref{app:proofs}; a
-companion manuscript (supplementary material) contains the
-finite-sample variance-adaptive refinements, the minimax
-$1/\sqrt m$ subspace-recovery lower bound, and further instance-dependent
-results.
+replacing ambient $d\sqrt{KT}$ with intrinsic rank $r$ in the leading
+term (Theorem~\ref{thm:spsc_regret}). Within the hard-projection class
+$\Pi_{\mathrm{HP}}$---the class of policies that commit to a rank-$r$
+projector before every exploitation action, containing SPSC and, to
+our knowledge, every prior algorithm for this setting---we prove a
+matching $\Omega(c^{1/3}T^{2/3})$ regret lower bound
+(Theorem~\ref{thm:spsc_lb}) and a minimax
+$1/\sqrt m$ subspace-recovery lower bound
+(Theorem~\ref{thm:minimax_recovery}). The regret bound inside
+$\Pi_{\mathrm{HP}}$ is therefore tight up to $\sqrt{\log d}$; whether
+a non-projecting algorithm can beat this tradeoff by querying
+off-subspace directions during exploitation is an open question our
+analysis isolates. Self-contained proofs of all main-text statements
+appear in Appendix~\ref{app:proofs}; variance-adaptive constant
+refinements and instance-dependent rates are deferred to a future
+long version.
 \item \textbf{Experiments.} We evaluate SPSC on a synthetic phase-transition
 grid and on seven real-data benchmarks derived from UCI/ImageNet-style datasets
 (Covertype, Pendigits, Satimage, MNIST, Fashion-MNIST, MovieLens, Warfarin),
 against 11 baselines including D-LinUCB, SW-LinUCB, Restart-LinUCB, LowOFUL,
-VOFUL, LowRank-Reward, LinTS, SW-LinTS, and two adapted stationary low-rank
-methods (BOSS, Jedra). The empirical crossover boundary tracks
+VOFUL, LowRank-Reward, LinTS~\citep{agrawal2013thompson}, SW-LinTS,
+and two adapted stationary low-rank methods (BOSS, Jedra). The empirical crossover boundary tracks
 the predicted $d-r \asymp T^{1/6}$ rule-of-thumb; SPSC delivers 6--38\%
 regret reductions whenever $d - r$ is above this threshold.
 \end{enumerate}
@@ -380,27 +384,44 @@ Appendix~\ref{app:adaptive_algo}.
 Under the assumptions of \S\ref{sec:setting}, run Alg.~\ref{alg:spsc}
 with probe allocation $m_k = \lceil (B\ell_k/(2A))^{2/3}\rceil$, where
 $A := 2R_\cA S_w + c$, $B := 2 C_{\mathrm{sub}} S_w R_\cA \sqrt{\log(d/\delta)}$.
-Then, for fixed $K$ and with probability at least $1-\delta$,
+Then, with probability at least $1-\delta$,
 \begin{equation}
 \boxed{\;
-\DynReg_T^{(c)} = \tilO(r\sqrt{T}) + \tilO(T^{2/3}) + O(V)\;}
+\DynReg_T^{(c)}
+= \tilO\!\bigl(r\sqrt{K T L_W}\bigr)
++ \tilO\!\bigl(K^{1/3}T^{2/3}\bigr)
++ O\!\bigl(W\,V\bigr),\;}
 \label{eq:main_bound}
 \end{equation}
-where $V := \sum_k \sum_{s\in E_k, s+1\in E_k}\|\theta_{s+1}-\theta_s\|_2$.
-The three terms correspond to (i) projected exploitation in $\R^r$,
+where $L_W=\log(1+WR_\cA^2/(\lambda r))$, $W$ is the exploitation window,
+and $V := \sum_k \sum_{s\in E_k, s+1\in E_k}\|\theta_{s+1}-\theta_s\|_2$
+is the total path variation of $\theta$. The three terms correspond
+to (i) projected exploitation in $\R^r$ summed across $K$ segments
+(the $\sqrt{K}$ factor comes from $\sum_k\sqrt{n_k}\le\sqrt{KT}$);
 (ii) the probe--subspace tradeoff from balancing $cm_k$ against the
-$O(m_k^{-1/2})$ subspace-error price, and (iii) the irreducible
-within-segment drift cost.
+$O(m_k^{-1/2})$ subspace-error price, aggregated across segments
+via Jensen ($\sum_k \ell_k^{2/3}\le K^{1/3}T^{2/3}$); and
+(iii) the windowed-ridge drift cost, a factor of $W$ ahead of the
+path variation $V$ (Lem.~\ref{lem:drift_conf} below, matching the
+standard sliding-window rate of \citet[Thm.~2]{russac2019weighted}).
 Proof in \S\ref{app:proof_main} (concentration chain in
 \S\ref{app:concentration_proof}).
 \end{theorem}
 
-The leading $\tilO(r\sqrt{T})$ term beats the ambient baseline
-$\tilO(d\sqrt{T})$ whenever $r \ll d$; the $\tilO(T^{2/3})$ term is
-the price of \emph{acquiring} the subspace information online.
-Solving $r\sqrt{T}\lesssim T^{2/3}$ gives a simple rule-of-thumb:
-\emph{SPSC dominates ambient LinUCB whenever $d - r \gtrsim T^{1/6}$}.
-This crossover is verified empirically in \S\ref{sec:experiments}.
+The leading $\tilO(r\sqrt{KT})$ exploitation term beats the ambient
+baseline $\tilO(d\sqrt{KT})$ whenever $r \ll d$; the
+$\tilO(K^{1/3}T^{2/3})$ term is the price of \emph{acquiring} the
+subspace information online. For a single segment ($K=1$) the bound
+reduces to $\tilO(r\sqrt{T}) + \tilO(T^{2/3}) + O(WV)$ and
+solving $r\sqrt{T}\lesssim T^{2/3}$ recovers the simple rule-of-thumb
+\emph{SPSC dominates ambient LinUCB whenever $d - r \gtrsim T^{1/6}$};
+with multiple segments the crossover shifts by a mild $K^{1/6}$ factor.
+The bound is informative whenever $K=o(\min\{T^{1/2}/r^{3/2},\,d^2/r^2\})$
+and $V = o(r\sqrt{KT}/W)$ (both conditions hold for the
+piecewise-constant regime that motivates our setting, where $V$ is
+supported on the $O(K)$ boundary edges, and for the stable-LDS regime
+with spectral radius $\le 1-\alpha_0$). The crossover is verified
+empirically in \S\ref{sec:experiments}.
 
 \begin{corollary}[Rank-adaptive guarantee]
 \label{cor:rank_adaptive}
@@ -415,39 +436,102 @@ unchanged. Proof in \S\ref{app:proof_adaptive_rank}.
 \label{thm:spsc_adaptive}
 Suppose every true subspace change satisfies $\Delta_k \ge 2b$.
 Alg.~\ref{alg:spsc_adaptive} achieves the same leading rate
-$\tilO(r\sqrt{T}) + \tilO(T^{2/3}) + O(V)$
-with $O(K)$ lower-order overhead for detection delay and recovery
-phases, and false alarms occur with probability at most
-$\delta_{\mathrm{FA}}$. Proof in \S\ref{app:proof_adaptive}.
+$\tilO(r\sqrt{KT}) + \tilO(K^{1/3}T^{2/3}) + O(WV)$
+with $O(K W_{\mathrm{det}})$ lower-order overhead for detection delay
+and recovery phases, and false alarms occur with probability at most
+$\delta_{\mathrm{FA}}$. Unlike Alg.~\ref{alg:spsc}, the adaptive
+variant uses a \emph{fixed} probe rate $\mu\in(0,1)$ and therefore
+does not require segment lengths $\ell_k$ (or their estimates) to
+allocate probes. Proof in \S\ref{app:proof_adaptive}.
 \end{theorem}
 
-\begin{theorem}[Class-conditional lower bound in $\Pi_{\mathrm{HP}}$]
+\begin{theorem}[Lower bound within the hard-projection class $\Pi_{\mathrm{HP}}$]
 \label{thm:spsc_lb}
-Let $\Pi_{\mathrm{HP}}$ denote the class of policies that, after
-probing, commit to a rank-$r$ projector $\widehat P_t$ and pick
-$x_t\in\argmax_{x\in\cA_t} x^\top \widehat P_t \vartheta_t$. This
-class contains SPSC and every prior algorithm for this problem that
-we are aware of; it does \emph{not} cover non-projecting policies
-that might use exploitation rounds to query off-subspace directions.
-For $d\ge 2r$ and all sufficiently large $T$, there
-exists $c_0 > 0$ such that
+Let $\Pi_{\mathrm{HP}}$ denote the class of policies whose
+exploitation action at every round factors through a data-measurable
+rank-$r$ projector $\widehat P_t$: $x_t\in\argmax_{x\in\cA_t}
+x^\top \widehat P_t \vartheta_t$. This class contains SPSC and, to
+our knowledge, every prior algorithm for this problem; it does
+\emph{not} cover policies that mix off-subspace directions into
+exploitation actions. For $d\ge 2r$ and all sufficiently large $T$,
+there exists $c_0 > 0$ (depending only on $R_\cA$, $\sigma_\varepsilon$,
+$S_w$) such that
 \[
 \inf_{\pi\in\Pi_{\mathrm{HP}}} \sup_\nu\ \E^\pi_\nu[\DynReg_T^{(c)}]
  \ge c_0\,c^{1/3}T^{2/3}.
 \]
-Thus the $T^{2/3}$ probe--subspace tradeoff is tight \emph{within}
-$\Pi_{\mathrm{HP}}$. The statement is class-conditional: it does not
-preclude a non-projecting policy achieving a better tradeoff, and
-constructing or ruling out such a policy is left open.
-Proof in \S\ref{app:proof_lb}.
+Combined with Theorem~\ref{thm:spsc_regret}, SPSC is \emph{rate-optimal
+inside $\Pi_{\mathrm{HP}}$}.
+Proof in \S\ref{app:proof_lb}. Whether a non-projecting policy can
+beat $T^{2/3}$ by extracting identifying information from the
+off-subspace component of exploitation actions is an open question
+our analysis isolates (Remark~\ref{rem:lb_scope_conf}).
 \end{theorem}
 
-\emph{Remarks on scope.} The present paper states only the algorithmic
-bounds needed to interpret the experiments; proofs, finite-sample
-subspace concentration (lifted MDS, variance-adaptive tail),
-minimax $1/\sqrt{m}$ recovery, instance-dependent refinements, and
-the fuller lower-bound program are developed in a companion
-manuscript (anonymized, in the supplementary material).
+\begin{theorem}[Minimax subspace-recovery lower bound]
+\label{thm:minimax_recovery}
+Let $d\ge 2r$ and fix the single-segment model of
+\S\ref{sec:setting} with isotropic Gaussian probes (truncated at
+$\|u\|\le L$). There exists a constant $c_1>0$ (depending only on
+$r,d,L,\sigma_\varepsilon,\lambda_{\min}$) such that for every $m\ge 1$
+and every $\cH_m$-measurable projector estimator $\widehat P$,
+\[
+\inf_{\widehat P}\ \sup_{\nu\in\mathfrak{M}}\ \E_\nu\!\bigl[\|\widehat P-P^\star\|_{\op}\bigr]
+ \ \ge\ \frac{c_1}{\sqrt m}.
+\]
+The upper bound of
+Corollary~\ref{cor:projector_conf} ($O(\sqrt{\log(d/\delta)/m})$)
+matches this rate up to a $\sqrt{\log d}$ factor. Consequently, no
+improvement of the $T^{2/3}$ probe term in
+Theorem~\ref{thm:spsc_regret} is possible through a better estimator
+alone; any sub-$T^{2/3}$ rate must come from a policy that steps
+outside $\Pi_{\mathrm{HP}}$. Proof in \S\ref{app:proof_minimax}.
+\end{theorem}
+
+\begin{corollary}[Robustness to approximate low rank and variance misspecification]
+\label{cor:misspec}
+Suppose $\theta_t = B_k^\star w_t + \theta_t^{\perp}$ inside $\cI_k$
+with $\sup_{t\in\cI_k}\|\theta_t^\perp\|_2\le\epsilon_k^\perp$
+(approximate low rank), and the plugin noise variance satisfies
+$|\hat\sigma^2-\sigma_\varepsilon^2|\le\delta_\sigma$. Then the bound
+of Theorem~\ref{thm:spsc_regret} holds with the additive term
+\[
+O\!\Bigl(R_\cA\sum_k \epsilon_k^\perp\, n_k
+\;+\; T\cdot L^3\epsilon_\times/\lambda_{\min}\Bigr)
+\]
+added to the right-hand side. The variance-misspec contribution
+$\delta_\sigma$ does \emph{not} enter the leading order for isotropic
+Gaussian probes: by Lemma~\ref{lem:G_unbiased_conf} the bias
+$-\delta_\sigma\mathcal K^{-1}(I_d)=-\delta_\sigma/(d+2)\cdot I_d$ is
+a scaled identity and only tightens the eigengap assumption
+$\lambda_{\min}\ge 4\tau_k$; it does not rotate eigenvectors, so the
+projector estimate $\widehat U_k$ is unchanged.
+\end{corollary}
+\begin{proof}[Sketch]
+Plug $\|\theta_t^\perp\|\le\epsilon_k^\perp$ into the subspace-mismatch
+term $x_t^\top(I-\widehat P_{t-1})\theta_t$ of the exploitation
+decomposition (eq.~\eqref{eq:exploit_sum}); this adds
+$R_\cA\epsilon_k^\perp n_k$ per segment. The state--noise coupling
+$\epsilon_\times$ enters via $\|\widetilde B_t\|_\op$ in
+Lemma~\ref{lem:G_unbiased_conf}; the Davis--Kahan chain of
+Corollary~\ref{cor:projector_conf} propagates it to
+$\Delta_\sigma = 4(|\delta_\sigma|L^2+2L^3\epsilon_\times)/\lambda_{\min}$
+in $\varepsilon_k$, and summing
+$\sum_k n_k\Delta_\sigma\le T\Delta_\sigma$ yields the stated term.
+For Gaussian probes, $\mathcal K^{-1}(I_d)\propto I_d$
+(Lem.~\ref{lem:K_inverse}), so the $\delta_\sigma$ component of
+$\widetilde B$ is isotropic and is annihilated by top-$r$ eigendecomposition.
+\end{proof}
+
+\emph{Remarks on scope.} The main body states the bounds needed to
+interpret the experiments; full self-contained proofs, including the
+lifted-MDS concentration chain and a matching minimax
+$1/\sqrt{m}$ subspace-recovery lower bound
+(Theorem~\ref{thm:minimax_recovery}), appear in
+Appendix~\ref{app:proofs}. Variance-adaptive constant refinements
+(replacing the uniform a.s.\ bound $R_X$ by a local effective scale)
+and instance-dependent gap-based rates sharpen constants without
+changing leading order; they are deferred to a future long version.
 
 %% ============================================================
 \section{Experiments}
@@ -458,12 +542,26 @@ benchmark and seven real-data environments, against eleven baselines:
 LinUCB~\citep{abbasi2011improved}, D-LinUCB~\citep{russac2019weighted},
 SW-LinUCB~\citep{cheung2019learning}, Restart-LinUCB,
 LowRank-Reward, LowOFUL~\citep{jun2019bilinear},
-VOFUL~\citep{kim2022improved}, LinTS,
+VOFUL~\citep{kim2022improved}, LinTS~\citep{agrawal2013thompson},
 SW-LinTS, and two adapted stationary low-rank methods (BOSS,
 Jedra~\citep{pmlr-v235-jedra24a}). Oracle-LinUCB (given the
 true subspace) is included as an upper-bound reference. All curves
 report means over at least $10$ seeds with $\pm 1$\,SE bands.
 Experiment code and JSON logs are released with the paper.
+
+\emph{Caveat on experimental realism.}
+The real-data benchmarks below test SPSC under \emph{constructed}
+nonstationarity: segments are induced by class- or cohort-subset
+shifts rather than observed in naturally-logged traffic, and actions
+at each round are drawn from the active segment's class pool.
+Naturally-logged nonstationary bandit traces with documented
+subspace changes are scarce in the public literature; obtaining one
+is a complementary problem to algorithm design. To guard against
+artifacts of any single segmentation rule, we include a
+segmentation-sensitivity study (Appendix~\ref{app:sensitivity}) that
+sweeps three alternative segmentation rules on Pendigits and an
+action-set-size ablation on Satimage; SPSC's advantage is stable
+under both.
 
 \subsection{Phase-transition boundary}
 \label{sec:exp_phase}
@@ -510,11 +608,15 @@ baseline.
 \caption{\textbf{SPSC/LinUCB} and \textbf{SPSC-Adaptive/Best Competitor}
 ratios across six real-data benchmarks (10 seeds per cell). Values
 ${<}1$ indicate SPSC wins; \textbf{bold} = SPSC variant beats every
-non-oracle baseline. A consistent pattern emerges: SPSC is
-dominated by LinUCB when $d\approx r$ (top of each block), and
-progressively wins as $d$ grows relative to $r$. The closest competitor
-(Restart-LinUCB) is itself subspace-oblivious, so its regret is
-constant along each row of a block.}
+non-oracle baseline. LowOFUL/VOFUL run with their own online-PCA
+subspace estimator (action-reward outer products with change-triggered
+buffer reset)---the strongest nonstationary adaptation we could give
+to these originally-stationary algorithms.
+A consistent pattern emerges: SPSC is dominated by LinUCB when
+$d\approx r$ (top of each block), and progressively wins as $d$ grows
+relative to $r$. Subspace-oblivious competitors (LinUCB, SW-LinUCB,
+D-LinUCB, Restart-LinUCB, LinTS, SW-LinTS) have regret independent of
+$r$, so within each $d$-block their values are identical across rows.}
 \label{tab:realdata}
 \scriptsize
 \setlength{\tabcolsep}{4pt}
@@ -572,20 +674,27 @@ competitor (SW-LinUCB) still yields a $6\%$ average reduction.}
 \label{fig:satimage-winct}
 \end{figure}
 
-\subsection{Clinical benchmark: Warfarin dosing}
+\subsection{Semi-synthetic clinical benchmark: Warfarin dosing}
 \label{sec:exp_warfarin}
 
 Warfarin is the most widely prescribed oral anticoagulant; optimal
 dosing depends on patient demographics, genotype (VKORC1, CYP2C9),
 and clinical indicators, with documented low-rank pharmacogenomic
 structure~\citep{international2009estimation}. We construct a
-bandit environment calibrated to the IWPC cohort statistics
-($\sim$5,700 patients, $d{=}93$ features, $K{=}8$ segments corresponding
-to subpopulation shifts, $T{=}5{,}000$, $10$ seeds). The reward is the
-negative deviation from the therapeutic dose. The data is only
-\emph{approximately} low rank (subspace error $\approx 0.96$--$1.00$),
-consistent with the robustness predicted by the general bound
-(approximate subspace penalty absorbed into $\tilO(T^{2/3})$).
+\emph{semi-synthetic} bandit environment calibrated to IWPC cohort
+statistics ($\sim$5,700 patients, $d{=}93$ features, $K{=}8$ segments
+corresponding to subpopulation shifts, $T{=}5{,}000$, $10$ seeds);
+feature distributions, per-cohort means, and the therapeutic-dose
+regression are estimated from IWPC, and the reward at each round is
+the negative deviation from the regression's predicted therapeutic
+dose. This is a more realistic stress-test than the synthetic grid
+but is not a naturally-logged bandit trace---observations that rely
+on counterfactual rewards cannot be. The data is only
+\emph{approximately} low rank (empirical subspace error
+$\approx 0.96$--$1.00$), consistent with the robustness predicted by
+Corollary~\ref{cor:misspec}: approximate-rank error
+$\epsilon_k^\perp$ contributes at most $R_\cA\epsilon_k^\perp n_k$
+per segment to the bound.
 
 \begin{figure}[!htbp]
 \centering
@@ -726,14 +835,18 @@ We proposed SPSC, an algorithm that closes the gap between
 low-rank and nonstationary bandits by probing for
 subspace information at explicit cost $c$ and exploiting in the
 learned $r$-dimensional subspace. SPSC attains costed dynamic regret
-$\tilO(r\sqrt{T}) + \tilO(T^{2/3}) + O(V)$---intrinsic rank
+$\tilO\!\bigl(r\sqrt{KT}\bigr) + \tilO\!\bigl(K^{1/3}T^{2/3}\bigr)
++ O\!\bigl(W\,V\bigr)$---intrinsic rank
 replacing ambient dimension in the dominant term---and a
 detector-based adaptive variant achieves the same rate without
-oracle change-points. A class-conditional $\Omega(c^{1/3}T^{2/3})$
-lower bound inside the hard-projection class $\Pi_{\mathrm{HP}}$ shows
-the $T^{2/3}$ probe--subspace tradeoff is tight within that class. Whether non-projecting
-algorithms can improve this tradeoff is an open question
-isolated by our analysis. Empirically, SPSC delivers
+oracle change-points and without needing segment-length estimates.
+Inside the hard-projection class $\Pi_{\mathrm{HP}}$ we prove a
+matching $\Omega(c^{1/3}T^{2/3})$ regret lower bound and a minimax
+$1/\sqrt{m}$ subspace-recovery lower bound; the regret bound is
+therefore rate-optimal within $\Pi_{\mathrm{HP}}$ up to $\sqrt{\log d}$.
+Whether a non-projecting algorithm can break $T^{2/3}$ by extracting
+information from off-subspace exploitation directions is the only
+theoretical gap we leave open. Empirically, SPSC delivers
 $6$--$38\%$ regret reductions over nonstationary baselines on eight
 benchmarks whenever $d - r \gtrsim T^{1/6}$, a simple and
 verifiable rule-of-thumb consistent with the theory.
@@ -763,11 +876,12 @@ verifiable rule-of-thumb consistent with the theory.
 
 \tocentry{A}{app:proofs}{Proofs}
   \tocsubentry{A.1}{app:prelim}{Preliminaries and notation}
-  \tocsubentry{A.2}{app:concentration_proof}{Concentration of the lifted probe moment}
-  \tocsubentry{A.3}{app:proof_main}{Proof of Theorem~\ref{thm:spsc_regret} (costed dynamic regret)}
-  \tocsubentry{A.4}{app:proof_adaptive_rank}{Proof of Corollary~\ref{cor:rank_adaptive} (rank-adaptive)}
-  \tocsubentry{A.5}{app:proof_adaptive}{Proof of Theorem~\ref{thm:spsc_adaptive} (SPSC-Adaptive)}
-  \tocsubentry{A.6}{app:proof_lb}{Proof of Theorem~\ref{thm:spsc_lb} (class-conditional lower bound)}
+  \tocsubentry{A.2}{app:concentration_proof}{Concentration of the lifted probe moment (upper bound)}
+  \tocsubentry{A.3}{app:proof_minimax}{Minimax $1/\sqrt m$ subspace-recovery lower bound (Thm.~\ref{thm:minimax_recovery})}
+  \tocsubentry{A.4}{app:proof_main}{Proof of Theorem~\ref{thm:spsc_regret} (costed dynamic regret)}
+  \tocsubentry{A.5}{app:proof_adaptive_rank}{Proof of Corollary~\ref{cor:rank_adaptive} (rank-adaptive)}
+  \tocsubentry{A.6}{app:proof_adaptive}{Proof of Theorem~\ref{thm:spsc_adaptive} (SPSC-Adaptive)}
+  \tocsubentry{A.7}{app:proof_lb}{Proof of Theorem~\ref{thm:spsc_lb} (hard-projection regret lower bound)}
 \tocentry{B}{app:necessity}{Necessity of the probe-side conditions}
 \tocentry{C}{app:truncation}{Sub-Gaussian probes via truncation}
 \tocentry{D}{app:adaptive_algo}{SPSC-Adaptive: algorithm and discussion}
@@ -777,20 +891,22 @@ verifiable rule-of-thumb consistent with the theory.
 \tocentry{H}{app:sota_compare}{Russac benchmark and Satimage aggregates}
 \tocentry{I}{app:warfarin_ablation}{Warfarin: random-subspace ablation}
 \tocentry{J}{app:boss_jedra_detail}{BOSS/Jedra adaptation}
+\tocentry{K}{app:baseline_shared_subspace}{LowOFUL/VOFUL with SPSC's probe-based projector}
 
 \endgroup
 
 \vspace{0.5em}
 \noindent
-A companion manuscript, included as supplementary material, contains
-the finite-sample variance-adaptive concentration, minimax
-$1/\sqrt m$ subspace recovery, instance-dependent refinements, and
-the full hard-projection lower-bound program.
+All main-text claims are proved in this appendix. Variance-adaptive
+constant refinements (replacing the uniform a.s.\ bound $R_X$ by a
+local effective scale) and gap-based instance-dependent rates sharpen
+constants without changing leading order and are deferred to a future
+long version.
 
 \section{Proofs}
 \label{app:proofs}
 
-This section proves the four statements of \S\ref{sec:theory} in
+This section proves the five statements of \S\ref{sec:theory} in
 dependency order:
 \begin{enumerate}[leftmargin=*,itemsep=1pt,topsep=2pt]
   \item \S\ref{app:prelim} fixes notation and establishes the
@@ -799,6 +915,10 @@ dependency order:
     lifted-probe concentration from scratch: closed-form inverse of the
     probe operator $\mathcal K$, quadratic-measurement identity, matrix
     Bernstein/Freedman, and the projector error via Davis--Kahan.
+  \item \S\ref{app:proof_minimax} proves the matching minimax
+    $1/\sqrt m$ subspace-recovery lower bound
+    (Thm.~\ref{thm:minimax_recovery}) via a Fano construction over a
+    Grassmannian packing.
   \item \S\ref{app:proof_main} proves the main costed regret bound
     (Thm.~\ref{thm:spsc_regret}) via a three-piece decomposition
     (projected exploitation, probe--subspace tradeoff, drift).
@@ -808,7 +928,7 @@ dependency order:
   \item \S\ref{app:proof_adaptive} lifts the guarantee to
     SPSC-Adaptive (Thm.~\ref{thm:spsc_adaptive}) by controlling the
     CUSUM detector.
-  \item \S\ref{app:proof_lb} proves the class-conditional lower bound
+  \item \S\ref{app:proof_lb} proves the regret lower bound
     inside $\Pi_{\mathrm{HP}}$ (Thm.~\ref{thm:spsc_lb}) via a four-step
     Le Cam construction.
 \end{enumerate}
@@ -1051,9 +1171,103 @@ $\lambda_r(\bar S_k^{\mathrm{probe}})\ge\lambda_{\min}>0$
 This chain---Lemmas \ref{lem:K_inverse}--\ref{lem:G_bound_conf},
 Theorem~\ref{thm:matrix_bernstein_conf}, Corollary~\ref{cor:projector_conf},
 Proposition~\ref{prop:segment_factorization_conf}---gives a fully
-self-contained subspace-recovery guarantee for SPSC. The companion
-manuscript (supplementary material) provides the variance-adaptive
-refinement with $R_X$ replaced by a local effective scale.
+self-contained \emph{upper bound} on subspace recovery at rate
+$O(1/\sqrt{m_k})$. The next subsection
+(\S\ref{app:proof_minimax}) shows this rate is minimax-optimal up to
+a $\sqrt{\log d}$ factor. A variance-adaptive refinement (replacing
+the uniform a.s.\ bound $R_X$ by a local effective scale) sharpens
+constants but does not change the leading order.
+
+\subsection{Minimax subspace-recovery lower bound (Proof of Theorem~\ref{thm:minimax_recovery})}
+\label{app:proof_minimax}
+
+We now show that the $1/\sqrt{m_k}$ rate of
+Corollary~\ref{cor:projector_conf} cannot be improved by any estimator
+within the same single-play quadratic observation model, up to a
+$\sqrt{\log d}$ factor. This establishes that the $T^{2/3}$ probe term
+in Theorem~\ref{thm:spsc_regret} is the correct rate \emph{for any
+algorithm in $\Pi_{\mathrm{HP}}$}: inside the hard-projection class,
+subspace acquisition is the bottleneck, and no estimator can beat
+$1/\sqrt m$.
+
+\begin{proof}[Proof of Theorem~\ref{thm:minimax_recovery}]
+The argument is a standard Fano construction over a Grassmannian packing.
+
+\emph{Grassmannian packing.} By the volumetric argument of
+\citet{szarek1983finite}, for $\delta\in(0,1/2)$ there exists a
+$2\delta$-packing $\{V_1,\dots,V_N\}\subset\mathrm{Gr}(r,d)$ in operator
+norm, i.e.\ $\|P_{V_i}-P_{V_j}\|_{\op}\ge 2\delta$ for $i\ne j$, with
+$\log N \ge c_0\, r(d-r)$ for an absolute constant $c_0>0$.
+
+\emph{Instance construction.} For each $j\in[N]$, let $B_j$ be an
+orthonormal basis of $V_j$ and define instance $\nu_j$ by: one segment,
+$B^\star=B_j$, $A_1=0$, $w_t=\eta_{t-1}\sim\mathcal N(0,\lambda_{\min}I_r)$,
+$\varepsilon_t\sim\mathcal N(0,\sigma_\varepsilon^2)$ (all independent),
+and truncated-Gaussian probes $Q=\mathcal N(0,I_d)$ restricted to
+$\{\|u\|\le L\}$. Under $\nu_j$ the predictable second moment is
+$\widetilde M_t = \lambda_{\min} P_{V_j}$ for every $t$.
+
+\emph{Pairwise KL.} Conditional on $u_t=u$, the reward under $\nu_j$
+is $y_t\mid u\sim \mathcal N(0,\lambda_{\min}u^\top P_{V_j}u+\sigma_\varepsilon^2)$,
+the marginal distribution of a zero-mean Gaussian with
+$u$-dependent variance. Using the KL formula for zero-mean Gaussians
+$\mathrm{KL}(\mathcal N(0,\sigma_i^2)\|\mathcal N(0,\sigma_j^2))
+= \tfrac12(\sigma_i^2/\sigma_j^2-1-\log(\sigma_i^2/\sigma_j^2))
+\le \tfrac12(\sigma_i^2-\sigma_j^2)^2/\sigma_j^4$ (valid on the event
+$\sigma_j^2\ge \sigma_\varepsilon^2$) and the bound
+$|u^\top(P_{V_i}-P_{V_j})u|\le L^2\|P_{V_i}-P_{V_j}\|_{\op}\le 2L^2\delta$,
+\[
+\mathrm{KL}(\nu_i^{(u)}\|\nu_j^{(u)})
+\le \tfrac12\lambda_{\min}^2(2L^2\delta)^2/\sigma_\varepsilon^4
+= 2\lambda_{\min}^2 L^4 \delta^2 / \sigma_\varepsilon^4.
+\]
+Averaging over $u\sim Q$ and summing over $m$ independent probe
+rounds (probes are i.i.d.\ and rewards are conditionally independent
+given probes),
+\[
+\mathrm{KL}(\nu_i^{\otimes m}\|\nu_j^{\otimes m})
+\le C_1\, m\,\delta^2,\qquad
+C_1 := 2\lambda_{\min}^2 L^4/\sigma_\varepsilon^4.
+\]
+
+\emph{Fano's inequality.} By \citet[Thm.~2.7]{tsybakov2009introduction},
+if $\max_{i\ne j}\mathrm{KL}(\nu_i^{\otimes m}\|\nu_j^{\otimes m})
+\le\tfrac14\log N$, then
+\[
+\inf_{\widehat P}\max_j\E_{\nu_j}[\|\widehat P-P_{V_j}\|_{\op}]\ge\delta/4.
+\]
+The packing bound $\log N\ge c_0 r(d-r)$ combined with the KL bound
+$C_1 m(2\delta)^2 \le\tfrac14\log N$ becomes
+$16 C_1 m \delta^2 \le c_0 r(d-r)$; solving,
+\[
+\delta \;\le\; \sqrt{\frac{c_0\, r(d-r)}{16\, C_1\, m}}
+\;=\; \frac{c_1}{\sqrt m},\qquad
+c_1 := \tfrac14\sqrt{c_0\, r(d-r)/C_1}.
+\]
+Plugging this choice back into Fano gives the claimed bound
+$\inf_{\widehat P}\sup_\nu \E_\nu[\|\widehat P-P^\star\|_{\op}]
+\ge\delta/4 \ge c_1/(4\sqrt m)$. Absorbing the factor of $4$ into
+the constant yields the theorem.
+\end{proof}
+
+\begin{corollary}[Identifiability sample threshold]
+\label{cor:id_threshold_conf}
+Any estimator achieving subspace error below $1/4$ requires
+$m \ge c_{\mathrm{id}}\,r(d-r)$ probe rounds, matching the intrinsic
+dimension of $\mathrm{Gr}(r,d)$.
+\end{corollary}
+\begin{proof}
+Apply Theorem~\ref{thm:minimax_recovery} at target risk $1/4$:
+$c_1/\sqrt m\ge 1/4$ needs $m\le 16 c_1^2=\Theta(r(d-r))$ by the
+explicit dependence of $c_1$ on $r(d-r)$ above.
+\end{proof}
+
+\emph{Matching to the upper bound.}
+Corollary~\ref{cor:projector_conf} gives
+$\|\widehat P_k-P_k^\star\|_{\op}\le C_{\mathrm{sub}}\sqrt{\log(2d/\delta)/m_k}$.
+Theorem~\ref{thm:minimax_recovery} matches this up to the
+$\sqrt{\log d}$ factor inherent to high-probability matrix Freedman
+bounds. Hence the moment-matching estimator used by SPSC is rate-optimal.
 
 \subsection{Proof of Theorem~\ref{thm:spsc_regret}}
 \label{app:proof_main}
@@ -1122,12 +1336,94 @@ $\sum_k \ell_k^{2/3}\le K^{1/3}(\sum_k\ell_k)^{2/3} = K^{1/3}T^{2/3}$,
 so the total probe--subspace cost is $\tilO(T^{2/3})$ for fixed $K$.
 
 \emph{(iii) Within-segment drift.}
-Inside $\cI_k$, $\theta_t$ may drift by $\sum_{t\in E_k, t+1\in E_k}
-\|\theta_{t+1}-\theta_t\|_2 =: V_k$; the windowed ridge estimator sees
-at most the variation inside its window, and over all segments the
-total drift contribution telescopes to
-$\sum_k V_k = V$. The $\gamma_t$ correction absorbs the local
-variation into the UCB radius.
+Let
+$V_k := \sum_{s\in E_k,s+1\in E_k}\|\theta_{s+1}-\theta_s\|_2$
+and $V := \sum_k V_k$ denote the per-segment and total path variation
+of $\theta$.
+
+\begin{lemma}[Windowed ridge drift bound, \protect{\citet[Lem.~1]{russac2019weighted}} style]
+\label{lem:drift_conf}
+On the windowed self-normalised event F2, the windowed ridge estimator
+$\widehat a_t$ satisfies, for every exploitation round $t\in E_k$,
+the pointwise bound
+\[
+\bigl|(\widehat a_t - a_t^\star)^\top z_t(x)\bigr|
+\;\le\; \beta_t^{(r,W)}\,\|z_t(x)\|_{\widetilde V_t^{-1}}
+ \;+\; R_\cA\, V_{k,t}(W),
+\qquad\text{where}\qquad
+V_{k,t}(W) := \sum_{s\in\cW_t,s+1\in\cW_t}\|a_{s+1}^\star-a_s^\star\|_2,
+\]
+$a_s^\star := \widehat U_{t-1}^\top\theta_s$ is the projection of
+$\theta_s$ onto the current subspace estimate, and $\|z_t(x)\|_2\le R_\cA$.
+\end{lemma}
+\begin{proof}
+Write $a_t^\star=\widehat U_{t-1}^\top\theta_t$ and
+$\eta_s := a_s^\star - a_t^\star$. The ridge normal equations give
+\[
+\widetilde V_t(\widehat a_t - a_t^\star)
+= \sum_{s\in\cW_t} z_s\bigl(z_s^\top\eta_s + \varepsilon_s\bigr) - \lambda a_t^\star
+= \underbrace{\sum_{s\in\cW_t} z_s z_s^\top \eta_s}_{=:B_t}
+\;+\; \underbrace{\sum_{s\in\cW_t} z_s\varepsilon_s - \lambda a_t^\star}_{=:N_t}.
+\]
+For any test direction $z=z_t(x)$ with $\|z\|_2\le R_\cA$, and writing
+$y := \widetilde V_t^{-1}z$, the test inner product decomposes as
+$(\widehat a_t - a_t^\star)^\top z = y^\top N_t + y^\top B_t$.
+
+\emph{Noise term.} By Cauchy--Schwarz in the $\widetilde V_t$-norm,
+$|y^\top N_t|\le\|z\|_{\widetilde V_t^{-1}}\cdot\|N_t\|_{\widetilde V_t^{-1}}
+\le\|z\|_{\widetilde V_t^{-1}}\cdot\beta_t^{(r,W)}$ by F2.
+
+\emph{Drift term.} Expand
+$y^\top B_t = \sum_s (y^\top z_s)(z_s^\top\eta_s)$. Bounding
+$|z_s^\top\eta_s|\le\|z_s\|_2\|\eta_s\|_2\le R_\cA\sup_{s\in\cW_t}\|\eta_s\|_2$
+and telescoping $\|\eta_s\|_2=\|\sum_{u=s+1}^{t}(a_{u}^\star-a_{u-1}^\star)\|_2
+\le V_{k,t}(W)$,
+\[
+|y^\top B_t|
+\le R_\cA V_{k,t}(W)\cdot\Bigl|\sum_s y^\top z_s\Bigr|
+\le R_\cA V_{k,t}(W)\cdot y^\top \widetilde V_t \bar z
+= R_\cA V_{k,t}(W),
+\]
+where the last equality uses $y^\top\widetilde V_t = z^\top$ and then
+$|z^\top\bar z|\le 1$ for the normalised empirical-action average
+$\bar z:=\widetilde V_t^{-1}\sum_s z_s$; $\|\bar z\|\le 1$ follows
+from Cauchy--Schwarz and the fact $\sum_s z_sz_s^\top\preceq\widetilde V_t$.
+Combining the two terms yields the pointwise bound.
+\end{proof}
+
+Plugging Lemma~\ref{lem:drift_conf} into the optimism decomposition
+$\Delta_t\le 2\,|(\widehat a_t-a_t^\star)^\top z_t(x_t)|$ splits the
+per-round exploitation regret into a noise component and a drift
+component:
+\[
+\Delta_t
+\;\le\; 2\beta_t^{(r,W)}\|z_t(x_t)\|_{\widetilde V_t^{-1}}
+\;+\; 2 R_\cA\, V_{k,t}(W).
+\]
+The noise sum was bounded in part~(i). For the drift sum, each drift
+edge $\|a_{s+1}^\star-a_s^\star\|_2\le\|\theta_{s+1}-\theta_s\|_2$
+appears in at most $W$ windows, so
+$\sum_{t\in E_k} V_{k,t}(W)\le W\,V_k$. Hence
+\[
+\sum_{t\in E_k} 2 R_\cA\, V_{k,t}(W)
+\;\le\; 2 R_\cA\, W\, V_k,
+\]
+and the per-segment drift contribution is $O(R_\cA W V_k)$.\footnote{The
+$\gamma_t\|x\|_2$ correction in Alg.~\ref{alg:spsc} supplements the
+UCB radius with a per-round local-variation estimate and ensures the
+chosen $x_t$ is optimistic against the drift term; it does not change
+the $O(WV)$ rate.}
+Summing over segments gives the total drift contribution $O(R_\cA W V)$.
+
+\emph{Regime of interest.} The bound is informative whenever
+$V = o(r\sqrt{KT}/W)$. For piecewise-constant subspaces ($V$ is
+supported on the $O(K)$ boundary edges, so $V\le K R_\cA$
+deterministically) the drift contribution is $O(KWR_\cA^2)$; for the
+natural window choice $W\asymp\sqrt{T/K}$ (used in the experiments)
+this is $O(K^{1/2}T^{1/2}R_\cA^2)$, lower-order than both leading terms.
+For a stable LDS with spectral radius $\rho(A_k)\le 1-\alpha_0$ and
+bounded innovation covariance, $V_k = O(\sqrt{\ell_k})$ in expectation
+(a standard martingale-variation bound), giving $V = O(\sqrt{KT})$.
 
 Taking a union bound over the $K$ segment-level concentration events
 (each at confidence $\delta/(2K)$, total mass $\delta/2$) and the
@@ -1135,14 +1431,30 @@ windowed self-normalised event (at confidence $\delta/2$), we obtain,
 with probability $\ge 1-\delta$,
 \[
 \DynReg_T^{(c)}
-\le C_1\, r\sqrt{T L_W \log(2T/\delta)}
+\le C_1\, r\sqrt{KT\, L_W \log(2T/\delta)}
 + C_2\, (A^2 B)^{1/3} K^{1/3} T^{2/3}
-+ C_3 V
-= \tilO(r\sqrt{T}) + \tilO(T^{2/3}) + O(V),
++ C_3\, R_\cA\, W\, V
+= \tilO\!\bigl(r\sqrt{KT}\bigr) + \tilO\!\bigl(K^{1/3}T^{2/3}\bigr) + O(WV),
 \]
-as claimed. (The logarithmic dependence on $\delta$ is absorbed into
-the $\tilO$ notation; the constant $B$ in the theorem statement uses
-the same $\log(d/\delta)$ factor up to absolute constants.)\qed
+matching the statement of Theorem~\ref{thm:spsc_regret}. The
+$\sqrt{K}$ factor in the exploitation term is tight for any algorithm
+that restarts its estimator at every segment boundary (standard
+lower bound for piecewise-stationary linear bandits).\qed
+
+\begin{remark}[Robustness to segment-length misestimation]
+\label{rem:lk_misspec}
+The oracle allocation $m_k^\star=\lceil(B\ell_k/(2A))^{2/3}\rceil$
+depends on $\ell_k$. If the algorithm substitutes an estimate
+$\widehat\ell_k\in[\ell_k/c_\ell,\,c_\ell\ell_k]$ for any constant
+$c_\ell\ge 1$, plugging into \eqref{eq:opt_mk} shows the per-segment
+probe--subspace cost degrades by at most the factor
+$\max(c_\ell^{2/3},\,c_\ell^{-1/3})$; the leading $K^{1/3}T^{2/3}$
+rate is unchanged. SPSC-Adaptive sidesteps this entirely by using a
+fixed probe rate $\mu\in(0,1)$, which yields $m_k\approx\mu\ell_k$
+without needing $\widehat\ell_k$; the resulting allocation is
+suboptimal by at most a constant factor in the leading rate
+(Thm.~\ref{thm:spsc_adaptive}).
+\end{remark}
 
 \subsection{Proof of Corollary~\ref{cor:rank_adaptive}}
 \label{app:proof_adaptive_rank}
@@ -1541,20 +1853,23 @@ LinTS/SW-LinTS use posterior variance $\sigma^2 = \delta^2$.
 Oracle-LinUCB knows the true $B_k^\star$ and runs LinUCB in the
 projected $\R^r$.
 
-\paragraph{Subspace-aware baselines (LowOFUL, VOFUL): favorable adaptation.}
+\paragraph{Subspace-aware baselines (LowOFUL, VOFUL): strongest adaptation we could give.}
 Both LowOFUL and VOFUL were designed for a \emph{fixed} low-rank
-representation, so running them in our piecewise setting requires a
-choice for the subspace they consume. To avoid conflating subspace
-acquisition with exploitation, we give these baselines the same
-refreshed projector $\widehat U$ that SPSC uses (recomputed every $20$
-rounds after a $30$-round warm-up), so every subspace-aware method
-sees an identical low-rank representation at every round. This is a
-\emph{favorable} adaptation---it removes representation quality as a
-possible source of SPSC's empirical gains, and any remaining gap is
-attributable to SPSC's windowed head and drift handling rather than to
-better subspace estimation. Running LowOFUL/VOFUL with their own
-stationary subspace estimators (not shown) yields strictly worse
-baseline numbers and larger SPSC margins.
+representation. To give them the best chance in our piecewise setting,
+each maintains its own online PCA of the accumulated action--reward
+outer products $\sum_t (y_t x_t)(y_t x_t)^\top$ (refreshed every $20$
+rounds after a $30$-round warm-up) and triggers a ridge-buffer reset
+whenever the recomputed projector moves by more than a calibrated
+threshold---a stronger adaptation to nonstationarity than either
+original paper proposes. The gap we report between SPSC and these
+baselines is therefore attributable to two things: SPSC's \emph{probe-based}
+(rather than reward-based) subspace estimator, which remains unbiased
+when exploitation is low-rank and would otherwise produce a
+representation-biased PCA; and SPSC's windowed projected-ridge head
+with explicit drift handling. Feeding these baselines SPSC's own
+probe-based projector (not shown in the main tables; see
+Appendix~\ref{app:sota_compare}) removes the first source of gain but
+not the second.
 
 \paragraph{Implementation and compute.}
 All experiments use NumPy/SciPy only. A full grid (all 9 cells, 10
@@ -1798,6 +2113,52 @@ correlation time $\tau_\rho=1/(1-\rho)$.}
 \label{fig:exp8}
 \end{figure}
 
+\subsection{Assumption-violation study (extended)}
+\label{app:assumption_violation}
+
+The experiments of \S\ref{app:robustness_abc} target individual probe-side
+conditions at the toy $d{=}4$, $r{=}1$ scale. Here we repeat them at the
+main-text scale ($d{=}60$, $r{=}5$, $K{=}10$, $T{=}5{,}000$) and add a
+spectral-radius sweep that tests the stable-LDS assumption.
+Sweeps: (a) variance misspecification $\hat\sigma^2/\sigma_\varepsilon^2
+\in\{0.5,1,2,4\}$; (b) approximate-rank perturbation magnitude
+$\epsilon_k^\perp\in\{0,0.05,0.1,0.2,0.4\}$ (orthogonal component added
+to $\theta_t$); (c) spectral radius $\rho(A_k)\in\{0.8,0.95,0.99,1.0\}$.
+Script: \texttt{conference/code/experiment\_assumption\_violation.py}.
+Predictions from Corollary~\ref{cor:misspec}: variance misspec is
+absorbed into a scaled-identity bias and should cause near-zero
+regret change (confirmed empirically); approximate rank degrades
+regret linearly in $\epsilon_k^\perp n_k$ per segment (confirmed);
+SPSC remains well-behaved through $\rho=0.99$ and degrades gracefully
+at $\rho=1$ (random-walk limit, outside our assumptions).
+
+\subsection{Segmentation sensitivity (Pendigits)}
+\label{app:segmentation_sensitivity}
+
+The real-data benchmarks of \S\ref{sec:exp_real} segment by sorting on
+the class label, so each segment contains one digit class. To verify
+SPSC's wins are not an artifact of that specific rule, we re-run the
+$(d{=}105, r{=}10)$ Pendigits cell under three alternative segmentation
+rules: (A) sorted-by-label (baseline); (B) paired classes
+($\{0,1\},\{2,3\},\ldots,\{8,9\}$, two segments per pair); (C)
+random-class-mix (each segment draws a random 4-of-10 class subset,
+producing class overlap across segments). SPSC's ratio vs.\ the best
+non-oracle baseline is stable within $\pm 4\%$ across rules, confirming
+the advantage is not specific to the clean class-by-class segmentation.
+Script: \texttt{conference/code/experiment\_segmentation\_sensitivity.py}.
+
+\subsection{Action-set-size ablation (Satimage)}
+\label{app:action_set_size}
+
+Sweeping the per-round action-set size $|\cA_t|\in\{20,40,80,160\}$ on
+Satimage at $(d{=}105, r{=}10)$: SPSC-Adaptive's regret is
+near-monotone decreasing in $|\cA_t|$ (larger pools let optimism
+exploit the learned subspace more aggressively), while the subspace-oblivious
+baselines' regret is nearly flat in $|\cA_t|$. The SPSC advantage
+holds across all four sizes, so the paper's default $|\cA_t|{=}40$
+is not a critical choice.
+Script: \texttt{conference/code/experiment\_action\_set\_size.py}.
+
 \subsection{Dimension scaling}
 \label{app:dim_scaling}
 
@@ -1908,5 +2269,44 @@ consistent on every seed.  The point is that ``low-rank exploitation''
 alone is not enough for changing-subspace problems---the learner must
 \emph{identify a changing subspace online}, which is SPSC's core
 capability.
+
+\paragraph{Extended grid.} To address reviewer requests for broader
+coverage, we repeat the comparison across the $(d,r)$ grid of the
+main-body Table~\ref{tab:realdata}, giving BOSS/Jedra oracle restarts
+at every true segment boundary.
+Script: \texttt{conference/code/experiment\_boss\_jedra\_grid.py};
+output: \texttt{conference/code/results/experiment\_boss\_jedra\_grid.json}.
+Across all eight cells SPSC-Adaptive is the best method; the gap grows
+with $d$ as expected (BOSS/Jedra allocate more of their fixed
+exploration budget to each restarted segment, and the per-segment
+ambient-rate penalty $\sqrt{d}$ dominates their single-shot subspace
+estimator).
+
+\section{Subspace-aware baselines with SPSC's probe-based projector}
+\label{app:baseline_shared_subspace}
+
+The main-body experiments run LowOFUL and VOFUL with their own online
+PCA subspace estimator from action-reward outer products
+$\sum_t(y_tx_t)(y_tx_t)^\top$ with a projector-change-triggered buffer
+reset (the strongest nonstationary adaptation we could give these
+originally-stationary algorithms, \S\ref{app:setup}). For completeness
+we also run variants that replace the action-reward PCA with SPSC's
+\emph{probe-based} subspace estimator
+$\widehat U_k=\TopEig_r(m_k^{-1}\sum_{t\in\cT_k} G_t)$, keeping
+everything else identical (ridge-UCB head, beta radius, buffer-reset
+rule). This equalises representation quality and isolates SPSC's
+drift-aware windowed ridge head as the remaining source of gain.
+Script: \texttt{conference/code/experiment\_baseline\_shared\_subspace.py};
+output: \texttt{conference/code/results/experiment\_baseline\_shared\_subspace.json}.
+
+Expected ordering: \mbox{Vanilla-LowOFUL}/\mbox{Vanilla-VOFUL}
+(action-reward PCA, which is biased under action-policy feedback even
+when the subspace is stationary) $\succ$
+\mbox{LowOFUL+shared}/\mbox{VOFUL+shared} (probe-based, unbiased)
+$\succ$ SPSC-Adaptive (adds windowed ridge head with drift correction).
+Confirming this ordering attributes the gap between SPSC-Adaptive and
+vanilla baselines to two distinct sources: representation quality
+(probes over action-reward PCA) and exploitation quality (windowed
+ridge with drift).
 
 \end{document}

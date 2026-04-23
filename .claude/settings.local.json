@@ -52,7 +52,9 @@
       "WebFetch(domain:www.itn.liu.se)",
       "WebFetch(domain:icml.cc)",
       "WebFetch(domain:ieeexplore.ieee.org)",
-      "Bash(curl -s -L \"https://arxiv.org/html/2402.15739v2\")"
+      "Bash(curl -s -L \"https://arxiv.org/html/2402.15739v2\")",
+      "Bash(pdflatex -interaction=nonstopmode conf.tex)",
+      "Bash(bibtex conf *)"
     ]
   }
 }
