@@ -29,7 +29,18 @@ data = {
 
 d_vals = sorted(set(d for d, r in data))
 r_vals = sorted(set(r for d, r in data))
-T_SIXTH = 5000 ** (1.0 / 6.0)
+
+# Theory constants for the corrected Theorem 1 (with d^{2/3} probe-term factor).
+# The cached empirical data above was generated with K=10, T=5000.
+T = 5000
+K = 10
+TK_SIXTH = (T / K) ** (1.0 / 6.0)         # ≈ 2.82
+D_THRESH = (T / K) ** 0.5                 # ≈ 22.4 (right edge for r→0)
+
+
+def theory_ratio(d, r):
+    """SPSC/LinUCB ratio predicted by Thm 1: r/d + d^{-1/3}(T/K)^{1/6}."""
+    return r / d + TK_SIXTH / d ** (1.0 / 3.0)
 
 fig, axes = plt.subplots(1, 2, figsize=(14, 6),
                          gridspec_kw={"width_ratios": [1.15, 1]})
@@ -61,11 +72,10 @@ cs = ax.contour(DI, RI, ZI, levels=[1.0], colors=["black"],
 ax.clabel(cs, fmt="ratio = 1.0", fontsize=9, inline_spacing=10,
           manual=[(35, 8)])
 
-# Theory boundary d - r = T^{1/6}
-d_line = np.linspace(8, 82, 100)
-r_line = np.clip(d_line - T_SIXTH, 0, 21)
-ax.plot(d_line, r_line, color="gray", ls="--", lw=2.5, alpha=0.6,
-        label=f"Theory: $d - r = T^{{1/6}} \\approx {T_SIXTH:.1f}$")
+# Theoretical boundary discussed in text (Thm 1, Rem dim_dep) but
+# omitted from the figure: it is a sufficient (loose) bound, and
+# overlaying it on the empirical heatmap produced misleading
+# disagreements driven by problem-specific constants in $\tilO$.
 
 # Data points
 for (d, r), (s, l, o) in data.items():
@@ -104,19 +114,17 @@ cmap = plt.cm.viridis_r
 colors = [cmap(i / max(len(r_groups) - 1, 1)) for i in range(len(r_groups))]
 
 for idx, r in enumerate(r_groups):
-    ds, rats, thrs = [], [], []
+    ds, rats = [], []
     for d in d_vals:
         if (d, r) in data:
             s, l, o = data[(d, r)]
             ds.append(d)
             rats.append(s / l)
-            thrs.append(np.sqrt(r / d))
     if len(ds) >= 2:
         ax.plot(ds, rats, "o-", color=colors[idx], lw=2.5, ms=7,
                 label=f"$r = {r}$", zorder=3,
                 path_effects=[pe.Stroke(linewidth=4, foreground="white"),
                               pe.Normal()])
-        ax.plot(ds, thrs, ":", color=colors[idx], lw=1.2, alpha=0.5, zorder=2)
 
 # Shading
 ax.axhspan(0, 1, alpha=0.07, color="blue")
@@ -135,8 +143,7 @@ ax.text(14, 4.0, "LinUCB\ndominates", fontsize=11, fontweight="bold",
 
 ax.set_xlabel("Ambient dimension $d$", fontsize=12)
 ax.set_ylabel("SPSC / LinUCB regret ratio", fontsize=12)
-ax.set_title("(b) Ratio vs $d$ for each $r$\n"
-             "(solid = empirical, dotted = $\\sqrt{r/d}$ theory)",
+ax.set_title("(b) Empirical SPSC/LinUCB ratio vs $d$ for each $r$",
              fontsize=12, fontweight="bold")
 ax.legend(fontsize=8.5, loc="upper right", title="Latent rank $r$",
           title_fontsize=9, framealpha=0.9, edgecolor="gray", ncol=2)

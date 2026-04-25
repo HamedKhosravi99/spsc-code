@@ -1,0 +1,378 @@
+% Standalone chunk A.2: Concentration chain (POST-FIX, Round 2).
+% Covers: Preliminaries, F2/F3, Lemma K_inverse, Lemma quad_conf,
+%         Lemma G_unbiased_conf (scaled-identity bias, exact),
+%         Rem bias_floor_sharp,
+%         Lemma G_bound_conf (observable cA_t event),
+%         Theorem matrix_bernstein_conf (predictable truncation MDS),
+%         Corollary projector_conf (with m_k >= log(2d/delta) hypothesis),
+%         Proposition segment_factorization_conf.
+% Source: conf.tex lines ~1057-1402 (post-fix).
+\input{_preamble}
+
+\title{Chunk A.2: Concentration of the lifted probe moment\\(post-fix, Round 4 verification)}
+\author{(excerpt for standalone review)}
+\date{}
+
+\begin{document}
+\maketitle
+
+\textbf{Setup context (not in chunk).} The learner plays $x_t \in \cA_t
+\subset \R^d$ with $\|x\| \le R_\cA$ and observes
+$y_t = x_t^\top\theta_t + \varepsilon_t$, $\theta_t = B_k^\star w_t$,
+$B_k^\star \in \R^{d\times r}$ orthonormal, $\|w_t\|\le S_w$,
+$\varepsilon_t$ sub-Gaussian with $\psi_2$-norm $\sigma_\varepsilon$
+(variance $\sigma_\varepsilon^2$, known up to a plugin $\hat\sigma^2$;
+misspec $\delta_\sigma := \hat\sigma^2-\sigma_\varepsilon^2$), and
+$\|\E[\varepsilon_t\theta_t\mid\cH_{t-1}]\|\le\epsilon_\times$
+(state--noise coupling). Probes are iid $u_t\sim\mathcal N(0,I_d)$,
+truncated at $\|u\|\le L$ (handled in Appendix~C chunk). The probe
+statistic is $s_t := y_t^2 - \hat\sigma^2$ and the lifted sample
+$G_t := \mathcal K^{-1}(s_t u_tu_t^\top)$, where $\mathcal K:M\mapsto\E[(u^\top M u)uu^\top]$.
+
+\textbf{What changed since Round~3 (R4 delta, this chunk).}
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=1pt]
+\item \textbf{Cor.~\ref{cor:projector_conf}} hypotheses rewritten as three
+  explicit itemized conditions (Freedman domination, Large-sample,
+  Probe-bias smallness), replacing R3's parenthetical ``provided
+  $b_\sigma\le\lambda_{\min}/4$''. The probe-bias smallness now
+  explicitly includes $\|\Theta_k\|_\op$, not just $b_\sigma$.
+\item Confidence-chain wording corrected: the Freedman event itself
+  holds w.p.\ $\ge 1-2\delta$ (Freedman $\delta$ + truncation-event $\delta$
+  from Lem.~\ref{lem:G_bound_conf}), not $\ge 1-\delta$ as R3's text implied.
+\end{itemize}
+
+\textbf{What changed since Round~2 (R3 delta, retained).}
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=1pt]
+\item \textbf{Cor.~\ref{cor:projector_conf}} restated: the R2 hypothesis
+``assume $\|\widehat M_k-\bar M_k^{\mathrm{probe}}\|_\op\le\lambda_{\min}/2$''
+was a random event used as a deterministic assumption. It is replaced
+by a proper deterministic sample-size condition
+$m_k\ge(16R_X/\lambda_{\min})^2\log(2d/\delta)$ that \emph{implies}
+the event w.h.p.\ via the Freedman bound.
+\item \textbf{Cor.~\ref{cor:projector_conf}} bound augmented with an
+explicit $4\|\Theta_k\|_\op/\lambda_{\min}$ term; R2 absorbed this
+silently into the $C_{\mathrm{sub}}$ inflation, which made downstream
+references (e.g.\ Cor.~rank\_adaptive, Round~2 chunk~A.5) unclear.
+\end{itemize}
+
+\textbf{What changed since Round~1 (delta highlights, retained from R2).}
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=1pt]
+\item \textbf{Lem.~\ref{lem:G_unbiased_conf}}: bias refined from conservative
+$\|\widetilde B\|_\op\le|\delta_\sigma|L^2+2L^3\epsilon_\times$ to
+$\widetilde B_t=-\delta_\sigma/(d+2)\cdot I_d$ (scaled identity, exact),
+using Gaussian odd-moment vanishing for the $\epsilon_\times$ cross term.
+\item \textbf{Lem.~\ref{lem:G_bound_conf}}: truncation event rewritten as
+the \emph{observable} $\cA_t:=\{\|u_t\|\le L\}\cap\{|y_t|\le L_y\}$
+(both $\sigma(u_t,y_t)$-measurable); probabilities accounted with
+$L^2=2d\log(4T/\delta)$, $L_\varepsilon=\sigma_\varepsilon\sqrt{2\log(4T/\delta)}$.
+\item \textbf{Thm.~\ref{thm:matrix_bernstein_conf}}: Freedman applied to the
+\emph{predictably-truncated MDS} $\tilde X_t:=G_t\mathbf 1\{\cA_t\}-\E[G_t\mathbf 1\{\cA_t\}\mid\cH_{t-1}]$;
+a deterministic offset $\Theta_k$ is introduced to transfer the bound
+back to $\widehat M_k$ on the high-probability event $\cE:=\bigcap_t\cA_t$.
+\item \textbf{Cor.~\ref{cor:projector_conf}}: hypothesis strengthened
+with $m_k\ge\log(2d/\delta)$ so that the linear Freedman term is dominated
+by the square-root term; truncation bias $\|\Theta_k\|_\op$ accounted
+explicitly (bounded by $O(d\sqrt{\delta/T})$ in the Appendix~C chunk).
+\end{itemize}
+
+\section*{Preliminaries (excerpt)}
+
+$\cI_k = [\tau_{k-1}, \tau_k)$ denotes segment $k$ of length
+$\ell_k := |\cI_k|$, $\sum_k \ell_k = T$. Inside $\cI_k$ the learner
+performs $m_k = |\cT_k|$ probe rounds ($\cT_k := \cTprobe\cap\cI_k$)
+and $n_k = \ell_k - m_k$ exploitation rounds ($E_k := \cI_k\setminus\cT_k$).
+Write $\widehat P_t = \widehat U_t \widehat U_t^\top$ and
+$P_k^\star = B_k^\star B_k^{\star\top}$ for the estimated and true rank-$r$
+projectors, and $\varepsilon_k := \|\widehat P_k - P_k^\star\|_{\op}$.
+The \emph{predictable second moment} is
+$\widetilde M_t := \E[\theta_t\theta_t^\top\mid\cH_{t-1}]
+= B_k^\star \E[w_tw_t^\top\mid\cH_{t-1}](B_k^\star)^\top$, and the
+probe-time average is
+$\bar M_k^{\mathrm{probe}} := m_k^{-1}\sum_{t\in\cT_k}\widetilde M_t$.
+By the stable-LDS assumption and $\Sigma_\eta\succ 0$,
+$\bar M_k^{\mathrm{probe}}$ has rank $r$ with $r$-th eigenvalue
+$\ge\lambda_{\min}>0$ uniformly in $k$.
+
+\begin{lemma}[Predictable probe-time excitation]
+\label{lem:probe_excitation_conf}
+For each segment $k$,
+$\lambda_r(m_k^{-1}\sum_{t\in\cT_k}\E[w_tw_t^\top\mid\cH_{t-1}])
+\ge \lambda_{\min}>0$ a.s.
+\end{lemma}
+\begin{proof}
+By stability and $\Sigma_\eta\succ 0$, the Lyapunov equation
+$\Sigma_k = A_k\Sigma_k A_k^\top + \Sigma_{\eta,k}$ has unique
+positive-definite solution with $\lambda_r(\Sigma_k)\ge
+\lambda_r(\Sigma_{\eta,k})/(1-(1-\alpha_0)^2)=:\underline\lambda$.
+Since $\E[w_tw_t^\top\mid\cH_{t-1}]\to\Sigma_k$ exponentially inside
+$\cI_k$, the probe-time average satisfies
+$\lambda_r(m_k^{-1}\sum_{t\in\cT_k}\E[w_tw_t^\top\mid\cH_{t-1}])\ge\underline\lambda/2=:\lambda_{\min}$
+past an $O(1)$ warm-up.
+\end{proof}
+
+\noindent\textbf{F2 (Windowed self-normalised bound).}\ On projected
+covariates $z_t = \widehat U_{t-1}^\top x_t\in\R^r$, the windowed ridge
+estimator $\widehat a_t = \widetilde V_t^{-1}\widetilde b_t$ satisfies,
+with probability $\ge 1-\delta$ and simultaneously for all $t$,
+$\|\widehat a_t - a_t^\star\|_{\widetilde V_t}\le\beta^{(r,W)}_t$
+with $\beta^{(r,W)}_t = \sigma_\varepsilon\sqrt{r\log(1+WR_\cA^2/(\lambda r)) + 2\log(1/\delta)} + \sqrt\lambda S_w$
+(projected Abbasi-Yadkori with sliding-window correction of Russac et al.).
+
+\noindent\textbf{F3 (Elliptical potential).}\ For any adapted
+$z_1,\dots,z_T\in\R^r$ with $\|z_t\|\le R_\cA$ and
+$\widetilde V_t = \lambda I + \sum_{s\in\cW_t} z_s z_s^\top$,
+$\sum_{t=1}^T \|z_t\|^2_{\widetilde V_t^{-1}}
+\le 2r\log(1 + W R_\cA^2/(\lambda r)) =: 2r L_W$.
+
+\section*{Concentration chain}
+
+\begin{lemma}[Closed-form inverse of $\mathcal K$]
+\label{lem:K_inverse}
+For isotropic Gaussian probes $u\sim\mathcal N(0,I_d)$,
+$\mathcal K(M) = 2M + \tr(M)\,I_d$ and
+$\mathcal K^{-1}(N) = \tfrac12 N - \tfrac{\tr(N)}{2(d+2)}\,I_d$, so
+$\|\mathcal K^{-1}\|_\op \le 1$.
+\end{lemma}
+\begin{proof}
+Expand $u^\top M u = \sum_{ij} M_{ij} u_i u_j$ and use Isserlis
+$\E[u_i u_j u_k u_l] = \delta_{ij}\delta_{kl} +
+\delta_{ik}\delta_{jl} + \delta_{il}\delta_{jk}$ to compute
+$\E[(u^\top M u)u_k u_l] = M_{kl}+M_{lk}+\tr(M)\delta_{kl} = 2M_{kl}
++ \tr(M)\delta_{kl}$ (symmetric $M$). Inverting
+$N = 2M + \tr(M)I_d$: $\tr(N) = (d+2)\tr(M)$, hence
+$M = \tfrac12 N - \tfrac{\tr(N)}{2(d+2)}I_d$. The operator norm
+follows from $|\tr(N)|/(d+2)\le\|N\|_\op$ for symmetric $N$.
+\end{proof}
+
+\begin{lemma}[Quadratic measurement identity]
+\label{lem:quad_conf}
+On every probe round $t\in\cTprobe$, with
+$\delta_\sigma := \hat\sigma^2 - \sigma_\varepsilon^2$,
+\[
+\E[s_t\mid\sigma(\cH_{t-1},u_t)]
+= u_t^\top \widetilde M_t u_t + 2 u_t^\top m_t - \delta_\sigma,\qquad \|m_t\|\le\epsilon_\times,
+\]
+where $m_t:=\E[\varepsilon_t\theta_t\mid\cH_{t-1},u_t]$. Under exact
+probe conditions ($\delta_\sigma=\epsilon_\times=0$) this collapses to
+$\E[s_t\mid\cdot] = u_t^\top\widetilde M_t u_t$.
+\end{lemma}
+\begin{proof}
+Expand $y_t^2 = (u_t^\top\theta_t)^2 + 2\varepsilon_t u_t^\top\theta_t
++ \varepsilon_t^2$ and condition on $\sigma(\cH_{t-1},u_t)$. Middle
+term contributes $2u_t^\top m_t$ with $\|m_t\|\le\epsilon_\times$ by
+assumption; last term contributes $\sigma_\varepsilon^2$, and
+subtracting $\hat\sigma^2$ leaves $-\delta_\sigma$. Independence of
+$u_t$ from $(\theta_t,\cH_{t-1})$ gives the first term.
+\end{proof}
+
+\begin{lemma}[Lifted probe sample is near-unbiased --- scaled-identity bias]
+\label{lem:G_unbiased_conf}
+Let $G_t := \mathcal K^{-1}(s_t u_tu_t^\top)$. Under $u_t\sim\mathcal N(0,I_d)$
+(untruncated; truncation handled separately),
+$\E[G_t\mid\cH_{t-1}] = \widetilde M_t + \widetilde B_t$ where
+\[
+\widetilde B_t \;=\; -\frac{\delta_\sigma}{d+2}\,I_d \qquad(\text{scaled identity, exact}),
+\]
+so $\|\widetilde B_t\|_\op = |\delta_\sigma|/(d+2)$. In particular
+$\widetilde B_t$ shifts all eigenvalues of $\E[G_t\mid\cH_{t-1}]$ by
+the same amount and does \emph{not} rotate eigenvectors.
+\end{lemma}
+\begin{proof}
+Linearity of $\mathcal K^{-1}$ and Lem.~\ref{lem:quad_conf} give
+\[
+\E[G_t\mid\cH_{t-1}]
+= \mathcal K^{-1}(\mathcal K(\widetilde M_t))
++ 2\,\mathcal K^{-1}(\E[(u_t^\top m_t)u_tu_t^\top\mid\cH_{t-1}])
+- \delta_\sigma\,\mathcal K^{-1}(\E[u_tu_t^\top]).
+\]
+The first term equals $\widetilde M_t$ (Lem.~\ref{lem:K_inverse}).
+The cross term vanishes: for any $\cH_{t-1}$-measurable $m_t$,
+$u_t\sim\mathcal N(0,I_d)$ has all third moments zero by symmetry, so
+$\E[(u_t^\top m_t)u_{t,k}u_{t,l}]=\sum_i m_{t,i}\,\E[u_{t,i}u_{t,k}u_{t,l}]=0$
+identically. Hence the $\epsilon_\times$-dependent term contributes
+zero to $\widetilde B_t$. For the third term, $\E[u_tu_t^\top]=I_d$,
+so Lem.~\ref{lem:K_inverse} gives
+$-\delta_\sigma\mathcal K^{-1}(I_d) = -\delta_\sigma[I_d/2 - d/(2(d+2))\,I_d]
+= -\delta_\sigma/(d+2)\cdot I_d$. Combining yields the scaled-identity form.
+\end{proof}
+
+\begin{remark}[Sharpened bias floor]
+\label{rem:bias_floor_sharp}
+Under isotropic Gaussian probes the state--noise coupling
+$\epsilon_\times$ contributes \emph{zero} bias to $\widetilde B_t$ (by
+Gaussian odd-moment vanishing), in contrast to the previously-stated
+conservative bound $|\delta_\sigma|L^2 + 2L^3\epsilon_\times$. The
+conservative bound remains valid for non-Gaussian probes lacking the
+odd-moment-vanishing property, and is retained in
+Cor.~\ref{cor:projector_conf} for generality; for Gaussian probes
+specifically, $\widetilde B_t$ is exactly a scaled identity and
+$\Delta_\sigma$ reduces to the sharper bound
+$\Delta_\sigma^{\mathrm{sharp}} = 4|\delta_\sigma|/((d+2)\lambda_{\min})$.
+\end{remark}
+
+\begin{lemma}[Observable a.s.\ bound on $G_t$]
+\label{lem:G_bound_conf}
+Define the \emph{observable} truncation event
+$\cA_t := \{\|u_t\|_2\le L\}\cap\{|y_t|\le L_y\}$ with
+$L_y := L\,S_w + L_\varepsilon$ and
+$L_\varepsilon := \sigma_\varepsilon\sqrt{2\log(4T/\delta)}$.
+Both indicators $\mathbf 1\{\|u_t\|\le L\}$, $\mathbf 1\{|y_t|\le L_y\}$
+are $\sigma(u_t,y_t)$-measurable, hence observable at round $t$. On
+$\cA_t$,
+\[
+  |s_t|\le R_s := L_y^2 + \hat\sigma^2, \qquad
+  \|G_t\|_\op \le R_X := L^2 R_s + S_w^2.
+\]
+Moreover, choosing $L^2=2d\log(4T/\delta)$ and
+$L_\varepsilon=\sigma_\varepsilon\sqrt{2\log(4T/\delta)}$ gives
+$\Pr(\cA_t^c\mid\cH_{t-1})\le\delta/T$, hence
+$\Pr(\bigcap_{t\in\cTprobe}\cA_t)\ge 1-\delta$.
+\end{lemma}
+\begin{proof}
+Since $\theta_t=B_k^\star w_t$ with $B_k^\star$ orthonormal and
+$\|w_t\|\le S_w$, $\|\theta_t\|_2\le S_w$. On $\cA_t$,
+$|y_t|\le L_y$ so $|s_t|=|y_t^2-\hat\sigma^2|\le y_t^2+\hat\sigma^2\le R_s$;
+using $\|\mathcal K^{-1}\|_\op\le 1$ and $\|u_tu_t^\top\|_\op\le L^2$,
+$\|G_t\|_\op\le|s_t|L^2+S_w^2=R_sL^2+S_w^2=R_X$ (the $S_w^2$
+absorbs the centering term $\|\widetilde M_t\|_\op\le S_w^2$).
+
+For the probability bound, $\chi^2_d$ tail with $L^2=2d\log(4T/\delta)$
+gives $\Pr(\|u_t\|>L)\le\delta/(4T)$. On $\{\|u_t\|\le L\}$,
+$|y_t|\le L S_w+|\varepsilon_t|$, so
+$\{|y_t|>L_y\}\cap\{\|u_t\|\le L\}\subseteq\{|\varepsilon_t|>L_\varepsilon\}$,
+and sub-Gaussian tail gives $\Pr(|\varepsilon_t|>L_\varepsilon)\le\delta/(2T)$.
+Union: $\Pr(\cA_t^c)\le\delta/(4T)+\delta/(2T)\le\delta/T$. Union over
+$|\cTprobe|\le T$ gives $\Pr(\bigcap\cA_t)\ge 1-\delta$.
+\end{proof}
+
+\begin{theorem}[Matrix Freedman for $\widehat M_k$ via predictable truncation]
+\label{thm:matrix_bernstein_conf}
+Define the predictably-truncated lifted sample
+$\tilde G_t := G_t\cdot\mathbf 1\{\cA_t\}$ and
+$\tilde X_t := \tilde G_t - \E[\tilde G_t\mid\cH_{t-1}]$.
+Then $\{\tilde X_t\}_{t\in\cT_k}$ is an MDS with
+$\|\tilde X_t\|_\op\le 2R_X$ a.s.\ and
+$\|\E[\tilde X_t^2\mid\cH_{t-1}]\|_\op\le R_X^2$ a.s. With probability
+$\ge 1-\delta$,
+\begin{equation}
+  \Bigl\|m_k^{-1}\textstyle\sum_{t\in\cT_k}\tilde X_t\Bigr\|_\op
+  \;\le\; 2R_X\sqrt{\log(2d/\delta)/m_k} + \tfrac{2R_X\log(2d/\delta)}{3m_k}.
+\end{equation}
+Transferring to the algorithm's estimator
+$\widehat M_k=m_k^{-1}\sum_{t\in\cT_k}G_t$: on the high-probability
+event $\cE := \bigcap_{t\in\cT_k}\cA_t$ (mass $\ge 1-\delta$ by
+Lem.~\ref{lem:G_bound_conf}), $\tilde G_t = G_t$ for every $t\in\cT_k$,
+so Freedman applies to $\widehat M_k$ up to a deterministic offset
+$\Theta_k := m_k^{-1}\sum_{t\in\cT_k}\E[G_t\mathbf 1\{\cA_t^c\}\mid\cH_{t-1}]$
+of operator norm $O(d\sqrt{\delta/T})$ (Appendix~C chunk). With
+probability $\ge 1-2\delta$,
+\begin{equation}
+\|\widehat M_k - \bar M_k^{\mathrm{probe}} - \widetilde B\|_\op
+\le 2R_X\sqrt{\log(2d/\delta)/m_k} + \frac{2R_X\log(2d/\delta)}{3m_k}
++ \|\Theta_k\|_\op.
+\label{eq:matrix_bernstein}
+\end{equation}
+\end{theorem}
+\begin{proof}
+\emph{MDS property.} $\mathbf 1\{\cA_t\}$ is $\sigma(u_t,y_t)$-measurable
+hence $\cH_t$-measurable, so $\tilde G_t$ is $\cH_t$-measurable and
+$\E[\tilde X_t\mid\cH_{t-1}]=0$.
+
+\emph{A.s.\ bound.} On $\cA_t$, $\|\tilde G_t\|_\op=\|G_t\|_\op\le R_X$
+by Lem.~\ref{lem:G_bound_conf}. On $\cA_t^c$, $\tilde G_t=0$, so
+$\|\tilde G_t\|_\op\le R_X$ unconditionally. The centered
+$\|\tilde X_t\|_\op\le\|\tilde G_t\|_\op+\|\E[\tilde G_t\mid\cH_{t-1}]\|_\op\le 2R_X$.
+
+\emph{Predictable variance.}
+$\|\E[\tilde X_t^2\mid\cH_{t-1}]\|_\op\le\|\E[\tilde G_t^2\mid\cH_{t-1}]\|_\op\le R_X^2$
+(follows from $\tilde G_t^2\preceq R_X^2 I$ on $\cA_t$, and zero on $\cA_t^c$).
+
+\emph{Freedman.} Matrix Freedman (Tropp 2011) with the above bounds
+gives the first displayed inequality on a $1-\delta$ event.
+
+\emph{Transfer.} Let $\bar{\tilde G}_k:=m_k^{-1}\sum\tilde G_t$,
+$\bar\mu_k:=m_k^{-1}\sum\E[\tilde G_t\mid\cH_{t-1}]$. On $\cE$,
+$\bar{\tilde G}_k=\widehat M_k$ and
+$\bar\mu_k = m_k^{-1}\sum\E[G_t\mid\cH_{t-1}]-\Theta_k
+= \bar M_k^{\mathrm{probe}}+\widetilde B-\Theta_k$ (using
+Lem.~\ref{lem:G_unbiased_conf}). Rearranging,
+$\widehat M_k-\bar M_k^{\mathrm{probe}}-\widetilde B
+= m_k^{-1}\sum\tilde X_t - \Theta_k$ on $\cE$, and triangle inequality
+yields \eqref{eq:matrix_bernstein} on $\cE\cap\{\text{Freedman}\}$,
+mass $\ge 1-2\delta$.
+\end{proof}
+
+\begin{corollary}[Projector concentration]
+\label{cor:projector_conf}
+Let $b_\sigma := |\delta_\sigma|L^2 + 2L^3\epsilon_\times$ denote the
+(deterministic) conservative upper bound on $\|\widetilde B\|_\op$ valid
+for any probe distribution (Lem.~\ref{lem:G_unbiased_conf}).
+Assume the three conditions:
+\begin{itemize}[leftmargin=1.5em,itemsep=1pt,topsep=1pt]
+\item (\emph{Freedman domination})\ $m_k\ge\log(2d/\delta)$, so the
+  linear Freedman term is at most the square-root term;
+\item (\emph{Large-sample})\ $m_k\ge(16R_X/\lambda_{\min})^2\log(2d/\delta)$,
+  so the Freedman square-root bound is $\le\lambda_{\min}/4$ (w.p.\
+  $\ge 1-2\delta$);
+\item (\emph{Probe-bias smallness})\ $b_\sigma+\|\Theta_k\|_\op\le\lambda_{\min}/4$,
+  so $\|\widetilde B\|_\op+\|\Theta_k\|_\op\le\lambda_{\min}/4$, giving
+  $\|\widehat M_k-\bar M_k^{\mathrm{probe}}\|_\op\le\lambda_{\min}/2$ at
+  the same confidence via \eqref{eq:matrix_bernstein}.
+\end{itemize}
+Then with probability $\ge 1-2\delta$,
+\begin{equation}
+\varepsilon_k := \|\widehat P_k - P_k^\star\|_\op
+\le C_{\mathrm{sub}}\sqrt{\log(2d/\delta)/m_k} + \Delta_\sigma + \frac{4\|\Theta_k\|_\op}{\lambda_{\min}},\
+C_{\mathrm{sub}} := \frac{8 R_X}{\lambda_{\min}},\
+\Delta_\sigma := \frac{4(|\delta_\sigma|L^2+2L^3\epsilon_\times)}{\lambda_{\min}}.
+\label{eq:proj_bound_conf}
+\end{equation}
+The truncation-bias contribution $4\|\Theta_k\|_\op/\lambda_{\min} = O(d\sqrt{\delta/T}/\lambda_{\min})=o(1)$
+for $\delta$ polynomial in $1/T$ (Prop.~theta\_bound, App.~C chunk). It is kept explicit here so
+downstream corollaries (e.g.\ Cor.~rank\_adaptive) can reference it.
+For Gaussian probes, $\Delta_\sigma$ specializes to the sharper
+$\Delta_\sigma^{\mathrm{sharp}}=4|\delta_\sigma|/((d+2)\lambda_{\min})$
+(Lem.~\ref{lem:G_unbiased_conf}, Rem.~\ref{rem:bias_floor_sharp}).
+\end{corollary}
+\begin{proof}
+By Lem.~\ref{lem:G_unbiased_conf},
+$\|\widetilde B\|_\op\le b_\sigma:=|\delta_\sigma|L^2+2L^3\epsilon_\times$
+(conservative, any probe distribution). Combining with
+Thm.~\ref{thm:matrix_bernstein_conf}, with probability $\ge 1-2\delta$,
+\[
+\|\widehat M_k - \bar M_k^{\mathrm{probe}}\|_\op
+\le 2R_X\sqrt{\log(2d/\delta)/m_k}
++ \frac{2R_X\log(2d/\delta)}{3m_k}
++ \|\Theta_k\|_\op + b_\sigma.
+\]
+Under $m_k\ge\log(2d/\delta)$, $2R_X\log(2d/\delta)/(3m_k)\le 2R_X\sqrt{\log(2d/\delta)/m_k}/3$,
+absorbing into a constant inflation of $C_{\mathrm{sub}}$.
+$\|\Theta_k\|_\op = O(d\sqrt{\delta/T})$ is polynomially small
+(Prop.~theta\_bound in Appendix~C chunk). $\bar M_k^{\mathrm{probe}}$
+has rank exactly $r$ with $r$-th eigenvalue $\ge\lambda_{\min}$
+(Prop.~\ref{prop:segment_factorization_conf}); Davis--Kahan gives
+$\|\widehat P_k-P_k^\star\|_\op\le 4\|\widehat M_k-\bar M_k^{\mathrm{probe}}\|_\op/\lambda_{\min}$,
+yielding \eqref{eq:proj_bound_conf}.
+\end{proof}
+
+\begin{proposition}[Segment factorisation]
+\label{prop:segment_factorization_conf}
+$\bar M_k^{\mathrm{probe}} = B_k^\star\bar S_k^{\mathrm{probe}}(B_k^\star)^\top$
+with $\bar S_k^{\mathrm{probe}}:=m_k^{-1}\sum_{t\in\cT_k}\E[w_tw_t^\top\mid\cH_{t-1}]$.
+In particular $\range(\bar M_k^{\mathrm{probe}}) = \range(B_k^\star)$.
+\end{proposition}
+\begin{proof}
+$\widetilde M_t = B_k^\star\E[w_tw_t^\top\mid\cH_{t-1}](B_k^\star)^\top$
+for $t\in\cI_k$; average over $\cT_k$ and factor $B_k^\star$. Range
+equality uses $\lambda_r(\bar S_k^{\mathrm{probe}})\ge\lambda_{\min}>0$
+(Lem.~\ref{lem:probe_excitation_conf}).
+\end{proof}
+
+This chain---Lemmas~\ref{lem:K_inverse}--\ref{lem:G_bound_conf},
+Theorem~\ref{thm:matrix_bernstein_conf}, Corollary~\ref{cor:projector_conf},
+Proposition~\ref{prop:segment_factorization_conf}---gives a
+self-contained upper bound on subspace recovery at rate
+$O(1/\sqrt{m_k})+\Delta_\sigma$, matched (up to $\sqrt{\log d}$) by
+the minimax lower bound (chunk A.3).
+
+\end{document}

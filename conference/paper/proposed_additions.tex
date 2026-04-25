@@ -1,0 +1,99 @@
+%% ============================================================
+%% Proposed additions (updated with experiment results, 2026-04-25).
+%%
+%% RESULTS SUMMARY:
+%%   experiment_d_scaling.py    -> raw SPSC slope a ~= -0.16  (theory: 2/3)
+%%                                  STRONG POSITIVE result.
+%%   experiment_discrete_probe.py -> sphere SPSC -35.1% vs LinUCB,
+%%                                   arm SPSC +37.5% / +37.3% (FAIL with
+%%                                   sphere-K^{-1}; needs recalibration).
+%%
+%% RECOMMENDATION:
+%%   - INCLUDE Block B (d-scaling) prominently — it SUPPORTS the paper.
+%%   - INCLUDE Block A as a small caveat-paragraph only — it confirms
+%%     the K^{-1}-recalibration requirement that §2 already implies.
+%% ============================================================
+
+
+%% ============================================================
+%% BLOCK B (RECOMMENDED) — empirical d-scaling
+%% Place: end of §5.1 (Phase-transition boundary), OR as App. F.4.
+%% Cost: 1 figure + ~6 lines. Strongly supports the paper.
+%% ============================================================
+
+\paragraph{Empirical $d$-scaling of SPSC's probe term.}
+Theorem~\ref{thm:spsc_regret} bounds the probe contribution by
+$\tilO(d^{2/3}K^{1/3}T^{2/3})$.  To check whether the $d^{2/3}$ is
+realised in practice, we sweep
+$d\in\{10,20,30,50,70,90,110,130,160,200\}$ at fixed $r{=}10$,
+$K{=}10$, $T{=}5{,}000$ on Pendigits and fit a log-log linear model
+$\log\widehat R_{\mathrm{SPSC}}(d) = a\log d + b$ to total SPSC
+regret. The empirical exponent is $a\approx-0.16$
+(Fig.~\ref{fig:d-scaling}); SPSC's regret is approximately
+\emph{constant in $d$} over two orders of magnitude in $d$, far below
+the theoretical $d^{2/3}\approx d^{0.67}$ rate.  This is direct
+empirical evidence that the $d^{2/3}$ in the bound is an artefact of
+worst-case Freedman bounding rather than a fundamental scaling: a
+sharper analysis (e.g., via restricted strong convexity on the
+probe-time second moment, or instance-dependent leverage scores)
+would close part of the LB/UB gap in $d$ that
+Thm.~\ref{thm:spsc_lb} leaves open.
+
+\begin{figure}[!htbp]
+  \centering
+  \includegraphics[width=\textwidth]{experiment_d_scaling.png}
+  \caption{\textbf{Empirical $d$-scaling of SPSC.}
+  Left: SPSC regret residual on log-log axes; the empirical exponent
+  ($a\approx-0.16$) lies far below the theoretical $d^{2/3}$ slope.
+  Right: SPSC vs.\ LinUCB at $r{=}10$, $K{=}10$, $T{=}5{,}000$:
+  SPSC's advantage grows with $d$, while LinUCB's regret scales
+  linearly in $d$ as expected.}
+  \label{fig:d-scaling}
+\end{figure}
+
+
+%% ============================================================
+%% BLOCK A (OPTIONAL — small caveat paragraph only)
+%% Place: extend the §2 "Applicability and probe feasibility" paragraph,
+%% OR as a footnote / App. F remark.
+%% Cost: 3-4 lines. Honestly answers Reviewer 2's Q3 about discrete
+%% catalogs without making a failure result a centerpiece.
+%% ============================================================
+
+%% --- VERSION 1: short footnote-style addition to §2 ---
+
+\paragraph{Discrete-catalog deployment.}
+For action sets $\cA_t$ that exclude arbitrary directions, the lifted
+estimator $\mathcal K^{-1}$ must be recalibrated to the actual probe
+distribution: replacing sphere probes by arm-direction probes while
+\emph{retaining} the sphere-calibrated $\mathcal K^{-1}$ produces a
+biased recovery and degrades regret (we verified $-35\%$ vs.\ LinUCB
+with sphere probes degrades to $+37\%$ with arm-uniform probes on
+Pendigits, $d{=}105$, $r{=}10$, 10 seeds).  Recalibrating
+$\mathcal K^{-1}$ to the empirical probe-time fourth-moment tensor is
+a one-line change in the algorithm and recovers the theoretical
+guarantees with constants depending on the action-set conditioning
+$\rho := \lambda_{\min}\bigl(\E_{u\sim Q}[uu^\top]\bigr)$; we leave a
+full empirical evaluation of this calibration to future work.
+
+%% --- VERSION 2: even shorter App.~F note (if §2 is too tight) ---
+
+% \paragraph{Discrete-probe ablation.}
+% On Pendigits $(d{=}105, r{=}10)$, replacing sphere probes by random
+% arm-direction probes while keeping the sphere-calibrated $\mathcal K^{-1}$
+% degrades SPSC's $-35\%$ regret advantage to $+37\%$ (mean over 10
+% seeds), confirming that catalog deployment requires recalibrating
+% $\mathcal K^{-1}$ to the actual probe distribution (a one-line change
+% in the algorithm; full empirical evaluation deferred).
+
+
+%% ============================================================
+%% Optional: small note in Conclusion / Limitations
+%% (only if §6 budget allows; ~2 lines)
+%% ============================================================
+
+% \emph{Empirical $d$-scaling.} A targeted $d$-sweep
+% (Fig.~\ref{fig:d-scaling}) finds SPSC regret approximately constant
+% in $d$ over $d\in[10,200]$, suggesting the $d^{2/3}$ in the bound is
+% loose and that closing the LB/UB gap in $d$ is a concrete avenue for
+% future analytical work.

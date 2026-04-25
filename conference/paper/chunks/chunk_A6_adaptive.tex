@@ -1,0 +1,224 @@
+% Standalone chunk A.6: SPSC-Adaptive regret bound
+% (POST-FIX, Round 2).
+% Covers: Thm spsc_adaptive (statement) with mu = c_mu (K/T)^{1/3},
+%         Rem mu_scaling (why the scaling is necessary, not cosmetic),
+%         proof decomposition (false-alarm, detection delay, fixed-rate
+%         allocation, exploitation+drift),
+%         Rem small_change (graceful degradation for sub-threshold changes).
+% Source: conf.tex lines ~477-514, 1870-1946 (post-fix).
+\input{_preamble}
+
+\title{Chunk A.6: SPSC-Adaptive regret bound\\(post-fix, Round 4 verification)}
+\author{(excerpt for standalone review)}
+\date{}
+
+\begin{document}
+\maketitle
+
+\textbf{Setup context.}
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=1pt]
+\item SPSC-Adaptive draws probes via Bernoulli$(\mu)$ each round
+(oblivious to segment boundaries); detector
+$S_t=\|\widehat M_t^{\mathrm{recent}}-\widehat M_t^{\mathrm{past}}\|_\op$
+compares recent-window vs.\ segment-accumulated probe moments.
+\item Detector threshold calibrated so that w.p.\ $\ge 1-\delta_{\mathrm{FA}}$
+no false alarm occurs under $H_0$ (no change), and all true changes
+$\Delta_k=\|P_{k+1}^\star-P_k^\star\|_\op\ge 2b$ (with $b>2\eta_{\mathrm{det}}$)
+are detected within a delay of $D_k=O(W_{\mathrm{det}}/\mu)$ rounds.
+\end{itemize}
+
+\textbf{What changed since Round~3 (R4 delta, this chunk).}
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=1pt]
+\item \textbf{Theorem failure probability updated (R3 remaining, blocking).}
+R3.1 introduced a Chernoff-based $\delta'$-event for detection delay,
+but R3's theorem and ``Final.'' line still said $1-\delta-\delta_{\mathrm{FA}}$.
+R4 updates both to $1-\delta-\delta_{\mathrm{FA}}-\delta'$; the theorem
+now also states the hypothesis $W_{\mathrm{det}}\ge 8\log(K/\delta')$
+explicitly.
+\end{itemize}
+
+\textbf{What changed since Round~2 (R3 delta, retained).}
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=1pt]
+\item \textbf{Detection delay via Chernoff (R2 B3).} R2 used Wald's
+identity to claim $D_k=O(W_{\mathrm{det}}/\mu)$, which gives only an
+expectation bound; the theorem states a high-probability guarantee.
+R3 replaces Wald with a Chernoff bound on the negative-binomial
+distribution of post-change rounds, giving
+$D_k\le 2W_{\mathrm{det}}/\mu$ w.p.\ $\ge 1-\delta'/K$ under
+$W_{\mathrm{det}}\ge 8\log(K/\delta')$.
+\item \textbf{Rem.~\ref{rem:small_change} P-drift vs.\ $\theta$-drift (R2 B4).}
+R2 claimed missed sub-threshold changes are absorbed into
+$O(WV)$ drift. This conflates \emph{projector drift} (not covered by
+windowed ridge, since $\widehat U$ is segment-accumulated) with
+\emph{parameter drift} (covered). R3 makes the distinction explicit
+and offers two accounting options: (i) choose $b$ large enough that
+all relevant changes are detected (giving $O(bT)$ miss cost), or
+(ii) augment $V$ with the missed-change contribution inside the
+$O(W\widetilde V)$ drift term.
+\end{itemize}
+
+\textbf{What changed since Round~1 (R2 delta, retained).}
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=1pt]
+\item \emph{Probe-rate scaling fixed (Bug~1 fix, fatal in R1).} Old
+theorem stated ``fixed $\mu\in(0,1)$'' achieves $K^{1/3}T^{2/3}$ rate;
+this is \emph{false} (constant $\mu$ gives probe cost $\Theta(\mu T)$,
+blowing up by $T^{1/3}$). Fix: $\mu = c_\mu\,(K/T)^{1/3}$ with a tuning
+constant $c_\mu>0$.
+\item \emph{Detection-delay overhead rewritten.} With the correct
+scaling, $KW_{\mathrm{det}}/\mu = (c_\mu^{-1})K^{2/3}T^{1/3}W_{\mathrm{det}}$,
+which is $o(K^{1/3}T^{2/3})$ iff $W_{\mathrm{det}}=o((T/K)^{1/3})$
+(upper half of the R7 two-sided condition). The two-sided interval
+is non-empty iff $K\log^3(K/\delta')=o(T)$; for constant $\delta'$
+this is $K=o(T/\log^3 T)$ (polynomial sparsity $K=T^\beta$, $\beta<1$
+is safely in; $K=T/(\log T)^c$ is in iff $c>3$).
+\item \emph{Balancing argument} rewritten with Cauchy--Schwarz (not
+Jensen) since under fixed rate $m_k\asymp\mu\ell_k$ (linear in $\ell_k$,
+not $\ell_k^{2/3}$).
+\item \emph{Rem.~\ref{rem:mu_scaling}} added to explain why the scaling
+is necessary, not cosmetic.
+\item \emph{Rem.~\ref{rem:small_change}} added for graceful degradation
+under sub-threshold changes.
+\end{itemize}
+
+\section*{Statement}
+
+\begin{theorem}[Adaptive SPSC]
+\label{thm:spsc_adaptive}
+Suppose every true subspace change satisfies $\Delta_k\ge 2b$ with the
+detector separation $b>2\eta_{\mathrm{det}}$, and the detection window
+satisfies the two-sided condition
+$8\log(K/\delta')\le W_{\mathrm{det}} = o((T/K)^{1/3})$ for a \emph{total}
+detection-delay failure budget $\delta'\in(0,1)$ (equivalently, per-change
+budget $\delta'/K$ from union bound). Lower bound: Chernoff argument for
+high-prob.\ delay. Upper bound: detection-delay overhead
+$KW_{\mathrm{det}}/\mu$ is $o(K^{1/3}T^{2/3})$. Compatibility requires
+$\log(K/\delta')=o((T/K)^{1/3})$; e.g.\ $W_{\mathrm{det}}=\Theta(\log(K/\delta'))$
+saturates the lower Chernoff bound and, under compatibility, satisfies
+the upper small-$o$ bound. Run SPSC-Adaptive with
+Bernoulli probe rate
+\[
+\mu = c_\mu\,(K/T)^{1/3}
+\]
+for a tuning constant $c_\mu > 0$ calibrated from the same $A, B$ as
+in the main Thm.\ spsc\_regret. With probability
+$\ge 1-\delta-\delta_{\mathrm{FA}}-\delta'$,
+\[
+\DynReg_T^{(c)} = \tilO(r\sqrt{KT}) + \tilO(K^{1/3}T^{2/3})
++ O(WV) + O(T\Delta_\sigma) + O(KW_{\mathrm{det}}/\mu),
+\]
+where the last term is the detection-delay overhead; false alarms
+occur with probability $\le\delta_{\mathrm{FA}}$ and detection-delay
+excursions (some $D_k > 2W_{\mathrm{det}}/\mu$) with probability $\le\delta'$.
+The adaptive variant does \emph{not} require \emph{per-segment}
+lengths $\ell_k$; only the macroscopic parameters $K,T$ enter, via
+both the probe rate $\mu = c_\mu(K/T)^{1/3}$ and the detection-window
+admissibility $8\log(K/\delta')\le W_{\mathrm{det}}=o((T/K)^{1/3})$.
+Exact segment lengths are estimated online via the change detector.
+\end{theorem}
+
+\begin{remark}[Why $\mu=\Theta((K/T)^{1/3})$ is the right scaling]
+\label{rem:mu_scaling}
+A fixed Bernoulli probe rate $\mu\in(0,1)$ produces $m_k\approx\mu\ell_k$
+probes per segment, giving total probe cost $c\mu T$ and per-segment
+subspace error $\varepsilon_k = O(1/\sqrt{\mu\ell_k})$. The
+probe-plus-subspace regret is then
+\[
+c\mu T + \sum_k R_\cA S_w\varepsilon_k n_k
+\lesssim c\mu T + \sqrt{KT/\mu},
+\]
+where the second term uses Cauchy--Schwarz ($\sum_k\sqrt{\ell_k}\le\sqrt{KT}$;
+not Jensen, since $m_k$ scales linearly in $\ell_k$, not $\ell_k^{2/3}$).
+Minimising in $\mu$: $\mu^\star = \Theta((K/T)^{1/3})$ with optimal
+cost $\Theta(K^{1/3}T^{2/3})$---matching the oracle allocation of
+Thm.\ spsc\_regret. A universal constant $\mu\in(0,1)$ would produce
+probe cost $\Theta(T)$, blowing up the rate by $T^{1/3}$; the scaling
+$\mu\asymp(K/T)^{1/3}$ is necessary, not cosmetic.
+\end{remark}
+
+\section*{Proof}
+
+\emph{False-alarm bound ($H_0$).} Under $H_0$ (no change), triangle
+inequality + matrix Freedman on each half of the detector window
+gives $\Pr(S_t > 2\eta_{\mathrm{det}}) \le \delta_{\mathrm{FA}}/T$ with
+$\eta_{\mathrm{det}} = C_{\mathrm{sub}}\sqrt{2\log(dT/\delta_{\mathrm{FA}})/W_{\mathrm{det}}}$
+($\sqrt 2$ from each half-window having $W_{\mathrm{det}}/2$ probes).
+Union over $T$ rounds: FA probability $\le\delta_{\mathrm{FA}}$.
+
+\emph{Detection delay ($H_1$).} At $\tau_k$, separation
+$\Delta_k\ge 2b > 4\eta_{\mathrm{det}}$ forces the detector once the
+recent window accumulates enough post-change probes to shift the
+moment by $\ge 2\eta_{\mathrm{det}}$. The number of post-change rounds
+$N$ needed to collect $W_{\mathrm{det}}$ fresh Bernoulli$(\mu)$ probes is
+negative-binomial with mean $W_{\mathrm{det}}/\mu$. By a Chernoff bound
+for sums of Bernoulli$(\mu)$,
+$\Pr(N>2W_{\mathrm{det}}/\mu)\le\exp(-W_{\mathrm{det}}/8)$. Taking
+$W_{\mathrm{det}}\ge 8\log(K/\delta')$ for a \emph{total} detection-delay
+failure budget $\delta'$ (equivalently, per-change budget $\delta'/K$),
+the detection delay is $D_k\le 2W_{\mathrm{det}}/\mu$ w.p.\ $\ge 1-\delta'/K$;
+union-bounding over $K$ changes gives total delay probability $\ge 1-\delta'$. Delay regret on this event:
+$2R_\cA S_w\sum_k D_k = O(KW_{\mathrm{det}}/\mu)$.
+
+\emph{Fixed-rate probe allocation.} With $m_k\sim\mu\ell_k$, subspace
+error is $\varepsilon_k=O(1/\sqrt{\mu\ell_k})+\Delta_\sigma$.
+Per-segment mismatch regret
+$R_\cA S_w\varepsilon_k n_k = O(R_\cA S_w\sqrt{\ell_k/\mu})+R_\cA S_w\Delta_\sigma n_k$.
+Summing with Cauchy--Schwarz:
+\[
+\underbrace{c\mu T}_{\text{probes}}+\underbrace{O(R_\cA S_w\sqrt{KT/\mu})}_{\text{estimation}}
++O(T\Delta_\sigma).
+\]
+Minimising in $\mu$: $\mu^\star=\Theta((C/c)^{2/3}(K/T)^{1/3})$ with
+optimal value $\Theta(c^{1/3}C^{2/3}K^{1/3}T^{2/3})$. Calibration
+$c_\mu:=(C/c)^{2/3}$ yields $\mu^\star=c_\mu(K/T)^{1/3}$ and matches
+the oracle rate of Thm.\ spsc\_regret.
+
+\emph{Detection-delay overhead under $\mu=\Theta((K/T)^{1/3})$.}
+$KW_{\mathrm{det}}/\mu = (c_\mu^{-1})K^{2/3}T^{1/3}W_{\mathrm{det}}$;
+this is $o(K^{1/3}T^{2/3})$ iff $W_{\mathrm{det}}=o((T/K)^{1/3})$,
+which is the upper half of the theorem's two-sided condition.
+Compatibility $\log(K/\delta')=o((T/K)^{1/3})$ is equivalent to
+$K\log^3(K/\delta')=o(T)$; the Chernoff-admissible choice
+$W_{\mathrm{det}}=\Theta(\log(K/\delta'))$ then satisfies both
+bounds. For constant $\delta'$, the sharp applicability boundary is
+$K=o(T/\log^3 T)$: polynomial sparsity $K=T^\beta$ ($\beta<1$) is
+safely inside; $K=T/(\log T)^c$ is inside iff $c>3$ (so
+$K=T/(\log T)^2$ is \emph{outside}---the theorem does not apply
+there, consistent with the non-existence of an admissible
+$W_{\mathrm{det}}$ in that regime).
+
+\emph{Exploitation + drift.} Thm.\ spsc\_regret's decomposition
+applies verbatim with estimated boundaries $\widehat\tau_k$; noise
+contributes $\tilO(r\sqrt{KT})$, drift $O(WV)$.
+
+\emph{Final.} Combining,
+\[
+\DynReg_T^{(c)}\le\tilO(r\sqrt{KT})+\tilO(K^{1/3}T^{2/3})+O(WV)+O(T\Delta_\sigma)+O(KW_{\mathrm{det}}/\mu).
+\]
+Total failure probability via union bound: $\delta$ (Freedman over
+segment-level concentration events) $+\ \delta_{\mathrm{FA}}$ (false
+alarms) $+\ \delta'$ (detection-delay Chernoff) $=\delta+\delta_{\mathrm{FA}}+\delta'$,
+matching the theorem statement.\qed
+
+\begin{remark}[Graceful degradation for small changes]
+\label{rem:small_change}
+If a true change at $\tau_k$ has $\Delta_k<2b$ (subspace separation
+below the detector threshold), the detector may miss it, and the
+algorithm's projector $\widehat U$ persists across the boundary. The
+resulting per-round subspace-mismatch regret is
+$R_\cA\|(I-\widehat P)\theta_t\|\le R_\cA S_w\Delta_k$, which is a
+\emph{persistent linear-in-horizon} term, not a drift term. Two
+accounting options: (i) if $b$ is taken large enough that all
+practically relevant changes have $\Delta_k\ge 2b$ (e.g.\ $b$ matched
+to the minimum actionable subspace change), missed changes
+contribute negligibly, $R_\cA S_w\cdot 2b\cdot T = O(bT)$; or (ii) if
+missed changes must be absorbed analytically, restate the drift term
+as $O(WV+R_\cA S_w\sum_k\Delta_k\mathbf 1\{\Delta_k<2b\}\cdot\ell_k)$,
+replacing $V$ with
+$\widetilde V := V+\sum_k\Delta_k\mathbf 1\{\Delta_k<2b\}\cdot\ell_k/W$
+inside the $O(W\widetilde V)$ drift term. In the piecewise-constant
+regime this degradation is sharp: the algorithm cannot recover from a
+missed subspace jump without a windowed \emph{subspace} estimator,
+which SPSC-Adaptive does not deploy.
+\end{remark}
+
+\end{document}

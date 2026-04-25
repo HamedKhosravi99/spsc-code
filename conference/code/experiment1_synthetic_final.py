@@ -109,7 +109,9 @@ for i, r in enumerate(r_vals):
         l, _ = final_stats(results[(d, r)]["LinUCB"])
         o, _ = final_stats(results[(d, r)]["Oracle"])
         ratio_grid[i, j] = s / l if l > 0 else np.nan
-        theory_grid[i, j] = np.sqrt(r / d)
+        # New theory ratio (Thm 1 with d^{2/3} probe term):
+        #   SPSC/LinUCB = r/d + d^{-1/3}(T/K)^{1/6}
+        theory_grid[i, j] = r / d + (T / K) ** (1.0 / 6.0) / d ** (1.0 / 3.0)
         oracle_grid[i, j] = o / l if l > 0 else np.nan
 
 # =========================================================================
@@ -141,13 +143,20 @@ ax1.set_title("(a) SPSC / LinUCB regret ratio\n(blue < 1 = SPSC wins)", fontsize
 cb1 = plt.colorbar(im1, ax=ax1, shrink=0.85)
 cb1.set_label("Ratio", fontsize=10)
 
-# Draw the d - r = T^{1/6} boundary
+# Draw the new theory boundary CURVE in (d, r) space:
+#     d - r = d^{2/3} (T/K)^{1/6}    <=>    r = d - d^{2/3}(T/K)^{1/6}
+factor = (T / K) ** (1.0 / 6.0)
 for i, r in enumerate(r_vals):
-    boundary_d = r + T_SIXTH
-    if d_vals[0] <= boundary_d <= d_vals[-1]:
-        j_frac = np.interp(boundary_d, d_vals, range(len(d_vals)))
-        ax1.plot(j_frac, i, "k*", markersize=10, zorder=5)
-ax1.plot([], [], "k*", markersize=10, label=f"$d - r = T^{{1/6}} \\approx {T_SIXTH:.1f}$")
+    # Solve  r = d - d^{2/3} * factor  for d (numerically: scan over d).
+    d_grid = np.linspace(d_vals[0], d_vals[-1], 400)
+    r_pred = d_grid - d_grid ** (2.0 / 3.0) * factor
+    idx = np.argmin(np.abs(r_pred - r))
+    d_at_r = d_grid[idx]
+    if d_vals[0] <= d_at_r <= d_vals[-1] and abs(r_pred[idx] - r) < 1.5:
+        j_frac = np.interp(d_at_r, d_vals, range(len(d_vals)))
+        ax1.plot(j_frac, i, "k*", markersize=11, zorder=5)
+ax1.plot([], [], "k*", markersize=11,
+         label=f"Theory boundary $d - r = d^{{2/3}}(T/K)^{{1/6}}$")
 ax1.legend(loc="upper left", fontsize=9)
 
 # --- Panel (b): Ratio vs d for each r (line plot) ---
@@ -177,7 +186,8 @@ ax2.fill_between([d_vals[0], d_vals[-1]], 1, 5, alpha=0.06, color="red",
                   label="LinUCB wins")
 ax2.set_xlabel("Ambient dimension $d$", fontsize=12)
 ax2.set_ylabel("SPSC / LinUCB ratio", fontsize=12)
-ax2.set_title("(b) Regret ratio vs $d$\n(solid = empirical, dashed = $\\sqrt{r/d}$ theory)",
+ax2.set_title("(b) Regret ratio vs $d$\n"
+              "(solid = empirical, dashed = theory $r/d + d^{-1/3}(T/K)^{1/6}$)",
               fontsize=12)
 ax2.legend(fontsize=8, ncol=2, loc="upper right")
 ax2.set_ylim(0, 4)
@@ -206,7 +216,7 @@ sc = ax3.scatter(thr_all, emp_all, c=d_all, cmap="plasma", s=80,
                   edgecolors="black", linewidths=0.5, zorder=3)
 ax3.plot([0, 1.5], [0, 1.5], "k--", lw=1, alpha=0.4, label="Empirical = Theory")
 ax3.axhline(1.0, color="gray", ls=":", lw=1, alpha=0.5)
-ax3.set_xlabel(r"Theory: $\sqrt{r/d}$", fontsize=12)
+ax3.set_xlabel(r"Theory ratio: $r/d + d^{-1/3}(T/K)^{1/6}$", fontsize=12)
 ax3.set_ylabel("Empirical: SPSC / LinUCB", fontsize=12)
 ax3.set_title("(c) Theory vs empirical ratio\n(colored by $d$)", fontsize=12)
 cb3 = plt.colorbar(sc, ax=ax3, shrink=0.85)
@@ -260,7 +270,8 @@ fig.suptitle(
     fontsize=14, fontweight="bold", y=1.01)
 
 plt.tight_layout()
-out_path = os.path.join(OUT_DIR, "experiment1_synthetic_final.png")
+# Save to the filename the paper actually references in §5.1.
+out_path = os.path.join(OUT_DIR, "experiment1_synthetic_phase.png")
 plt.savefig(out_path, bbox_inches="tight", dpi=150)
 print(f"\nSaved: {out_path}")
 

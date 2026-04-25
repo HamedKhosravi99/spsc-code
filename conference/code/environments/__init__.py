@@ -11,3 +11,10 @@ from .lastfm_environment import RealLastfmEnvironment
 from .fashion_mnist_environment import FashionMNISTEnvironment
 from .mnist_environment import MNISTEnvironment
 from .newsgroups_environment import NewsgroupsEnvironment
+
+# OpenBandit Pipeline (real exploration logs).  Soft-imported because
+# the `obp` package is an optional dependency.
+try:
+    from .openbandit_environment import OpenBanditEnvironment
+except ImportError:
+    OpenBanditEnvironment = None

@@ -42,15 +42,15 @@ METHOD_NAMES = [
 
 METHOD_LABELS = {
     "Oracle-LinUCB":    "Oracle LinUCB",
-    "SPSC-Alg1":        "SPSC Alg.1 (ours)",
-    "SPSC-Adaptive":    "SPSC Adaptive (ours)",
-    "LowOFUL":          "LowOFUL (Jun+ '19)",
-    "VOFUL":            "VOFUL (Kim+ '22)",
+    "SPSC-Alg1":        "SPSC (ours)",
+    "SPSC-Adaptive":    "SPSC-Adaptive (ours)",
+    "LowOFUL":          "LowOFUL",
+    "VOFUL":            "VOFUL",
     "LowRank-Reward":   "LowRank-Reward",
-    "SW-LinUCB":        "SW-LinUCB (Cheung+ '19)",
-    "D-LinUCB":         "D-LinUCB (Russac+ '19)",
+    "SW-LinUCB":        "SW-LinUCB",
+    "D-LinUCB":         "D-LinUCB",
     "Restart-LinUCB":   "Restart-LinUCB",
-    "LinUCB":           "LinUCB (Abbasi+ '11)",
+    "LinUCB":           "LinUCB",
 }
 
 METHOD_COLORS = {
@@ -184,9 +184,11 @@ def make_bar_figure(all_results, out_path):
         return
 
     n_cells = min(len(winning_cells), 4)
-    fig, axes = plt.subplots(1, n_cells, figsize=(6 * n_cells, 6), sharey=False)
+    fig, axes = plt.subplots(1, n_cells, figsize=(6.5 * n_cells, 6.5), sharey=False)
     if n_cells == 1:
         axes = [axes]
+
+    LABEL_COLOR = "#000000"  # pure black for darkness
 
     for ax_idx, (d, r) in enumerate(winning_cells[:4]):
         ax = axes[ax_idx]
@@ -202,22 +204,25 @@ def make_bar_figure(all_results, out_path):
         ax.barh(y, [means[i] for i in order],
                 xerr=[ses[i] for i in order],
                 color=[colors[i] for i in order],
-                capsize=3, height=0.7, edgecolor="black", linewidth=0.3)
+                capsize=4, height=0.72, edgecolor="black", linewidth=0.6)
         ax.set_yticks(y)
-        ax.set_yticklabels([METHOD_LABELS[METHOD_NAMES[i]].split("(")[0].strip()
-                            for i in order], fontsize=8)
-        ax.set_xlabel("Control Regret", fontsize=10)
-        ax.set_title(f"$d={d}$, $r={r}$", fontsize=11, fontweight="bold")
-        ax.xaxis.grid(True, alpha=0.3)
+        labels = [METHOD_LABELS[METHOD_NAMES[i]] for i in order]
+        ax.set_yticklabels(labels, fontsize=14, color=LABEL_COLOR, fontweight="bold")
+        ax.set_xlabel("Control Regret", fontsize=15, color=LABEL_COLOR, fontweight="bold")
+        ax.set_title(f"$d={d}$, $r={r}$", fontsize=16, fontweight="bold", color=LABEL_COLOR)
+        ax.tick_params(axis="x", labelsize=13, colors=LABEL_COLOR)
+        ax.tick_params(axis="y", labelsize=14, colors=LABEL_COLOR)
+        for spine in ax.spines.values():
+            spine.set_color(LABEL_COLOR)
+            spine.set_linewidth(1.0)
+        ax.xaxis.grid(True, alpha=0.35)
 
     fig.suptitle(
-        "Pendigits Extended SOTA: SPSC Winning Configurations\n"
-        f"$K={N_SEGMENTS}$, probe_every={PROBE_EVERY}, "
-        f"$\\lambda={LAM}$  ({N_SEEDS} seeds)",
-        fontsize=12, fontweight="bold", y=1.02,
+        "Pendigits: SPSC dominates every non-oracle baseline at $d{\\geq}55$, $r{\\geq}10$",
+        fontsize=18, fontweight="bold", y=1.03, color=LABEL_COLOR,
     )
     plt.tight_layout()
-    plt.savefig(out_path, bbox_inches="tight", dpi=150)
+    plt.savefig(out_path, bbox_inches="tight", dpi=180)
     print(f"Saved: {out_path}")
 
 
@@ -225,34 +230,60 @@ def make_bar_figure(all_results, out_path):
 # Main
 # ---------------------------------------------------------------------------
 if __name__ == "__main__":
+    import sys, json, os
+
+    CACHE = os.path.join(os.path.dirname(__file__),
+                         "results", "experiment_pendigits_extended_cache.json")
+    REPLOT_ONLY = "--replot" in sys.argv
+
     print("=" * 80)
     print("Pendigits Grid (10 methods, 10 seeds)")
     print(f"  d = {D_VALUES}")
     print(f"  r = {R_VALUES}")
     print(f"  SEG_SIZE={SEG_SIZE}, N_SEGMENTS={N_SEGMENTS}, "
           f"lam={LAM}, probe_every={PROBE_EVERY}, window={WINDOW}, c={PROBE_COST}")
+    print(f"  cache: {CACHE}")
+    print(f"  mode: {'REPLOT-ONLY (load cache)' if REPLOT_ONLY else 'RUN+CACHE'}")
     print("=" * 80)
 
     all_results = {}
-    total_cells = len(D_VALUES) * len(R_VALUES)
-    cell_idx = 0
 
-    for d in D_VALUES:
-        for r in R_VALUES:
-            cell_idx += 1
-            if r >= d:
-                print(f"\n[{cell_idx}/{total_cells}] d={d}, r={r} -- SKIPPED (r >= d)")
-                all_results[(d, r)] = None
-                continue
+    if REPLOT_ONLY and os.path.exists(CACHE):
+        with open(CACHE, "r") as f:
+            raw = json.load(f)
+        for k, v in raw.items():
+            d, r = map(int, k.split(","))
+            all_results[(d, r)] = (None if v is None
+                                   else {m: np.asarray(arr) for m, arr in v.items()})
+        print(f"Loaded cache: {len(all_results)} cells")
+    else:
+        total_cells = len(D_VALUES) * len(R_VALUES)
+        cell_idx = 0
+        for d in D_VALUES:
+            for r in R_VALUES:
+                cell_idx += 1
+                if r >= d:
+                    print(f"\n[{cell_idx}/{total_cells}] d={d}, r={r} -- SKIPPED (r >= d)")
+                    all_results[(d, r)] = None
+                    continue
 
-            t_cell = time.time()
-            print(f"\n\n[{cell_idx}/{total_cells}] ========== d={d}, r={r} ==========",
-                  flush=True)
+                t_cell = time.time()
+                print(f"\n\n[{cell_idx}/{total_cells}] ========== d={d}, r={r} ==========",
+                      flush=True)
 
-            res = run_cell(d, r)
-            all_results[(d, r)] = res
-            print(f"\n  Cell completed in {time.time()-t_cell:.1f}s")
-            print_cell_summary(res, d, r)
+                res = run_cell(d, r)
+                all_results[(d, r)] = res
+                print(f"\n  Cell completed in {time.time()-t_cell:.1f}s")
+                print_cell_summary(res, d, r)
+
+        # Save cache
+        os.makedirs(os.path.dirname(CACHE), exist_ok=True)
+        cache_obj = {f"{d},{r}": (None if v is None
+                                  else {m: arr.tolist() for m, arr in v.items()})
+                     for (d, r), v in all_results.items()}
+        with open(CACHE, "w") as f:
+            json.dump(cache_obj, f)
+        print(f"Saved cache: {CACHE}")
 
     # Final ratio summary
     print("\n" + "=" * 100)

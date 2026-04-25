@@ -1,0 +1,637 @@
+  ## Chunk A2 — Claude
+
+ (1) Lemma K_inverse — VERIFIED
+
+  Re-derivation via Isserlis:
+  $$(\mathcal K(M)){kl} = \sum{ij} M_{ij},\E[u_iu_ju_ku_l] =
+  \sum_{ij}M_{ij}(\delta_{ij}\delta_{kl}+\delta_{ik}\delta_{jl}+\delta_{il}\delta_{jk}) = \tr(M)\delta_{kl} + M_{kl} +
+  M_{lk}.$$
+  Symmetric $M \Rightarrow \mathcal K(M)=2M+\tr(M)I_d$. Taking trace, $\tr(\mathcal K(M))=(d+2)\tr(M)$, so inversion $M
+  = N/2 - \tr(N)/(2(d+2)),I_d$ with $N=\mathcal K(M)$ is exact. Operator norm: for symmetric $N$ with eigenvalues
+  $\lambda_i$, eigenvalues of $\mathcal K^{-1}(N)$ are $\lambda_i/2 - \tr(N)/(2(d+2))$, bounded by $|N|/2 +
+  d|N|/(2(d+2)) = \frac{d+1}{d+2}|N| < |N|$. So $|\mathcal K^{-1}|_\op = (d+1)/(d+2) < 1$. Claim $\le 1$ holds with
+  slack $1/(d+2)$.
+
+  ---
+  (2) Lemma quad_conf — VERIFIED (with one exposition gap)
+
+  $y_t^2$ expansion is mechanical. Conditional on $\sigma(\cH_{t-1}, u_t)$, independence of $u_t$ from $(\theta_t,
+  \cH_{t-1})$ gives $\E[\theta_t\theta_t^\top\mid\cH_{t-1},u_t] = \widetilde M_t$, so
+  $\E[(u^\top\theta)^2\mid\cdot]=u^\top\widetilde M_t u$. Middle term: $m_t :=
+  \E[\varepsilon_t\theta_t\mid\cH_{t-1},u_t] = \E[\varepsilon_t\theta_t\mid\cH_{t-1}]$ by independence — not a function
+  of $u_t$. Noise term: uses $\E[\varepsilon_t^2\mid\cH_{t-1},u_t] = \sigma_\varepsilon^2$.
+
+  Exposition gaps (not fatal): (i) The setup states $|\E[\varepsilon_t\theta_t]|\le\epsilon_\times$ unconditionally, but
+   the proof needs $|\E[\varepsilon_t\theta_t\mid\cH_{t-1}]|\le\epsilon_\times$ a.s. These are genuinely different;
+  paper should restate assumption conditionally. (ii) "Sub-Gaussian with variance $\sigma_\varepsilon^2$" is ambiguous;
+  the derivation silently needs $\E[\varepsilon_t^2\mid\cH_{t-1}] = \sigma_\varepsilon^2$ exactly, which is a stronger
+  conditional-variance assumption than sub-Gaussianity.
+
+  ---
+  (3) Lemma G_unbiased — FLAGGED
+
+  Step that fails (line 138 of the proof):
+
+  ▎ $|\E[(u_t^\top m_t)u_tu_t^\top]|\op \le L\epsilon\times\cdot L^2 = L^3\epsilon_\times$
+
+  Concrete counterexample to the derivation. Take $d=2$, $m_t = (\epsilon_\times, 0)^\top$, and $u \sim N(0, I_2)$
+  untruncated (as written — no $\mathbf 1{\cA_t}$ appears in the definition of $G_t$ or in the expectation). The
+  inequality $|u^\top m_t| \le |u||m_t| \le L\epsilon_\times$ relies on $|u|\le L$, but $|u|$ is unbounded with positive
+   probability. The stated "deterministic" chain is invalid.
+
+  Correct computation: for any $\cH_{t-1}$-measurable fixed vector $m$ and $u \sim N(0, I_d)$,
+  $$(\E[(u^\top m)uu^\top]){kl} = \sum_i m_i,\E[u_iu_ku_l] = 0$$
+  by vanishing Gaussian third moments. So the middle term contributes exactly zero, and
+  $$\widetilde B_t ;=; -\delta\sigma,\mathcal K^{-1}(I_d) ;=; -\frac{\delta_\sigma}{d+2},I_d.$$
+  True bound: $|\widetilde B_t|\op = |\delta\sigma|/(d+2)$, a clean scaled identity.
+
+  Stated bound $|\delta_\sigma|L^2 + 2L^3\epsilon_\times$: holds only trivially (as "nonnegative $\ge 0$"), via a broken
+   chain of reasoning. Loose by factor $\sim 2d(d+2)\log(4T/\delta)$.
+
+  Similar issue with the $\delta_\sigma$ term: "$|\E[u_tu_t^\top]|\op\le L^2$" is false for untruncated Gaussian — the
+  correct value is $|I_d|\op = 1$. Again the derivation invokes truncation that is not present in the lemma statement.
+
+  Scaled-identity claim: correct under untruncated interpretation (and the parenthetical $(1-O(\delta/T))$ caveat is
+  unnecessary — no truncation correction appears because the lemma is untruncated).
+
+  Impact: conclusion is salvageable as an upper bound; downstream rates inherit loose (but not wrong) $L^2, L^3$
+  factors. The proof as written is not a proof.
+
+  ---
+  (4) Lemma G_bound — VERIFIED (with $d=1$ constants nit)
+
+  Observability: $\mathbf 1{\cA_t}$ is $\sigma(u_t,y_t)$-measurable ⇒ $\cH_t$-measurable, not $\cH_{t-1}$-measurable. ✓
+
+  On $\cA_t$: $|s_t| = |y_t^2 - \hat\sigma^2| \le L_y^2 + \hat\sigma^2 = R_s$; $|G_t|_\op \le |s_t||u|^2 \le R_s L^2 \le
+   R_X$. The $+S_w^2$ buffer in $R_X$ is unnecessary for bounding $|G_t|$ itself, but doesn't hurt. (The stated
+  justification "absorbs the centering term" is incoherent for $G_t$; it applies to $\tilde X_t$ in Thm 5.)
+
+  Probability bound issue at $d=1$: with $L^2 = 2d\log(4T/\delta) = 2\log(4T/\delta)$ and $|u|\sim|N(0,1)|$,
+  $\Pr(|u|>L)\le 2e^{-L^2/2}=\delta/(2T)$, not $\delta/(4T)$ as claimed. Via Laurent–Massart the $\delta/(4T)$ claim
+  holds for $d\ge 2$ (when $\log(4T/\delta)\ge 2$). Final union-bound total $\delta/(2T)+\delta/(2T) = \delta/T$ still
+  holds for $d=1$, so the lemma's conclusion $\Pr(\cA_t^c)\le\delta/T$ survives. Minor constant slip.
+
+  ---
+  (5) Theorem matrix_bernstein_conf — VERIFIED (with two caveats)
+
+  MDS. $\tilde G_t = G_t\mathbf 1{\cA_t}$ is $\cH_t$-measurable; $\tilde X_t := \tilde G_t - \E[\tilde
+  G_t\mid\cH_{t-1}]$ has $\E[\tilde X_t\mid\cH_{t-1}]=0$ by construction. ✓ Symmetric: $\tilde G_t$ is image of
+  $\mathcal K^{-1}$ of symmetric input, so Hermitian in the real sense. ✓
+
+  a.s. bound. $|\tilde G_t|\op \le R_X$ a.s. (on $\cA_t^c$ it's 0; on $\cA_t$ it's $\le R_s L^2 \le R_X$). By Jensen for
+   the operator norm, $|\E[\tilde G_t\mid\cH{t-1}]|_\op \le R_X$. So $|\tilde X_t|\le 2R_X$. ✓
+
+  Predictable variance. $\tilde G_t$ symmetric with $|\tilde G_t|\le R_X$ ⇒ $-R_X I\preceq \tilde G_t \preceq R_X I$ ⇒
+  $\tilde G_t^2 \preceq R_X^2 I$, so $\E[\tilde G_t^2\mid\cH_{t-1}]\preceq R_X^2 I$. And $\E[\tilde X_t^2\mid\cH_{t-1}]
+  = \E[\tilde G_t^2\mid\cH_{t-1}] - (\E[\tilde G_t\mid\cH_{t-1}])^2 \preceq R_X^2 I$ (subtracting PSD). Summed:
+  $\lambda_{\max}(\sum\E[\tilde X_t^2\mid\cH_{t-1}])\le m_k R_X^2$ by PSD sum. ✓
+
+  Bernstein inversion. With per-term bound $2R_X$ and total variance $m_k R_X^2$, inverting $2d\exp(-r^2/(2m_k R_X^2 +
+  4R_X r/3))\le\delta$ via $\sqrt{a+b}\le\sqrt a+\sqrt b$:
+  $$r \le \frac{2R_X\log(2d/\delta)}{3} + R_X\sqrt{2m_k\log(2d/\delta)}.$$
+  Dividing by $m_k$: $R_X\sqrt{2\log(2d/\delta)/m_k} + 2R_X\log(2d/\delta)/(3m_k)$. The paper's coefficient
+  $2R_X\sqrt{\log(2d/\delta)/m_k}$ is looser (by $\sqrt 2$) but valid; the $2R_X\log(2d/\delta)/(3m_k)$ matches. ✓
+
+  Transfer identity. On $\cE=\bigcap_t\cA_t$: $\tilde G_t=G_t$ ⇒ $\bar{\tilde G}k=\widehat M_k$. $\E[\tilde
+  G_t\mid\cH{t-1}] = \E[G_t\mid\cH_{t-1}] - \E[G_t\mathbf 1{\cA_t^c}\mid\cH_{t-1}] = \widetilde M_t+\widetilde B_t -
+  (\Theta_k$ contribution$)$. Algebra: $\widehat M_k - \bar M_k^{\text{probe}} - \widetilde B = m_k^{-1}\sum\tilde X_t -
+   \Theta_k$ on $\cE$. ✓
+
+  Caveat 1 (terminology): "Predictably-truncated" is a misnomer. $\mathbf 1{\cA_t}$ is $\sigma(u_t,y_t)$-measurable,
+  i.e., $\cH_t$-measurable, not $\cH_{t-1}$-predictable. The mathematics of Freedman doesn't require predictable
+  truncation (only the MDS property, which holds), so this is a naming inconsistency, not a bug.
+
+  Caveat 2 (handwave): "$|\Theta_k|$ is polynomially small in $T$" is asserted without derivation. I verified:
+  $\E[|u|^4\mathbf 1{|u|^2>L^2}]$ via incomplete-Gamma decays like $(d\log(4T/\delta))^{d/2+1}(\delta/(4T))^d /
+  \Gamma(d/2)$, giving $|\Theta_k| = O(\text{polylog}\cdot\delta/T)$ for $d\ge 1$. So the claim is true but the paper
+  should either cite a lemma or add two lines. This handwave is a soft FLAG.
+
+  ---
+  (6) Corollary projector_conf — VERIFIED
+
+  Davis–Kahan for top-$r$ projectors with unperturbed gap $\gamma=\lambda_{\min}$ gives $|\hat P - P|\op \le
+  2|E|\op/\gamma$ when $|E|<\gamma/2$. Paper uses factor 4, which is conservative by $2\times$ — valid. With $|E|\le
+  2R_X\sqrt{\log(2d/\delta)/m_k} + b_\sigma$ from Thm 5 (after dropping the $\log/m_k$ and $\Theta_k$ terms that are
+  absorbed once $m_k\ge 4\log(2d/\delta)/9$ and $T$ large), Davis–Kahan yields $C_{\text{sub}}=8R_X/\lambda_{\min}$ and
+  $\Delta_\sigma = 4b_\sigma/\lambda_{\min}$. ✓
+
+  Minor: the corollary's intermediate bound $|\widehat M_k-\bar M_k^{\text{probe}}|\op \le
+  2R_X\sqrt{\log(2d/\delta)/m_k}+b\sigma$ silently drops the $2R_X\log/(3m_k)$ Bernstein term and $|\Theta_k|$. Both are
+   dominated for $m_k$ large, but the statement should say "for $m_k\ge m_0$ with $m_0$ explicit" to be clean.
+
+  ---
+  (7) Proposition segment_factorization — VERIFIED
+
+  $\theta_t = B_k^\star w_t$ on $\cI_k$ with $B_k^\star$ fixed ⇒ $\theta_t\theta_t^\top = B_k^\star w_tw_t^\top
+  (B_k^\star)^\top$. Taking conditional expectation and averaging over $\cT_k$ pulls $B_k^\star$ out linearly: $\bar
+  M_k^{\text{probe}} = B_k^\star \bar S_k^{\text{probe}}(B_k^\star)^\top$. Range equality: $\bar S_k^{\text{probe}}\succ
+   0$ with $\lambda_r\ge\lambda_{\min}$ (Lemma probe_excitation_conf), so it's invertible on $\R^r$; $B_k^\star$ has
+  orthonormal columns, so for $v \ne 0 \in \text{range}(B_k^\star)$: write $v=B_k^\star a$, $a\ne 0$; then $\bar M_k v =
+   B_k^\star \bar S_k a \ne 0$, and $\bar M_k$ kills $\text{range}(B_k^\star)^\perp$. ⇒ $\text{range}(\bar M_k) =
+  \text{range}(B_k^\star)$. ✓
+
+  ---
+  Summary
+
+  ┌────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────┐
+  │         Claim          │                                         Status                                         │
+  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ (1) K_inverse          │ VERIFIED                                                                               │
+  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ (2) quad_conf          │ VERIFIED (restate $\epsilon_\times$ and noise-variance assumptions conditionally)      │
+  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ (3) G_unbiased         │ FLAGGED — derivation broken; true bias is exact scaled identity                        │
+  │                        │ $-\delta_\sigma/(d+2),I_d$, stated upper bound holds only trivially                    │
+  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ (4) G_bound            │ VERIFIED (constant slip at $d=1$, harmless)                                            │
+  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ (5)                    │ VERIFIED ("predictably truncated" is misnomer;                                         │
+  │ matrix_bernstein_conf  │ $|\Theta_k|=O(\text{polylog}\cdot\delta/T)$ should be stated)                          │
+  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ (6) projector_conf     │ VERIFIED (factor 4 conservative; state $m_k$ threshold)                                │
+  ├────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────┤
+  │ (7)                    │ VERIFIED                                                                               │
+  │ segment_factorization  │                                                                                        │
+  └────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────┘
+
+  One genuine FLAG (claim 3) plus several exposition fixes. The FLAG does not break downstream rates — they become
+  pessimistic by a factor of $O(d^2\log T)$ rather than wrong — but the proof as written is not a proof and must be
+  rewritten to either (a) invoke vanishing third moments and derive $\widetilde B_t = -\delta_\sigma/(d+2)I_d$, or (b)
+  explicitly do the truncated analysis with $\mathbf 1{\cA_t}$ inside the expectation, which changes the lemma
+  statement.
+
+
+
+
+  ## Chunk A2 — GPT
+
+
+
+\textbf{(1) VERIFIED}
+
+For each $(k,\ell)$, $\E[(u^\top M u)u_k u_\ell]=\sum_{ij}M_{ij}\E[u_i u_j u_k u_\ell]=\sum_{ij}M_{ij}(\delta_{ij}\delta_{k\ell}+\delta_{ik}\delta_{j\ell}+\delta_{i\ell}\delta_{jk})=\operatorname{tr}(M)\delta_{k\ell}+M_{k\ell}+M_{\ell k}$, hence $K(M)=2M+\operatorname{tr}(M)I_d$.
+
+If $X:=\frac12N-\frac{\operatorname{tr}(N)}{2(d+2)}I_d$, then $\operatorname{tr}(X)=\operatorname{tr}(N)/(d+2)$, so $K(X)=2X+\operatorname{tr}(X)I_d=N$.
+
+The bound $\|K^{-1}\|_{\mathrm{op}}\le 1$ is true but not tight: the exact norm is $d/(d+2)$, attained by $N=\operatorname{diag}(1,-1,\dots,-1)$.
+
+\bigskip
+
+\textbf{(2) FLAGGED}
+
+The identity $\E[s_t\mid \sigma(\mathcal H_{t-1},u_t)]=u_t^\top \widetilde M_t u_t+2u_t^\top m_t-\delta_\sigma$ is correct by expanding $y_t^2=(u_t^\top\theta_t)^2+2\varepsilon_tu_t^\top\theta_t+\varepsilon_t^2$ and conditioning termwise.
+
+The failure is the bound $\|m_t\|\le \epsilon_\times$: the chunk’s setup only states $\|\E[\varepsilon_t\theta_t]\|\le \epsilon_\times$, which does \emph{not} imply $\|m_t\|=\|\E[\varepsilon_t\theta_t\mid \mathcal H_{t-1},u_t]\|\le \epsilon_\times$.
+
+Concrete counterexample: $d=1$, $\theta_t\equiv 1$, $\varepsilon_t=\operatorname{sign}(u_t)$; then $u_t$ is independent of $(\theta_t,\mathcal H_{t-1})$, $\E[\varepsilon_t\theta_t]=0$, but $m_t=\operatorname{sign}(u_t)$, so $|m_t|=1\not\le 0$.
+
+\bigskip
+
+\textbf{(3a) VERIFIED}
+
+Using linearity of $K^{-1}$, $\E[G_t\mid \mathcal H_{t-1}]=K^{-1}\!\big(\E[s_tu_tu_t^\top\mid \mathcal H_{t-1}]\big)$.
+
+Substituting claim (2) gives
+\[
+K^{-1}( \E[(u_t^\top \widetilde M_t u_t)u_tu_t^\top\mid \mathcal H_{t-1}] )
++K^{-1}( \E[2(u_t^\top m_t)u_tu_t^\top\mid \mathcal H_{t-1}] )
+-\delta_\sigma K^{-1}(\E[u_tu_t^\top]).
+\]
+
+Because $u_t$ is independent of $(\widetilde M_t,\mathcal H_{t-1})$, the first term is $K^{-1}(K(\widetilde M_t))=\widetilde M_t$.
+
+\bigskip
+
+\textbf{(3b) FLAGGED}
+
+The specific bad step is $\| \E[(u_t^\top m_t)u_tu_t^\top]\|_{\mathrm{op}}\le L\epsilon_\times\cdot L^2$: no truncation has been imposed in Lemma $G_{\text{unbiased}}$, so replacing $\|u_t\|$ by $L$ inside this unconditional expectation is invalid.
+
+In the same counterexample as (2), $\epsilon_\times=\|\E[\varepsilon_t\theta_t]\|=0$ but $m_t=\operatorname{sign}(u_t)$, so $\E[(u_t^\top m_t)u_tu_t^\top]=\E[|u_t|^3]=2\sqrt{2/\pi}\neq 0$.
+
+Hence the displayed bound $\|\E[(u_t^\top m_t)u_tu_t^\top]\|_{\mathrm{op}}\le L^3\epsilon_\times=0$ is false unless a \emph{conditional} bound on $m_t$ is added.
+
+\bigskip
+
+\textbf{(3c) VERIFIED}
+
+Here $\E[u_tu_t^\top]=I_d$ exactly, because Lemma $G_{\text{unbiased}}$ is still working with the untruncated Gaussian probe law.
+
+Applying claim (1) with $N=I_d$ gives
+\[
+K^{-1}(I_d)=\frac12I_d-\frac{d}{2(d+2)}I_d=\frac{1}{d+2}I_d,
+\]
+so the bias term is exactly $-\delta_\sigma (d+2)^{-1}I_d$.
+
+Therefore the “scaled identity” statement is exact; the parenthetical “after truncation, up to $1-O(\delta/T)$” is misplaced in this lemma.
+
+\bigskip
+
+\textbf{(4a) FLAGGED}
+
+Both indicators are indeed $\sigma(u_t,y_t)$-measurable, so they are observable once round $t$ has been played.
+
+But “predictable” means $\mathcal H_{t-1}$-measurable, and $\mathbf 1\{|y_t|\le L_y\}$ cannot be known at time $t-1$ because $y_t$ is only revealed at round $t$.
+
+So $\mathcal A_t$ is adapted/$\mathcal H_t$-measurable, \emph{not} predictable; the proof can still use centering, but the word “predictable” is wrong.
+
+\bigskip
+
+\textbf{(4b) VERIFIED}
+
+On $\mathcal A_t$, $|s_t|=|y_t^2-\hat\sigma^2|\le y_t^2+\hat\sigma^2\le L_y^2+\hat\sigma^2=:R_s$.
+
+Also
+\[
+\|G_t\|_{\mathrm{op}}
+=\|K^{-1}(s_tu_tu_t^\top)\|_{\mathrm{op}}
+\le \|K^{-1}\|_{\mathrm{op}}\,|s_t|\,\|u_tu_t^\top\|_{\mathrm{op}}
+\le R_sL^2\le R_X.
+\]
+
+The extra $+S_w^2$ is unnecessary here because $G_t$ is not centered in this lemma, but it makes the stated upper bound true.
+
+\bigskip
+
+\textbf{(4c) VERIFIED}
+
+On $\{\|u_t\|\le L\}$, $|u_t^\top\theta_t|\le \|u_t\|\,\|\theta_t\|\le LS_w$ because $\|\theta_t\|=\|B_k^\star w_t\|\le S_w$.
+
+Therefore $|y_t|=|u_t^\top\theta_t+\varepsilon_t|\le LS_w+|\varepsilon_t|$.
+
+So $\{|y_t|>L_y\}\cap\{\|u_t\|\le L\}\subseteq \{|\varepsilon_t|>L_\varepsilon\}$ with $L_y=LS_w+L_\varepsilon$.
+
+\bigskip
+
+\textbf{(4d) VERIFIED}
+
+The noise part is clean: with $L_\varepsilon=\sigma_\varepsilon\sqrt{2\log(4T/\delta)}$, sub-Gaussianity gives
+\[
+\Pr(|\varepsilon_t|>L_\varepsilon)\le 2e^{-L_\varepsilon^2/(2\sigma_\varepsilon^2)}=\delta/(2T).
+\]
+
+For the Gaussian probe, $\|u_t\|^2\sim\chi_d^2$, and Laurent--Massart gives an upper-tail bound that makes $\Pr(\|u_t\|>L)\le \delta/(4T)$ valid for $L^2=2d\log(4T/\delta)$; a Chernoff bound is actually the cleaner derivation here.
+
+Hence
+\[
+\Pr(\mathcal A_t^c)\le \delta/(4T)+\delta/(2T)=3\delta/(4T)\le \delta/T,
+\]
+so the union bound gives $\delta/T$, not $4\delta/T$.
+
+\bigskip
+
+\textbf{(5a) VERIFIED}
+
+$\tilde G_t=G_t\mathbf 1\{\mathcal A_t\}$ is $\mathcal H_t$-measurable because $G_t$ and $\mathbf 1\{\mathcal A_t\}$ are both functions of round-$t$ observables.
+
+By definition,
+\[
+\tilde X_t=\tilde G_t-\E[\tilde G_t\mid \mathcal H_{t-1}].
+\]
+
+Therefore $\E[\tilde X_t\mid \mathcal H_{t-1}]=0$ identically; this part is just centering.
+
+\bigskip
+
+\textbf{(5b) VERIFIED}
+
+On $\mathcal A_t$, claim (4b) gives $\|\tilde G_t\|_{\mathrm{op}}=\|G_t\|_{\mathrm{op}}\le R_X$, and on $\mathcal A_t^c$ one has $\tilde G_t=0$.
+
+So $\|\tilde G_t\|_{\mathrm{op}}\le R_X$ almost surely without any conditioning.
+
+Then
+\[
+\|\tilde X_t\|_{\mathrm{op}}
+\le \|\tilde G_t\|_{\mathrm{op}}+\|\E[\tilde G_t\mid\mathcal H_{t-1}]\|_{\mathrm{op}}
+\le 2R_X.
+\]
+
+\bigskip
+
+\textbf{(5c) VERIFIED}
+
+Let $\mu_t:=\E[\tilde G_t\mid\mathcal H_{t-1}]$; then
+\[
+\E[\tilde X_t^2\mid\mathcal H_{t-1}]
+=\E[(\tilde G_t-\mu_t)^2\mid\mathcal H_{t-1}]
+=\E[\tilde G_t^2\mid\mathcal H_{t-1}]-\mu_t^2
+\preceq \E[\tilde G_t^2\mid\mathcal H_{t-1}].
+\]
+
+Since $\tilde G_t$ is self-adjoint and $\|\tilde G_t\|_{\mathrm{op}}\le R_X$, we have $\tilde G_t^2\preceq R_X^2I$ almost surely.
+
+Thus
+\[
+\E[\tilde X_t^2\mid\mathcal H_{t-1}]\preceq R_X^2I.
+\]
+
+\bigskip
+
+\textbf{(5d) VERIFIED}
+
+Tropp’s matrix Freedman theorem states that for self-adjoint martingale differences with $\lambda_{\max}(X_t)\le R$ and predictable quadratic variation bounded by $\sigma^2$, one has a Bernstein/Freedman tail of the form
+\[
+\exp\!\left(-\frac{t^2}{2(\sigma^2+Rt/3)}\right).
+\]
+
+Here $R=2R_X$ and $\sigma^2\le m_kR_X^2$, so after the two-sided $2d$ union bound one gets
+\[
+\left\|\frac1{m_k}\sum_t \tilde X_t\right\|_{\mathrm{op}}
+\lesssim \sqrt{2}\,R_X\sqrt{\log(2d/\delta)/m_k}
++\frac{2R_X\log(2d/\delta)}{3m_k}.
+\]
+
+Therefore the paper’s coefficient $2R_X$ in front of the square-root term is a valid but looser simplification of the Freedman form.
+
+\bigskip
+
+\textbf{(5e) VERIFIED}
+
+Write
+\[
+\bar{\tilde G}_k:=m_k^{-1}\sum_{t\in\mathcal T_k}\tilde G_t
+\qquad\text{and}\qquad
+\bar\mu_k:=m_k^{-1}\sum_{t\in\mathcal T_k}\E[\tilde G_t\mid\mathcal H_{t-1}];
+\]
+then
+\[
+m_k^{-1}\sum_t\tilde X_t=\bar{\tilde G}_k-\bar\mu_k.
+\]
+
+On $\mathcal E=\bigcap_t\mathcal A_t$, $\tilde G_t=G_t$, so $\bar{\tilde G}_k=\widehat M_k$, while
+\[
+\bar\mu_k
+=
+m_k^{-1}\sum_t\bigl(\E[G_t\mid\mathcal H_{t-1}]-\E[G_t\mathbf 1\{\mathcal A_t^c\}\mid\mathcal H_{t-1}]\bigr)
+=
+\bar M_k^{\mathrm{probe}}+\widetilde B-\Theta_k.
+\]
+
+Hence
+\[
+\widehat M_k-\bar M_k^{\mathrm{probe}}-\widetilde B
+=
+\left(m_k^{-1}\sum_t\tilde X_t\right)-\Theta_k
+\]
+on $\mathcal E$; the identity is correct, although $\Theta_k$ is predictable/random, not deterministic.
+
+\bigskip
+
+\textbf{(5f) VERIFIED}
+
+Lemma $G_{\text{bound}}$ gives $\Pr(\mathcal E^c)\le \delta$.
+
+Tropp-Freedman gives another failure event of size at most $\delta$.
+
+So the intersection event has probability at least $1-2\delta$; the bookkeeping itself is correct.
+
+\bigskip
+
+\textbf{(6a) VERIFIED}
+
+From Proposition segment\_factorization,
+\[
+\bar M_k^{\mathrm{probe}}=B_k^\star \bar S_k^{\mathrm{probe}}(B_k^\star)^\top.
+\]
+
+If $\lambda_r(\bar S_k^{\mathrm{probe}})\ge \lambda_{\min}>0$, then $\bar S_k^{\mathrm{probe}}$ is full rank $r$, so $\bar M_k^{\mathrm{probe}}$ has exactly $r$ positive eigenvalues.
+
+Those nonzero eigenvalues equal the eigenvalues of $\bar S_k^{\mathrm{probe}}$, so the $r$-th eigenvalue is at least $\lambda_{\min}$.
+
+\bigskip
+
+\textbf{(6b) VERIFIED}
+
+Because $\bar M_k^{\mathrm{probe}}$ is PSD of rank $r$, its eigengap at the signal/noise split is
+\[
+\lambda_r(\bar M_k^{\mathrm{probe}})-\lambda_{r+1}(\bar M_k^{\mathrm{probe}})\ge \lambda_{\min}.
+\]
+
+A Davis--Kahan/Yu--Wang--Samworth population-gap bound gives
+\[
+\|\sin\Theta(\widehat U_k,U_k^\star)\|_{\mathrm{op}}
+\le 2\|\widehat M_k-\bar M_k^{\mathrm{probe}}\|_{\mathrm{op}}/\lambda_{\min},
+\]
+and for equal-rank subspaces
+\[
+\|\widehat P_k-P_k^\star\|_{\mathrm{op}}=\|\sin\Theta\|_{\mathrm{op}}.
+\]
+
+So the constant $4$ is conservative but correct; the cleaner operator-norm constant here is $2$, not $4$.
+
+\bigskip
+
+\textbf{(6c) FLAGGED}
+
+The corollary proof drops two positive terms that are present in Theorem $\text{matrix\_bernstein\_conf}$: the linear Freedman term $\frac{2R_X\log(2d/\delta)}{3m_k}$ and the truncation-bias term $\|\Theta_k\|_{\mathrm{op}}$.
+
+Concrete counterexample to the derivation: if $m_k=1$ and $\log(2d/\delta)=16$, then after the paper’s own factor $4/\lambda_{\min}$ the omitted linear term alone contributes
+\[
+128R_X/(3\lambda_{\min}),
+\]
+which is not absorbed by
+\[
+C_{\mathrm{sub}}\sqrt{\log(2d/\delta)/m_k}=32R_X/\lambda_{\min}.
+\]
+
+So the displayed final bound needs extra assumptions explicitly controlling both dropped terms; as written, it does not follow from the preceding theorem.
+
+\bigskip
+
+\textbf{(7) VERIFIED}
+
+For every probe time $t\in\mathcal T_k$,
+\[
+\widetilde M_t=\E[\theta_t\theta_t^\top\mid\mathcal H_{t-1}]
+=
+B_k^\star \E[w_tw_t^\top\mid\mathcal H_{t-1}] (B_k^\star)^\top.
+\]
+
+Averaging over $t\in\mathcal T_k$ gives
+\[
+\bar M_k^{\mathrm{probe}}=B_k^\star \bar S_k^{\mathrm{probe}} (B_k^\star)^\top.
+\]
+
+If $\lambda_r(\bar S_k^{\mathrm{probe}})\ge \lambda_{\min}>0$, then $\bar S_k^{\mathrm{probe}}$ is invertible on $\mathbb R^r$, so
+\[
+\operatorname{range}(\bar M_k^{\mathrm{probe}})=\operatorname{range}(B_k^\star).
+\]
+
+\bigskip
+
+Bottom line: the hard breaks are \textbf{(2)}, \textbf{(3b)}, \textbf{(4a)}, and \textbf{(6c)}. The most serious structural issue is that the proof quietly upgrades an \emph{unconditional} coupling bound into a \emph{conditional} one, and that invalidates the bias control in $G_{\text{unbiased}}$; the “predictable truncation” wording is also false, though the MDS centering step itself survives.
+
+
+-----
+
+  ## Chunk A3 — minimax LB
+
+### Claude response
+
+\section*{Adversarial audit of \texttt{chunk_A3_minimax_lb.tex}}
+
+  \subsection*{(1) Local packing with matched upper/lower op-norm diameters}
+
+  \textbf{FLAGGED.} The equation
+  [
+  \tfrac12\Delta ;\le; |P_{V_i}-P_{V_j}|{\mathrm{op}} ;\le; 2\Delta,\qquad \log N\ge c_0,r(d-r),
+  ]
+  is a true existence statement (via a volumetric packing of an op-norm ball of radius $2\Delta$ in a tangent chart of
+  $\mathrm{Gr}(r,d)$, using
+  $\log!\bigl[\mathrm{vol}(B{\mathrm{op}}(2\Delta))/\mathrm{vol}(B_{\mathrm{op}}(\Delta/2))\bigr]\ge r(d-r)\log 4$), but
+   the cited reference \emph{does not supply it}.
+
+  Cai--Ma--Wu (2013), Lem.~1, gives a packing
+  [
+  |P_{V_i}-P_{V_j}|_F;\ge;c',\epsilon\sqrt{r},\qquad \log N;\gtrsim;r(d-r),
+  ]
+  i.e.\ only a \emph{Frobenius-norm lower} bound. Wainwright 2019 Ch.~15 (Example 15.14) likewise develops the
+  construction via Varshamov--Gilbert on $\pm 1$ blocks, whose pairwise contrast is controlled in F-norm, not op-norm.
+
+  Translating the F-norm separation to op-norm loses a factor $\sqrt{2r}$: if $|G_i-G_j|F\asymp\epsilon\sqrt{r(d-r)}$
+  then
+  [
+  |\Pi{ij}|{\mathrm{op}};\ge;|\Pi{ij}|F/\sqrt{2r};\gtrsim;\epsilon\sqrt{(d-r)/r},\qquad
+  |\Pi{ij}|{\mathrm{op}};\le;|\Pi{ij}|_F;\lesssim;\epsilon\sqrt{r(d-r)},
+  ]
+  a gap of $\sqrt{2r}$, not the factor $4$ claimed. So the \emph{specific} citation does not deliver the stated
+  two-sided op-norm packing. The cleanest fix is to cite Szarek's Grassmannian metric-entropy bound (or do the local
+  volumetric construction explicitly); the claim itself survives.
+
+  \subsection*{(2) Isserlis identity and $\mathrm{tr},\Pi_{ij}=0$}
+
+  \textbf{VERIFIED.} For $u\sim\mathcal N(0,I_d)$ and symmetric $M$,
+  [
+  \mathbb E[(u^\top Mu)^2]=\sum_{ijkl}M_{ij}M_{kl},\mathbb E[u_iu_ju_ku_l]
+  =\sum_{ijkl}M_{ij}M_{kl}(\delta_{ij}\delta_{kl}+\delta_{ik}\delta_{jl}+\delta_{il}\delta_{jk}),
+  ]
+  and the three sums evaluate to $(\mathrm{tr},M)^2$, $|M|F^2$, $\mathrm{tr}(M^2)=|M|F^2$ respectively (last two equal
+  by symmetry). Total: $(\mathrm{tr},M)^2+2|M|F^2$. For $\Pi{ij}=P{V_i}-P{V_j}$, both projectors have trace $r$, so
+  $\mathrm{tr},\Pi_{ij}=0$. Caveat: probes are truncated at $|u|\le L$, so the exact identity requires absorbing a
+  $(1+o(1))$ factor into $C_1$; this is standard.
+
+  \subsection*{(3) Frobenius bound via rank}
+
+  \textbf{VERIFIED.} $\mathrm{rank}(\Pi_{ij})\le\mathrm{rank}(P_{V_i})+\mathrm{rank}(P_{V_j})\le 2r$. For any matrix $M$
+   of rank $k$, $|M|F^2=\sum{i=1}^k\sigma_i(M)^2\le k,\sigma_1(M)^2=k,|M|{\mathrm{op}}^2$. Hence $|\Pi{ij}|F^2\le
+  2r|\Pi{ij}|_{\mathrm{op}}^2\le 2r(2\Delta)^2=8r\Delta^2$.
+
+  \subsection*{(4) KL tensorization and identical probe marginal}
+
+  \textbf{VERIFIED.} Setup fixes probes $u_t\sim\mathcal N(0,I_d)$ truncated at $L$, independent of $B^\star$; the
+  $\mathcal H_m$-measurable estimator is over the \emph{estimator} class, not an adaptive probing strategy, so the probe
+   law is instance-independent. Then
+  [
+  \mathrm{KL}(\nu_i(u,y),|,\nu_j(u,y))=\mathrm{KL}(\nu_i(u),|,\nu_j(u))+\mathbb E_u[\mathrm{KL}(\nu_i(y\mid
+  u),|,\nu_j(y\mid u))]=0+\mathbb E_u[\mathrm{KL}(\cdot\mid u)],
+  ]
+  and iid rounds give $\mathrm{KL}(\nu_i^{\otimes m}|\nu_j^{\otimes m})=m\cdot\mathrm{KL}(\nu_i|\nu_j)$.
+
+  \subsection*{(5) Fano constant $\tfrac14\log N$}
+
+  \textbf{FLAGGED (minor).} Tsybakov 2009, Thm.~2.5 actually states: if
+  $\tfrac{1}{M+1}\sum_j\mathrm{KL}(P_j|P_0)\le\alpha\log M$ with $\alpha<1/8$, then
+  [
+  \inf_{\hat\theta}\max_j P_j(\hat\theta\ne\theta_j);\ge;\frac{\sqrt M}{1+\sqrt
+  M}\Bigl(1-2\alpha-\sqrt{\tfrac{2\alpha}{\log M}}\Bigr),
+  ]
+  \emph{not} the quoted $K\le\tfrac14\log N\Rightarrow P_e\ge1/2$''. The quoted form is the textbook Fano'' derived from
+   $P_e\ge 1-(K+\log 2)/\log N$: requiring $P_e\ge1/2$ gives $K\le(\log N)/2-\log 2$, which is implied by
+  $K\le\tfrac14\log N$ only when $\log N\ge 4\log 2$, i.e.\ $N\ge 16$. This side-condition is not stated but is
+  automatic since $\log N\ge c_0 r(d-r)$. Re-citing Tsybakov 2009, Prop.~2.3 (Fano's lemma)'' or Cor.~2.6'' would be
+  accurate; Thm.~2.5 gives a sharper but different statement.
+
+  \subsection*{(6) Final balance and $r$-cancellation}
+
+  \textbf{VERIFIED.} Impose $C_1mr\Delta^2\le\tfrac14\log N$; use $\log N\ge c_0 r(d-r)$ to reduce to the sufficient
+  condition $\Delta^2\le c_0(d-r)/(4C_1m)$ (the factor $r$ cancels). Saturating:
+  [
+  \Delta=\tfrac12\sqrt{c_0(d-r)/(C_1m)},\qquad \Delta/8=\tfrac{1}{16}\sqrt{c_0(d-r)/(C_1m)}=c_1/\sqrt m,
+  ]
+  with $c_1=\tfrac{1}{16}\sqrt{c_0(d-r)/C_1}=\Theta(\sqrt{d-r})$, valid for $m\ge c_0(d-r)/C_1$ (the regime where
+  $\Delta\le1/2$).
+
+  \subsection*{(7) Identifiability corollary ``$m\ge c(d-r)$ for constant risk''}
+
+  \textbf{FLAGGED.} The \emph{rate} claim $m=\Omega(d-r)$ is consistent with $c_1=\Theta(\sqrt{d-r})$, but the
+  \emph{specific constant} $1/4$ is unreachable by the theorem as proved. With
+  [
+  c_1=\tfrac{1}{16}\sqrt{c_0(d-r)/C_1},\qquad 16c_1^2=\tfrac{c_0(d-r)}{16C_1},
+  ]
+  the window ``$c_1/\sqrt m\ge 1/4$'' demands $m\le 16c_1^2=c_0(d-r)/(16C_1)$, which lies \emph{below} the regime of
+  validity $m\ge c_0(d-r)/C_1$. The two ranges are disjoint, so in the regime where the bound $c_1/\sqrt m$ is proved,
+  one always has
+  [
+  c_1/\sqrt m;\le;c_1/\sqrt{c_0(d-r)/C_1};=;1/16;<;1/4.
+  ]
+  The full piecewise lower bound (including the $\Delta=1/2$ cap for small $m$) is
+  $\Delta/8=\tfrac{1}{16}\min(1,\sqrt{c_0(d-r)/(C_1m)})\le 1/16$, never $\ge 1/4$.
+
+  \textbf{Counterexample to the corollary's proof as written:} take any $m\ge 1$; the theorem does not exclude an
+  estimator with risk $\in(1/16,1/4)$, so ``risk $<1/4$'' says nothing about $m$ via Theorem~\ref{thm:minimax_recovery}.
+   Concrete fix: either (a) state the corollary at target $1/32$ (or any $\epsilon<1/16$), giving $m\ge
+  c_1^2/\epsilon^2=\Theta(d-r)$ consistently; or (b) strengthen the theorem with a \emph{global} (non-local) packing
+  argument to reach $\Omega(1)$ lower bounds for constant target risk.
+
+  \subsection*{Summary}
+
+  \begin{center}
+  \begin{tabular}{cl}
+  (1) & FLAGGED — citation/construction mismatch (F-norm vs op-norm); claim itself recoverable via Szarek.\
+  (2) & VERIFIED (modulo truncation constant).\
+  (3) & VERIFIED.\
+  (4) & VERIFIED.\
+  (5) & FLAGGED (minor) — wrong Tsybakov number; inequality holds for $N\ge 16$.\
+  (6) & VERIFIED.\
+  (7) & FLAGGED — constant $1/4$ exceeds achievable lower-bound value $1/16$; restate at $\epsilon<1/16$.
+  \end{tabular}
+  \end{center}
+
+  \textbf{Net verdict:} the rate $c_1/\sqrt m$ with $c_1=\Theta(\sqrt{d-r})$ is correct. The two substantive gaps are
+  the Grassmannian-packing citation (1) and the constant in the identifiability corollary (7); both are fixable without
+  changing the rate.
+
+
+ ### GPT response
+
+\paragraph*{Claim (1)} \textbf{FLAGGED.}\
+The exact source I could locate is: Cai--Ma--Wu Lemma 1 gives a \emph{local packing number inside a ball}, but for the Frobenius metric (\rho(P,Q)=|P-Q|*F); Pajor's Proposition 8 is the operator-norm ((\sigma*\infty)) entropy statement. ([arXiv][1])\
+So the cited reference does \emph{not} directly imply (\frac{\Delta}{2}\le |P_{V_i}-P_{V_j}|_{\op}\le 2\Delta) at the same scale; there is a metric mismatch between (|\cdot|*F) and (|\cdot|*{\op}).\
+Concrete counterexample to that substitution: if all (r) principal angles between (V,W) equal (\theta) with (\sin\theta=\Delta/\sqrt{2r}), then (|P_V-P_W|*F=\Delta) but (|P_V-P_W|*{\op}=\Delta/\sqrt{2r}<\Delta/2) for (r\ge 3).
+
+\paragraph*{Claim (2)} \textbf{FLAGGED.}\
+The identity itself is correct: (\mathbb E[(u^\top M u)^2]=\sum_{ijkl}M_{ij}M_{kl}(\delta_{ij}\delta_{kl}+\delta_{ik}\delta_{jl}+\delta_{il}\delta_{jk})=(\operatorname{tr}M)^2+2|M|*F^2) for symmetric (M), and (\operatorname{tr}\Pi*{ij}=\operatorname{tr}P_{V_i}-\operatorname{tr}P_{V_j}=r-r=0).\
+The failing step is the \emph{application}: the instances were defined with probes truncated to ({|u|\le L}), but the proof then marginalizes as if (u\sim\mathcal N(0,I_d)) unconditionally.\
+Concrete counterexample: for (d=1), (M=[1]), (L=1), one has (\mathbb E[u^4\mid |u|\le1]\neq 3=\mathbb E_{Z\sim\mathcal N(0,1)}[Z^4]); the untruncated Isserlis formula is not the law actually used in the model.
+
+\paragraph*{Claim (3)} \textbf{VERIFIED.}\
+(\operatorname{rank}(P-Q)\le \operatorname{rank}(P)+\operatorname{rank}(Q)=2r), so (|P-Q|*F^2\le \operatorname{rank}(P-Q)|P-Q|*{\op}^2\le 2r|P-Q|_{\op}^2).\
+This is just (\sum_k s_k(A)^2\le (\max_k s_k(A)^2)\cdot #{k:s_k(A)\neq0}) applied to (A=P-Q).\
+The constant (2) is tight: with (P=\operatorname{diag}(I_r,0_r,0)) and (Q=\operatorname{diag}(0_r,I_r,0)), one gets (|P-Q|*F^2=2r) and (|P-Q|*{\op}=1).
+
+\paragraph*{Claim (4)} \textbf{VERIFIED.}\
+For one round, both models have the same probe marginal (Q_L) (the common truncated-Gaussian law), and only the conditional law of (y) given (u) changes.\
+Hence by the KL chain rule, (\mathrm{KL}(P_i^{u,y}|P_j^{u,y})=\mathrm{KL}(Q_L|Q_L)+\mathbb E_{u\sim Q_L}!\left[\mathrm{KL}(P_i^{y|u}|P_j^{y|u})\right]=\mathbb E_{u\sim Q_L}[\mathrm{KL}(\cdot)]).\
+Independence across (m) rounds then gives (\mathrm{KL}(\nu_i^{\otimes m}|\nu_j^{\otimes m})=m,\mathbb E_{u\sim Q_L}!\left[\mathrm{KL}(\nu_i^{y|u}|\nu_j^{y|u})\right]).
+
+\paragraph*{Claim (5)} \textbf{FLAGGED.}\
+Tsybakov Theorem (2.5) is the many-hypothesis \emph{Kullback version}: if (\frac1M\sum_{j=1}^M K(P_j,P_0)\le \alpha\log M) with (0<\alpha<1/8), then the testing error is bounded below by (\frac{\sqrt M}{1+\sqrt M}\bigl(1-2\alpha-\sqrt{2\alpha/\log M}\bigr)); Theorem (2.7) is only the general-loss wrapper. ([University of Southampton][2])\
+So ``(\max \mathrm{KL}\le \frac14\log N \Rightarrow P_{\mathrm{err}}\ge \frac12)'' is \emph{not} the stated Tsybakov theorem, and the constant (\frac14) does not match Theorem (2.5).\
+Concrete counterexample to the claimed implication: for (N=2), (P_0=\mathrm{Bern}(0.5)), (P_1=\mathrm{Bern}(0.7)), one has (\max{K(P_0,P_1),K(P_1,P_0)}<\frac14\log 2), but the optimal one-sample testing error is (0.4<1/2).
+
+\paragraph*{Claim (6)} \textbf{VERIFIED.}\
+The algebra is correct: (C_1mr\Delta^2\le \frac14 c_0 r(d-r)) implies (\Delta^2\le \frac{c_0(d-r)}{4C_1m}) because the factor (r) cancels exactly.\
+Then (\Delta/8\ge c_1/\sqrt m) with (c_1=\frac1{16}\sqrt{c_0(d-r)/C_1}), so indeed (c_1=\Theta(\sqrt{d-r})).\
+This is only the balancing step; it is conditional on the earlier packing, KL, and Fano steps being valid.
+
+\paragraph*{Claim (7)} \textbf{VERIFIED.}\
+Yes: if (\inf_{\widehat P}\sup_\nu \mathbb E_\nu|\widehat P-P^\star|*{\op}\ge c_1/\sqrt m) and (c_1=\Theta(\sqrt{d-r})), then forcing the risk below (1/4) requires (c_1/\sqrt m<1/4).\
+Equivalently, any estimator with constant risk (\le 1/4) must satisfy (m>16c_1^2=\Theta(d-r)).\
+So the identifiability threshold (m\ge c*{\mathrm{id}}(d-r)) is consistent; the proof just needs the contraposition written with the inequality in the correct direction.
+
+[1]: https://arxiv.org/pdf/1211.1309 "https://arxiv.org/pdf/1211.1309"
+[2]: https://www.personal.soton.ac.uk/cz1y20/Reading_Group/mlts-2023w/Tsybakov_Nonparametric_Estimation.pdf "https://www.personal.soton.ac.uk/cz1y20/Reading_Group/mlts-2023w/Tsybakov_Nonparametric_Estimation.pdf"
+
+
+
+
+

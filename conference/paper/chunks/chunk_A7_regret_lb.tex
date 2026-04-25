@@ -1,0 +1,162 @@
+% Standalone chunk A.7: Hard-projection regret lower bound
+% (POST-FIX, Round 2).
+% Covers: Thm spsc_lb statement (Pi_HP class, large-d regime),
+%         Le Cam proof (two-point, adversarial-v, exploit-KL suppression),
+%         Rem lb_scope_conf, Rem lb_class_conf.
+% Source: conf.tex lines ~516-541, 1947-2077 (post-fix).
+\input{_preamble}
+
+\title{Chunk A.7: Hard-projection regret lower bound\\(post-fix, Round 2 verification)}
+\author{(excerpt for standalone review)}
+\date{}
+
+\begin{document}
+\maketitle
+
+\textbf{Setup context.}
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=1pt]
+\item $\Pi_{\mathrm{HP}}$: policies whose exploitation action factors
+through a data-measurable rank-$r$ projector,
+$x_t=\widehat P_t x_t$ (contains SPSC and, to our knowledge, every
+prior algorithm for this problem).
+\item Costed dynamic regret
+$\DynReg_T^{(c)} := \sum_t(\max_x x^\top\theta_t-x_t^\top\theta_t)+c|\cTprobe|$.
+\end{itemize}
+
+\textbf{What changed since Round~1 (delta highlights).}
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=1pt]
+\item \emph{Linear-in-$\alpha$ per-round regret.} Rewritten using
+$x_t^\top v \le R_\cA\|\widehat P_t v\|$ (from $x_t=\widehat P_t x_t$),
+avoiding the spurious $\alpha^2/\|w\|$ term that appeared when the
+original sketch assumed $w\ne 0$.
+\item \emph{Constants explicit in Le Cam.} $\alpha^2 :=
+\sigma_\varepsilon^2/\bigl[4(m+R_\cA^2(T-m)r/d)\bigr]$ gives
+$\mathrm{KL}\le 1/8$, so Pinsker $d_{\mathrm{TV}}\le\sqrt{1/16}=1/4$.
+\item \emph{Scope-regime remarks.} Rem.~\ref{rem:lb_scope_conf} pins
+down the large-$d$ regime $d\ge d_0\cdot r\,T^{1/3}$ (Pinsker bound
+degrades to $\Omega(\sqrt T)$ in $d=O(r)$); Rem.~\ref{rem:lb_class_conf}
+makes explicit where the $\Pi_{\mathrm{HP}}$ restriction enters.
+\end{itemize}
+
+\section*{Statement}
+
+\begin{theorem}[Lower bound within $\Pi_{\mathrm{HP}}$]
+\label{thm:spsc_lb}
+Assume $d \ge d_0\cdot r\,T^{1/3}$ for an absolute constant $d_0$
+(large-$d$ / subspace-recovery-limited regime). For all sufficiently
+large $T$, there exists $c_0 > 0$ (depending only on
+$R_\cA, \sigma_\varepsilon, d_0$) such that
+\[
+\inf_{\pi\in\Pi_{\mathrm{HP}}} \sup_\nu\ \E^\pi_\nu[\DynReg_T^{(c)}]
+ \;\ge\; c_0\,c^{1/3}\,(R_\cA\sigma_\varepsilon)^{2/3}\,T^{2/3}.
+\]
+Combined with Thm.\ spsc\_regret, SPSC is rate-optimal within
+$\Pi_{\mathrm{HP}}$ in this regime.
+\end{theorem}
+
+\section*{Proof}
+
+Two-point Le Cam: $\nu_0$ has zero signal ($\theta^{(0)}\equiv 0$),
+$\nu_1(v)$ has signal $\alpha v$ for a unit $v$ chosen by the
+adversary after seeing the policy. Under $\Pi_{\mathrm{HP}}$,
+adversarial $v$ suppresses exploit-KL, forcing identification via
+probes.
+
+\emph{Construction.} $B^{(0)}=[e_1,\dots,e_r]$, $\theta^{(0)}\equiv 0$
+(limit $\Sigma_\eta\to 0^+$, $w_0=0$; bound is continuous in $\Sigma_\eta$).
+$B^{(1)}=[e_1,\dots,e_{r-1},v]$, $\theta^{(1)}\equiv\alpha v$. Both
+valid rank-$r$. $\varepsilon_t\sim\mathcal N(0,\sigma_\varepsilon^2)$,
+$\cA=\{\|x\|\le R_\cA\}$, probes $u_t\sim\mathcal N(0,I_d)$.
+
+\emph{Step 1 (linear-in-$\alpha$ per-round regret).} Under $\pi\in\Pi_{\mathrm{HP}}$,
+$x_t=\widehat P_t x_t$, so $x_t^\top v = x_t^\top\widehat P_t v\le R_\cA\|\widehat P_t v\|$
+(Cauchy--Schwarz). Optimal $\nu_1$-reward is $R_\cA\alpha$ (play $R_\cA v$),
+so
+\[
+\Delta_t^{(1)}\ge R_\cA\alpha(1-\|\widehat P_t v\|),
+\]
+linear in $\alpha$. Under $\nu_0$, control regret is $0$ and costed
+regret is the probe cost $cm$.
+
+\emph{Step 2 (adversarial $v$ suppresses exploit-KL).} Sequential KL
+chain rule:
+\[
+\mathrm{KL}(\mathbb P_0^{\cH}\|\mathbb P_1^{\cH})
+=\frac{\alpha^2}{2\sigma_\varepsilon^2}\E_{\mathbb P_0}\!\Bigl[\sum_{t=1}^T(x_t^\top v)^2\Bigr].
+\]
+Probes ($x_t=u_t\sim\mathcal N(0,I_d)$) contribute $\E[(u^\top v)^2]=1$
+each, total $m\alpha^2/(2\sigma_\varepsilon^2)$. Exploit rounds:
+$(x_t^\top v)^2=(x_t^\top\widehat P_t v)^2\le R_\cA^2\|\widehat P_t v\|^2$.
+
+Under $\nu_0$, history is noise-only ($y_t\sim\mathcal N(0,\sigma_\varepsilon^2)$,
+independent of $v$), so law of $\widehat P_t$ under $\nu_0$ does not
+depend on $v$. Adversary picks $v^\star$ \emph{after} this law is
+determined:
+\[
+v^\star:=\arg\min_{\|v\|=1}\E_{\mathbb P_0(v)}\!\Bigl[\sum_{t\in\cT_{\mathrm{exp}}}\|\widehat P_t v\|^2\Bigr].
+\]
+Average over $v$ uniform on $\mathbb S^{d-1}$: $\E_v\|\widehat P_t v\|^2=\tr(\widehat P_t)/d=r/d$.
+So $\min_v\le r/d$ per round, total $\le(T-m)r/d$. Substituting,
+\[
+\mathrm{KL}(\mathbb P_0^{\cH}\|\mathbb P_1^{\cH}(v^\star))
+\le\frac{\alpha^2}{2\sigma_\varepsilon^2}\Bigl(m+\frac{R_\cA^2(T-m)r}{d}\Bigr).
+\]
+
+\emph{Step 3 (Le Cam).} Pinsker: $d_{\mathrm{TV}}\le\sqrt{\mathrm{KL}/2}$.
+Set
+\[
+\alpha^2 := \frac{\sigma_\varepsilon^2}{4\bigl(m+R_\cA^2(T-m)r/d\bigr)}
+\implies\mathrm{KL}\le 1/8,\quad d_{\mathrm{TV}}\le\sqrt{1/16}=1/4 < 1/2.
+\]
+Two-point Le Cam:
+$\max(\E^\pi_{\nu_0}[\mathrm{Reg}],\E^\pi_{\nu_1(v^\star)}[\mathrm{Reg}])
+\ge\tfrac12(1-d_{\mathrm{TV}})\cdot(\text{regret gap})$.
+
+\emph{Step 4 (large-$d$ regime).} Under $d\ge d_0 r T^{1/3}$,
+$R_\cA^2(T-m)r/d\le R_\cA^2 T^{2/3}/d_0$. For $m\ge T^{2/3}/d_0$, the
+denominator in $\alpha^2$ is dominated by $m$, so
+$\alpha\asymp\sigma_\varepsilon/\sqrt m$. By Step 1,
+\[
+\E_{\nu_1(v^\star)}[\mathrm{Reg}]
+\ge R_\cA\alpha(T-m)\cdot(1-\sqrt{r/d}-d_{\mathrm{TV}})
+\ge c_1 R_\cA\alpha(T-m)
+\]
+for an absolute constant $c_1>0$ (using $\sqrt{r/d}\le 1/\sqrt{d_0 T^{1/3}}$
+small and $d_{\mathrm{TV}}\le 1/4$). Substituting,
+\[
+\sup_\nu\E^\pi_\nu[\mathrm{DynReg}_T^{(c)}]
+\ge cm+c_1 R_\cA\sigma_\varepsilon T/\sqrt m
+\]
+(bounding $T-m\ge T/2$ for $m\le T/2$; for $m>T/2$ the probe cost
+$cm\ge cT/2$ alone dominates). Minimising in $m$,
+$m^\star=\Theta((R_\cA\sigma_\varepsilon T/c)^{2/3})$, and
+\[
+\inf_{\pi\in\Pi_{\mathrm{HP}}}\sup_\nu\E^\pi_\nu[\mathrm{DynReg}_T^{(c)}]
+\ge c_0\,c^{1/3}(R_\cA\sigma_\varepsilon)^{2/3}T^{2/3}
+\]
+for an absolute $c_0>0$.\qed
+
+\begin{remark}[Regime of the lower bound]
+\label{rem:lb_scope_conf}
+The $T^{2/3}$ rate is established for $d\ge d_0\cdot r\,T^{1/3}$
+(i.e.\ $d/r\gtrsim T^{1/3}$), the natural regime in which subspace
+recovery is the bottleneck. In the opposite regime $d=O(r)$, the
+exploit-KL term $R_\cA^2(T-m)r/d$ is comparable to $T$, and the above
+Pinsker bound degrades to $\Omega(\sqrt T)$; a tighter analysis
+(e.g., instance-specific Grassmannian packing) is needed for
+$d=O(r)$ but lies outside scope.
+\end{remark}
+
+\begin{remark}[Scope of the lower bound w.r.t.\ policy class]
+\label{rem:lb_class_conf}
+The hard-projection restriction enters via Step 2's inequality
+$|x_t^\top v|=|x_t^\top\widehat P_t v|\le R_\cA\|\widehat P_t v\|$,
+valid because $x_t=\widehat P_t x_t$. A policy outside
+$\Pi_{\mathrm{HP}}$ could pick exploitation actions with non-zero
+components along $v$ even when $\widehat P_t v=0$, contributing extra
+exploit-KL that might beat $T^{2/3}$ by exploiting identifying
+information from off-subspace exploitation. Constructing (or ruling
+out) such an algorithm is the open problem our analysis isolates.
+\end{remark}
+
+\end{document}

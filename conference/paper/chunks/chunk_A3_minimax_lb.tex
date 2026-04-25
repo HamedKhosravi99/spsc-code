@@ -1,0 +1,161 @@
+% Standalone chunk A.3: Minimax subspace-recovery lower bound
+% (POST-FIX, Round 2).
+% Covers: Thm minimax_recovery (local Grassmannian packing + Fano),
+%         Cor id_threshold_conf.
+% Source: conf.tex lines ~543-562, 1404-1537 (post-fix).
+\input{_preamble}
+
+\title{Chunk A.3: Minimax subspace-recovery lower bound\\(post-fix, Round 2 verification)}
+\author{(excerpt for standalone review)}
+\date{}
+
+\begin{document}
+\maketitle
+
+\textbf{Setup context.}
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=1pt]
+\item Single-segment instance: $B^\star\in\R^{d\times r}$ orthonormal,
+$A_1=0$, $w_t\sim\mathcal N(0,\lambda_{\min}I_r)$ i.i.d.,
+$\varepsilon_t\sim\mathcal N(0,\sigma_\varepsilon^2)$ i.i.d., probes
+$u_t\sim\mathcal N(0,I_d)$ truncated at $\|u\|\le L$.
+\item Upper bound (chunk A.2): $\varepsilon_k\le O(\sqrt{\log d/m_k})$.
+We show this matches the minimax optimum up to $\sqrt{\log d}$.
+\end{itemize}
+
+\textbf{What changed since Round~1 (delta highlights).}
+\begin{itemize}[leftmargin=*,itemsep=1pt,topsep=1pt]
+\item \emph{Fano constants explicit:} $\alpha = 1/16$ (rather than a
+symbolic $\alpha<1/8$), $N\ge 16$ enforced by the packing size
+$\log N\ge c_0 r(d-r)$.
+\item \emph{Explicit final constant:} $c_1 = \tfrac{1}{32}\sqrt{c_0(d-r)/C_1}$
+with $C_1 := 8\lambda_{\min}^2/\sigma_\varepsilon^4$; regime of
+validity $m\ge c_0(d-r)/(16 C_1)$ stated.
+\item \emph{ID-threshold target risk:} changed to $1/32$ (from $1/4$)
+to match the actual constant produced by the Fano lower bound.
+\end{itemize}
+
+\section*{Statement}
+
+\begin{theorem}[Minimax subspace-recovery lower bound]
+\label{thm:minimax_recovery}
+Let $d\ge 2r$ and fix the single-segment model described above with
+isotropic Gaussian probes (truncated at $\|u\|\le L$). There exists a
+constant $c_1>0$ (depending only on $r,d,L,\sigma_\varepsilon,\lambda_{\min}$,
+with $c_1=\Theta(\sqrt{d-r})$) such that for every $m\ge 1$ and every
+$\cH_m$-measurable projector estimator $\widehat P$,
+\[
+\inf_{\widehat P}\ \sup_{\nu\in\mathfrak{M}}\ \E_\nu\!\bigl[\|\widehat P-P^\star\|_{\op}\bigr]
+ \ \ge\ \frac{c_1}{\sqrt m}.
+\]
+The upper bound $O(\sqrt{\log(d/\delta)/m})$ of chunk~A.2 matches this
+up to $\sqrt{\log d}$; hence the $T^{2/3}$ probe term in the main
+theorem is rate-optimal within $\Pi_{\mathrm{HP}}$.
+\end{theorem}
+
+\section*{Proof}
+
+\begin{proof}
+The argument is a Fano construction over a \emph{local} Grassmannian
+packing with matched upper and lower diameter bounds, so that the KL
+bound (upper diameter) and Fano's inequality (lower diameter) are
+applied at the same scale.
+
+\emph{Local Grassmannian packing.} For $d\ge 2r$ and any scale
+$\Delta\in(0,1/2)$, there exist subspaces $V_1,\dots,V_N\in\mathrm{Gr}(r,d)$
+satisfying
+\begin{equation}
+  \tfrac{1}{2}\Delta \;\le\; \|P_{V_i}-P_{V_j}\|_\op \;\le\; 2\Delta
+  \quad\text{for all }i\ne j,
+  \qquad \log N \;\ge\; c_0\, r(d-r),
+\label{eq:local_packing}
+\end{equation}
+for an absolute constant $c_0>0$ (Varshamov--Gilbert on a Grassmannian
+tangent-space chart around a reference $V_0$; cf.\ Cai--Ma 2013 or
+Wainwright HDS Ch.~15). The upper diameter $2\Delta$ is what the KL
+computation requires; the lower diameter $\Delta/2$ is what Fano
+requires. A global packing with only a separation lower bound would
+not suffice.
+
+\emph{Instance construction.} For each $j\in[N]$, let $B_j$ be an
+orthonormal basis of $V_j$ and define $\nu_j$: $B^\star=B_j$, $A_1=0$,
+$w_t\sim\mathcal N(0,\lambda_{\min}I_r)$ i.i.d.,
+$\varepsilon_t\sim\mathcal N(0,\sigma_\varepsilon^2)$ i.i.d.,
+$u_t\sim\mathcal N(0,I_d)$ truncated at $\|u\|\le L$ (truncation mass
+$\le\delta$ absorbed into constants via Appendix~C chunk). Under $\nu_j$,
+the conditional reward distribution given probe $u_t=u$ is zero-mean
+Gaussian with variance
+$\sigma_j^2(u):=\lambda_{\min} u^\top P_{V_j} u+\sigma_\varepsilon^2\ge\sigma_\varepsilon^2$.
+
+\emph{Pairwise KL.} Let $\Pi_{ij}:=P_{V_i}-P_{V_j}$, so
+$\tr\Pi_{ij}=0$. Conditional KL between two zero-mean Gaussians with
+variances $\sigma_i^2(u),\sigma_j^2(u)$ is
+$\tfrac12(r_u-1-\log r_u)$, $r_u:=\sigma_i^2(u)/\sigma_j^2(u)>0$. Using
+the elementary $r-1-\log r\le(r-1)^2/(2\min(r,1))$ and
+$\sigma_j^2(u)\ge\sigma_\varepsilon^2$,
+\[
+\mathrm{KL}(\nu_i^{(y\mid u)}\|\nu_j^{(y\mid u)})
+\le\frac{(\sigma_i^2(u)-\sigma_j^2(u))^2}{2\sigma_\varepsilon^4}
+=\frac{\lambda_{\min}^2\,(u^\top\Pi_{ij}u)^2}{2\sigma_\varepsilon^4}.
+\]
+Marginalising over $u\sim\mathcal N(0,I_d)$ (identical probe marginals
+under $\nu_i,\nu_j$, so joint KL is
+$\E_u[\mathrm{KL}(\nu_i^{(y\mid u)}\|\nu_j^{(y\mid u)})]$), and using
+Isserlis $\E[(u^\top M u)^2]=(\tr M)^2+2\|M\|_F^2$ with $\tr\Pi_{ij}=0$,
+\[
+\E_u[\mathrm{KL}]\le\frac{\lambda_{\min}^2}{2\sigma_\varepsilon^4}\cdot 2\|\Pi_{ij}\|_F^2
+=\frac{\lambda_{\min}^2}{\sigma_\varepsilon^4}\|\Pi_{ij}\|_F^2.
+\]
+$\Pi_{ij}$ is a difference of rank-$r$ projectors, so
+$\mathrm{rank}(\Pi_{ij})\le 2r$ and $\|\Pi_{ij}\|_F^2\le 2r\|\Pi_{ij}\|_\op^2\le 8r\Delta^2$ by~\eqref{eq:local_packing}. Hence
+\[
+\E_u[\mathrm{KL}]\le C_1 r\Delta^2,\qquad
+C_1:=\frac{8\lambda_{\min}^2}{\sigma_\varepsilon^4}.
+\]
+Tensorising over $m$ i.i.d.\ probe rounds,
+$\mathrm{KL}(\nu_i^{\otimes m}\|\nu_j^{\otimes m})\le C_1 m r\Delta^2$.
+
+\emph{Fano's inequality.} Standard Fano (Tsybakov Thm.~2.5/Cor.~2.6):
+if $\max_{i\ne j}\mathrm{KL}(\nu_i^{\otimes m}\|\nu_j^{\otimes m})\le\alpha\log N$
+for $\alpha\in(0,1/8)$ and $N\ge 16$, then
+$\inf_{\widehat\psi}\max_j\Pr_{\nu_j}(\widehat\psi\ne j)
+\ge\tfrac{\sqrt N}{1+\sqrt N}(1-2\alpha-\sqrt{2\alpha/\log N})\ge 1/4$.
+Taking $\alpha=1/16$ suffices for $N\ge 16$; the packing
+$\log N\ge c_0 r(d-r)\ge 16$ holds whenever $r(d-r)$ is sufficiently large.
+Combining with the lower-diameter bound $\|\Pi_{ij}\|_\op\ge\Delta/2$
+via Markov's inequality applied to $\|\widehat P-P_{V_j}\|_\op$,
+\[
+\inf_{\widehat P}\max_j\E_{\nu_j}[\|\widehat P-P_{V_j}\|_\op]
+\ge\frac{\Delta}{2}\cdot\frac{1}{4}=\Delta/8.
+\]
+
+\emph{Balancing.} KL constraint $C_1 m r\Delta^2\le\tfrac{1}{16}\log N$,
+with $\log N\ge c_0 r(d-r)$, gives $\Delta^2\le c_0(d-r)/(16C_1 m)$.
+Setting $\Delta=\min\bigl(1/2,\sqrt{c_0(d-r)/(16C_1 m)}\bigr)$ saturates,
+and
+\[
+\inf_{\widehat P}\sup_{\nu\in\mathfrak M}\E_\nu[\|\widehat P-P^\star\|_\op]
+\ge\Delta/8\ge\frac{c_1}{\sqrt m}
+\]
+with $c_1:=\tfrac{1}{32}\sqrt{c_0(d-r)/C_1}$, valid for
+$m\ge c_0(d-r)/(16C_1)$ (regime $m\gg r(d-r)$ where recovery is possible).
+\end{proof}
+
+\begin{corollary}[Identifiability sample threshold]
+\label{cor:id_threshold_conf}
+Any estimator achieving operator-norm subspace error below $1/32$
+requires $m\ge c_{\mathrm{id}}(d-r)$ probe rounds.
+\end{corollary}
+\begin{proof}
+Apply Thm.~\ref{thm:minimax_recovery} at target risk $1/32$:
+$c_1/\sqrt m\ge 1/32$ needs $m\le 32^2 c_1^2=\Theta(d-r)$ from
+$c_1=\Theta(\sqrt{d-r})$. The $\Theta(\sqrt{(d-r)/m})$ op-norm rate is
+the standard minimax rate; F-norm gives $\Theta(\sqrt{r(d-r)/m})$,
+matching the Grassmannian intrinsic dimension $r(d-r)$.
+\end{proof}
+
+\emph{Matching.} Corollary~cor:projector\_conf of chunk~A.2 gives
+$\|\widehat P_k-P_k^\star\|_\op\le C_{\mathrm{sub}}\sqrt{\log(2d/\delta)/m_k}$;
+Thm.~\ref{thm:minimax_recovery} matches up to the $\sqrt{\log d}$
+factor inherent to high-probability matrix Freedman bounds.
+
+\end{document}
