@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -oE \"\\\\\\\\\\\\\\\\cite[a-z]?\\\\{[^}]*\\\\}\" C:/Users/hamed/Documents/GitHub/lowrank-bandits/conference/paper/conf.tex)"
+    ]
+  }
+}

@@ -198,7 +198,31 @@
       "Bash(pdftotext -layout -f 9 -l 9 conf.pdf /tmp/Zv9.txt)",
       "Bash(pdftotext -layout -f 10 -l 10 conf.pdf /tmp/Zv10.txt)",
       "Bash(pdftotext -layout -f 9 -l 9 conf.pdf /tmp/Yp9.txt)",
-      "Bash(pdftotext -layout -f 10 -l 10 conf.pdf /tmp/Yp10.txt)"
+      "Bash(pdftotext -layout -f 10 -l 10 conf.pdf /tmp/Yp10.txt)",
+      "Bash(pdftotext -layout -f 9 -l 9 conf.pdf /tmp/Sp9.txt)",
+      "Bash(pdftotext -layout -f 10 -l 10 conf.pdf /tmp/Sp10.txt)",
+      "Bash(pdftotext -layout -f 9 -l 9 conf.pdf /tmp/Qp9.txt)",
+      "Bash(pdftotext -layout -f 10 -l 10 conf.pdf /tmp/Qp10.txt)",
+      "Bash(pdftotext -layout -f 9 -l 9 conf.pdf /tmp/Qp9b.txt)",
+      "Bash(pdftotext -layout -f 10 -l 10 conf.pdf /tmp/Qp10b.txt)",
+      "Bash(pdftotext -layout -f 9 -l 9 conf.pdf /tmp/Qp9c.txt)",
+      "Bash(pdftotext -layout -f 10 -l 10 conf.pdf /tmp/Qp10c.txt)",
+      "Bash(pdftotext -layout -f 9 -l 9 conf.pdf /tmp/Qp9d.txt)",
+      "Bash(pdftotext -layout -f 10 -l 10 conf.pdf /tmp/Qp10d.txt)",
+      "Bash(pdftotext -layout -f 9 -l 9 conf.pdf /tmp/p9F.txt)",
+      "Bash(pdftotext -layout -f 10 -l 10 conf.pdf /tmp/p10F.txt)",
+      "Bash(pdftotext -layout -f 9 -l 9 conf.pdf /tmp/p9Y.txt)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(echo \"bibtex exit=$?\")",
+      "Bash(echo \"pdflatex2 exit=$?\")",
+      "Bash(echo \"pdflatex3 exit=$?\")",
+      "Bash(echo \"p1=$?\")",
+      "Bash(echo \"bx=$?\")",
+      "Bash(echo \"p2=$?\")",
+      "Bash(echo \"p3=$?\")",
+      "Bash(pdftotext -layout conf.pdf -)",
+      "Bash(pdftotext conf.pdf -)",
+      "Bash(echo \"p=$?\")"
     ]
   }
 }

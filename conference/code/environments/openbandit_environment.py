@@ -26,13 +26,21 @@ plug in unchanged.
 
 import os
 import numpy as np
+import pandas as pd
 from sklearn.preprocessing import StandardScaler
 
+# We don't use obp's OpenBanditDataset loader (it depends on a pandas
+# API removed in pandas>=2.0).  We just need the bundled CSV data files,
+# which we locate inside the obp install path.
 try:
-    from obp.dataset import OpenBanditDataset
-    OBP_AVAILABLE = True
-    OBP_IMPORT_ERROR = None
+    import obp as _obp
+    _OBP_DATA_ROOT = os.path.join(os.path.dirname(_obp.__file__),
+                                   "dataset", "obd")
+    OBP_AVAILABLE = os.path.isdir(_OBP_DATA_ROOT)
+    OBP_IMPORT_ERROR = None if OBP_AVAILABLE else (
+        f"obp installed but bundled data dir missing: {_OBP_DATA_ROOT}")
 except ImportError as _e:
+    _OBP_DATA_ROOT = None
     OBP_AVAILABLE = False
     OBP_IMPORT_ERROR = str(_e)
 
@@ -76,23 +84,61 @@ class OpenBanditEnvironment:
     # Data loading
     # ------------------------------------------------------------------
     def _load_obp_data(self, campaign, behavior_policy, target_d):
-        """Pull OBP logs and assemble per-round feature vectors."""
-        ds = OpenBanditDataset(
-            behavior_policy=behavior_policy,
-            campaign=campaign,
-            data_path=None,           # default cache: ~/.obp_data
-        )
-        feedback = ds.obtain_batch_bandit_feedback()
+        """Read the bundled OBD CSVs directly (bypasses obp's loader,
+        which is incompatible with pandas>=2.0)."""
+        sub = {"all": "all", "men": "men", "women": "women"}[campaign]
+        log_csv = os.path.join(_OBP_DATA_ROOT, behavior_policy, sub,
+                                f"{sub}.csv")
+        item_csv = os.path.join(_OBP_DATA_ROOT, behavior_policy, sub,
+                                "item_context.csv")
+        if not (os.path.isfile(log_csv) and os.path.isfile(item_csv)):
+            raise FileNotFoundError(
+                f"OBD CSVs not found for campaign={campaign!r}, "
+                f"behavior_policy={behavior_policy!r}.\n"
+                f"  log_csv: {log_csv}\n  item_csv: {item_csv}"
+            )
 
-        actions = feedback["action"]              # (n_rounds,)  arm idx
-        rewards = feedback["reward"].astype(float)  # (n_rounds,) 0/1 click
-        contexts = feedback["context"]            # (n_rounds, dim_user)
+        log_df = pd.read_csv(log_csv, index_col=0)
+        item_df = pd.read_csv(item_csv, index_col=0)
 
-        # action_context: (n_actions_total, dim_action) item embeddings
-        action_context = ds.action_context.astype(float)
+        actions = log_df["item_id"].to_numpy(dtype=int)
+        rewards = log_df["click"].to_numpy(dtype=float)
+
+        # User context: 4 categorical user_feature_* columns (hashed
+        # strings) + 80 numeric user-item_affinity_* columns.
+        affinity_cols = [c for c in log_df.columns
+                         if c.startswith("user-item_affinity_")]
+        user_cat_cols = [c for c in log_df.columns
+                         if c.startswith("user_feature_")]
+        # Hash categorical user features to small one-hot blocks
+        BUCKETS = 8
+        user_cat_mat = np.zeros((len(log_df), len(user_cat_cols) * BUCKETS),
+                                dtype=np.float32)
+        for j, col in enumerate(user_cat_cols):
+            for i, v in enumerate(log_df[col].to_numpy()):
+                bucket = hash((j, str(v))) % BUCKETS
+                user_cat_mat[i, j * BUCKETS + bucket] = 1.0
+        contexts = np.hstack([
+            user_cat_mat,
+            log_df[affinity_cols].to_numpy(dtype=np.float32),
+        ])
+
+        # Item context: item_feature_0 numeric + 3 categorical strings.
+        # Build a (n_items, item_dim) embedding: numeric + hashed cats.
+        n_items = item_df["item_id"].max() + 1
+        item_cat_cols = [c for c in item_df.columns
+                         if c.startswith("item_feature_") and c != "item_feature_0"]
+        item_dim = 1 + len(item_cat_cols) * BUCKETS
+        action_context = np.zeros((n_items, item_dim), dtype=np.float32)
+        for _, row in item_df.iterrows():
+            iid = int(row["item_id"])
+            action_context[iid, 0] = float(row["item_feature_0"])
+            for j, col in enumerate(item_cat_cols):
+                bucket = hash((j, str(row[col]))) % BUCKETS
+                action_context[iid, 1 + j * BUCKETS + bucket] = 1.0
 
         # Per-round feature = user context concatenated with arm embedding
-        arm_feats = action_context[actions]
+        arm_feats = action_context[actions].astype(float)
         full = np.hstack([contexts.astype(float), arm_feats])
 
         # Standardise (zero-mean, unit-var per column) before dim adjust

@@ -4,6 +4,8 @@ from .real_covtype_environment_v2 import RealCovtypeEnvironmentV2
 from .real_pendigits_environment import RealPendigitsEnvironment
 from .real_satimage_environment import RealSatimageEnvironment
 from .warfarin_environment import WarfarinEnvironment
+from .vancomycin_environment import VancomycinEnvironment
+from .criteo_environment import CriteoEnvironment
 from .movielens_environment import MovieLensEnvironment
 from .real_movielens_environment import RealMovieLensEnvironment
 from .jester_environment import RealJesterEnvironment
