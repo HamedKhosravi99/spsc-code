@@ -71,35 +71,45 @@
 \maketitle
 
 \begin{abstract}
-Linear contextual bandits with low-rank reward structure deliver
-$\tilO(r\sqrt{T})$ regret only when the rank-$r$ subspace is
-fixed; nonstationary methods adapt to drifting parameters but pay
-the ambient rate $\tilO(d\sqrt{T})$. We close this gap for
-\emph{piecewise low-rank} bandits in which the reward parameter
-$\theta_t=B_k^\star w_t$ lives in a subspace
-$\range(B_k^\star)\subset\R^d$ that changes at unknown
-changepoints, while the learner sees only single-play scalar rewards
-$y_t=x_t^\top\theta_t+\varepsilon_t$ and may purchase information at
-cost $c>0$ per \emph{probe} round.
-We first establish an \emph{identification boundary}: three
-probe-side conditions (known noise variance, bounded state--noise
-coupling, full-dimensional probe support) are each individually
-necessary and jointly sufficient for recovering the active subspace
-from quadratic functionals of scalar rewards. Building on this
-characterisation, we introduce \textbf{SPSC} (Single-Play
-Subspace-Calibrated Optimism), which interleaves probing with
-windowed ridge-UCB inside the learned $r$-dimensional subspace, and
-prove costed dynamic regret
-$\tilO(r\sqrt{T})+\tilO(T^{2/3})+O(WV_{\rm in})$, replacing the
-ambient $d\sqrt{T}$ dependence with the intrinsic rank. A
-CUSUM-style adaptive variant removes the oracle-boundary assumption
-at the same leading rate.
-On eleven benchmarks (a synthetic phase-transition grid, six
-UCI/MovieLens datasets, two semi-synthetic clinical settings, and
-two production stress tests), SPSC attains regret reductions over
-state-of-the-art nonstationary and low-rank baselines whenever
-$d-r\gtrsim T^{1/6}$, an empirical crossover that matches the
-analytical prediction.
+
+ We study linear contextual bandits over a horizon of $T$ rounds, in
+  which the reward parameter $\theta_t \in \R^d$ lies in a
+  piecewise-constant rank-$r$ subspace ($r \ll d$) that
+  \emph{changes} across an unknown number $K$ of segments. The
+  learner sees only a scalar reward
+  $y_t = x_t^\top \theta_t + \varepsilon_t$ for action
+  $x_t \in \cA_t \subset \R^d$ with noise $\varepsilon_t$, and may
+  purchase information by designating rounds as \emph{probes} at
+  per-probe cost $c > 0$. Within each segment $k$, the parameter
+  factorises as $\theta_t = B_k^\star w_t$ for an orthonormal
+  $B_k^\star \in \R^{d\times r}$ and latent state $w_t \in \R^r$.
+  Existing low-rank bandit methods assume a fixed representation and
+  cannot track changing subspaces; nonstationary methods ignore
+  low-rank structure and pay the full ambient rate
+  $\tilO(d\sqrt{T})$. We first establish an \emph{identification boundary}: three
+  probe-side conditions (known noise variance, bounded state--noise
+  coupling, full-dimensional probe support) are each individually
+  necessary and jointly sufficient for recovering
+  $\range(B_k^\star)$ from quadratic functionals of scalar rewards.
+  We then introduce \textbf{SPSC} (Single-Play Subspace-Calibrated
+  Optimism), an algorithm that interleaves isotropic probes with
+  ridge-UCB exploitation \emph{inside} the learned $r$-dimensional
+  subspace, using a quadratic-measurement identity to recover the
+  active subspace from single-play scalar rewards. The costed dynamic
+  regret satisfies
+  $\tilO(r\sqrt{T})+\tilO(T^{2/3})+O(W V_{\rm in})$, where $W$ is the
+  exploitation window and
+  $V_{\rm in}$
+  is the within-segment path variation, replacing the ambient
+  $d\sqrt{T}$ dependence with intrinsic rank $r$. A CUSUM-style
+  adaptive variant removes the oracle-boundary assumption at the same
+  leading rate. On eleven benchmarks (a synthetic phase-transition grid, six
+  UCI/MovieLens environments, two semi-synthetic clinical datasets,
+  and two production stress tests), SPSC attains regret reductions
+  over state-of-the-art nonstationary and low-rank baselines whenever
+  $d-r\gtrsim T^{1/6}$, matching the analytical crossover prediction.
+
+
 \end{abstract}
 
 %% ============================================================
@@ -130,7 +140,7 @@ observations of $\theta_t$.
 
 Existing work treats exactly one of the two properties.
 Stationary low-rank
-bandits~\citep{jun2019bilinear,pmlr-v235-jedra24a,lu2021lowrank}
+bandits~\citep{jun2019bilinear,jedra2024low,lu2021low}
 deliver the desired $\tilO(r\sqrt T)$ rate but assume a fixed $B^\star$,
 which the first subspace change in real data invalidates.
 Nonstationary bandits~\citep{russac2019weighted,cheung2019learning}
@@ -172,13 +182,14 @@ cost $O(cm)$), whose optimum determines the leading rate.
 \paragraph{Identifiability boundary.}
   Three probe-side conditions, namely known noise variance, bounded
   state--noise coupling, and full-dimensional probe support, are each
-  individually necessary and jointly sufficient for recovering
-  $\range(B_k^\star)$ from single-play scalar rewards, via a lifted
-  operator $\mathcal K^{-1}$ acting on the centred statistic
-  $y_t^2-\widehat\sigma^2$ (Theorem~\ref{thm:identification};
+  individually necessary (in the unrestricted-second-moment problem)
+  and jointly sufficient for recovering $\range(B_k^\star)$ from
+  single-play scalar rewards, via a lifted operator $\mathcal K^{-1}$
+  acting on the centred statistic $y_t^2-\widehat\sigma^2$
+  (Theorem~\ref{thm:identification};
   Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}). Dropping any
-  one makes $\widetilde M_t$ unidentifiable for \emph{every}
-  algorithm, not just SPSC.
+  one makes $\widetilde M_t$ unidentifiable from quadratic
+  measurements alone, irrespective of algorithm.
 
 \paragraph{Contributions.}
 \begin{enumerate}[leftmargin=1.5em,itemsep=2pt]
@@ -191,11 +202,14 @@ noise-variance estimate. Theorem~\ref{thm:identification} establishes
 \emph{tight identifiability}: (a) under the three probe-side
 conditions, the segment-averaged $\widehat M_k$ recovers
 $\range(B_k^\star)$ at rate $1/\sqrt{m_k}$; (b) each of the three
-conditions is individually necessary, so the assumption set is
-\emph{minimal}---no weaker set of conditions enables recovery, by
-\emph{any} algorithm. The necessity half is what distinguishes this
-from a generic identifiability result: it identifies the boundary
-of the solvable region, not merely a sufficient interior point.
+conditions is individually necessary in the unrestricted
+second-moment problem, so the probe-side assumption set is minimal
+at the level of quadratic functionals of scalar rewards. The
+necessity half is what distinguishes this from a generic
+identifiability result: it identifies the boundary of the solvable
+region, not merely a sufficient interior point. Within the rank-$r$
+LDS class, rank structure may relax (i); (ii) and (iii) remain
+needed.
 \item \textbf{Algorithm.} \textbf{SPSC} (Alg.~\ref{alg:spsc})
 interleaves probing with windowed projected ridge-UCB inside the
 learned $r$-dimensional subspace; a \textbf{SPSC-Adaptive} variant
@@ -224,13 +238,13 @@ identifiability condition is not a proof artefact.
 
 \paragraph{Related work.}
 Stationary low-rank
-bandits~\citep{jun2019bilinear,kang2022gestt,pmlr-v235-jedra24a,pmlr-v235-jang24e,stojanovic2023spectral,duong2024boss,lu2021lowrank}
+bandits~\citep{jun2019bilinear,kang2022efficient,jedra2024low,jang2024efficient,stojanovic2023spectral,duong2024beyond,lu2021low}
 achieve intrinsic-rank rates but assume a fixed $B^\star$;
 nonstationary
-bandits~\citep{russac2019weighted,cheung2019learning,abbasi2023dynamic,hou2024pslb,kim2022improved}
+bandits~\citep{russac2019weighted,cheung2019learning,abbasi2023new,hou2024almost,kim2022improved}
 bound dynamic regret in the ambient dimension and ignore low-rank
 structure; cost-aware
-observation~\citep{seldin2014paid,tucker2023costly,elumar2025costly}
+observation~\citep{seldin2014prediction,tucker2023bandits,elumar2024multi}
 prices information acquisition for fixed parameters, not for
 identifying a changing subspace. SPSC is the first algorithm we
 are aware of that (i) attains regret scaling with intrinsic rank
@@ -360,18 +374,21 @@ $\widehat M_k=m_k^{-1}\sum_{t\in\cT_k}G_t$ satisfies, with
 probability at least $1-\delta$, the projector concentration
 $\|\widehat P_k-P_k^\star\|_{\op}\le C_{\mathrm{sub}}\sqrt{\log(d/\delta)/m_k}$;
 in particular $\widehat U_k=\TopEig_r(\widehat M_k)$ recovers
-$\range(B_k^\star)$ at rate $1/\sqrt{m_k}$.
-\item \textbf{Necessity.} Each of (i), (ii), (iii) is individually
-necessary: removing any one of these conditions yields two distinct
+$\range(B_k^\star)$ at rate $1/\sqrt{m_k}$ (Proof in Appendix~\ref{app:concentration_proof}).
+\item \textbf{Necessity (unrestricted-second-moment scope).} Each of
+(i), (ii), (iii) is individually necessary in the unrestricted
+second-moment problem: removing any one yields two distinct
 conditional second moments $\widetilde M_t\ne\widetilde M_t'$ that
 generate identical observation laws
 $\E[s_t\mid\cH_{t-1},u]$, so $\widetilde M_t$ is not identifiable from
 quadratic measurements. The three constructions are independent (each
 counterexample satisfies the remaining two conditions), so the three
-form a minimal identifiability set.
+form a minimal identifiability set in this class. Within the rank-$r$
+LDS class of \S\ref{sec:setting} ($r<d$), rank deficiency partially
+relaxes (i) since $\sigma_\varepsilon^2$ is identifiable from the
+$d-r$ smallest eigenvalues; (ii) and (iii) remain needed (Proof in Appendix~\ref{app:necessity}).
 \end{enumerate}
-Proofs in Appendix~\ref{app:concentration_proof} (part 1) and
-Appendix~\ref{app:necessity} (part 2).
+
 \end{theorem}
 
 %% ============================================================
@@ -403,41 +420,9 @@ local within-window drift. Per-round cost is $O(dr|\cA_t|+r^2)$ vs.\
 $O(d^2|\cA_t|)$ for ambient LinUCB, an $O(d/r)$ speed-up in addition
 to the statistical gain.
 
-\begin{algorithm}[t]
-  \caption{\textbf{SPSC}: Single-Play Subspace-Calibrated Optimism (oracle boundaries)}
-  \label{alg:spsc}
-  \begin{algorithmic}[1]
-  \State \textbf{Input:} segments $\{\cI_k\}_{k=1}^K$, probe schedule $\cTprobe$,
-         $\lambda>0$, probe distribution $Q$, rank $r$, window $W$.
-  \State Initialise $\widehat U_0\in\R^{d\times r}$ arbitrarily with orthonormal columns.
-  \For{$k=1,\dots,K$}\Comment{outer loop over segments}
-      \State $M_{\mathrm{acc}}\leftarrow 0$;\ $N_k\leftarrow 0$;\
-             $\widehat U_t\leftarrow \widehat U_{t-1}$.
-             \Comment{reset segment-local accumulator and probe counter}
-      \For{$t\in\cI_k$}
-          \If{$t\in\cTprobe$}\Comment{probe round}
-              \State draw $u_t\sim Q$; play $x_t=u_t$; observe $y_t$.
-              \State $s_t \leftarrow y_t^2 - \hat\sigma^2$;\quad
-                     $G_t \leftarrow \mathcal K^{-1}(s_t\,u_tu_t^\top)$.
-              \State $M_{\mathrm{acc}}\leftarrow M_{\mathrm{acc}}+ G_t$;\
-                     $N_k\leftarrow N_k+1$;\
-                     $\widehat U_t \leftarrow \TopEig_r(M_{\mathrm{acc}} / N_k)$.
-          \Else\Comment{exploitation round}
-              \State $\cW_t \leftarrow \{s\in\cI_k\setminus\cTprobe : t{-}W \le s < t\}$;\quad
-                     $z_t(x)\leftarrow \widehat U_{t-1}^\top x$.
-              \State $\widetilde V_t \leftarrow \lambda I_r + \sum_{s\in\cW_t} z_t(x_s)z_t(x_s)^\top$,\quad
-                     $\widetilde b_t \leftarrow \sum_{s\in\cW_t} z_t(x_s) y_s$.
-              \State $\widehat a_t \leftarrow \widetilde V_t^{-1}\widetilde b_t$;\;
-                     choose $x_t = \argmax_{x\in\cA_t}
-                     \bigl\{ z_t(x)^\top\widehat a_t
-                      + \beta_t^{(r,W)}\|z_t(x)\|_{\widetilde V_t^{-1}}
-                      + \gamma_t\|x\|_2\bigr\}$.
-              \State observe $y_t$;\ \ $\widehat U_t\leftarrow \widehat U_{t-1}$.
-          \EndIf
-      \EndFor
-  \EndFor
-  \end{algorithmic}
-\end{algorithm}
+Full pseudocode for Alg.~\ref{alg:spsc} (oracle boundaries) is in
+Appendix~\ref{app:algorithms}, alongside the adaptive variant
+described next.
 
 \paragraph{Adaptive variant (unknown boundaries).}
 SPSC-Adaptive removes the oracle-boundary assumption by detecting
@@ -467,7 +452,8 @@ $a_0\lceil\ell_k/m_k\rceil$. (Uniformly spaced probes satisfy this.)
 \label{thm:spsc_regret}
 Run Alg.~\ref{alg:spsc} with oracle segment boundaries
 $\{\cI_k\}_{k=1}^K$, scaled-sphere probes, and a balanced probe
-schedule. Under the model of \S\ref{sec:setting} and exact centering
+schedule. Under the model of \S\ref{sec:setting},
+Assumption~\ref{ass:projected_potential}, and exact centering
 $\widehat\sigma^2=\sigma_\varepsilon^2$, set the per-segment probe
 budget to $m_k=\min\{\ell_k,\lceil c_0\ell_k^{2/3}\rceil\}$ for an
 absolute constant $c_0>0$ (chosen as the closed-form optimum
@@ -494,6 +480,24 @@ window (cumulative on $E_k$ when $W\ge\ell_k$); the bound is most
 informative when $V_{\rm in}$ is small. Proof in
 \S\ref{app:proof_main}.
 \end{theorem}
+
+\begin{corollary}[Plug-in variance]
+\label{cor:plugin_variance}
+Estimate $\widehat\sigma^2$ from $N$ probe-round residuals
+(Lem.~\ref{lem:variance_estimator}) and write
+$\delta_\sigma:=|\widehat\sigma^2-\sigma_\varepsilon^2|$. For
+scaled-sphere probes, the bias
+$\widetilde B=-(\delta_\sigma/d)I_d$ from
+Lem.~\ref{lem:G_unbiased_conf} is a scaled identity, hence preserves
+the eigenvectors of $\bar M_k^{\mathrm{probe}}$. Davis--Kahan applied
+with the biased mean as reference removes the
+$\Delta_\sigma$ floor at population level, so
+Theorem~\ref{thm:spsc_regret} holds with the boxed bound,
+$\lambda_{\min}$ replaced by $\lambda_{\min}-\delta_\sigma/d$ in the
+constants. Choosing $N\gtrsim T^{2/3}/d^2$ yields
+$\delta_\sigma/d\ll\lambda_{\min}$ with high probability, so the
+leading rate is preserved.
+\end{corollary}
 
 \begin{corollary}[Within-segment-stationary special case]
 \label{cor:stationary_within}
@@ -567,8 +571,8 @@ eleven baselines: LinUCB~\citep{abbasi2011improved},
 D-LinUCB~\citep{russac2019weighted},
 SW-LinUCB~\citep{cheung2019learning}, Restart-LinUCB, LowRank-Reward,
 LowOFUL~\citep{jun2019bilinear}, VOFUL~\citep{kim2022improved}, LinTS,
-SW-LinTS, and adapted BOSS~\citep{duong2024boss} and
-Jedra~\citep{pmlr-v235-jedra24a}; Oracle-LinUCB (given the true
+SW-LinTS, and adapted BOSS~\citep{duong2024beyond} and
+Jedra~\citep{jedra2024low}; Oracle-LinUCB (given the true
 subspace) is an optimistic reference. All curves report means over
 at least 10 seeds with $\pm 1$\,SE bands.
 
@@ -644,12 +648,22 @@ MovieLens,      $r{=}10$ & 1.00           & 1.00           & \textbf{0.97} & \te
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{experiment_pendigits_extended.png}
+\includegraphics[width=\textwidth]{experiment_pendigits_extended.png}
 \caption{\textbf{Pendigits operating-regime grid.}
 SPSC and SPSC-Adaptive dominate every non-oracle baseline once
-$d{\ge}55$ and $r{\ge}10$; at $r{=}1$ or $d{=}5$ LinUCB/Restart-LinUCB
-win, consistent with $d-r\gtrsim T^{1/6}$.}
+$d{\ge}55$ and $r{\ge}10$.}
 \label{fig:pendigits-regime}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.90\textwidth]{experiment_real_satimage_double_rings.png}
+\caption{\textbf{Satimage operating-regime sunburst.} Regret ratios
+across the $(d,r)$ grid.
+Blue cells (ratio ${<}1$) indicate SPSC wins; red cells indicate
+losses. (a) SPSC vs.\ LinUCB; (b) SPSC vs.\ best non-oracle
+competitor.}
+\label{fig:satimage-sunburst}
 \end{figure}
 
 At the best cell $(d{=}105, r{=}10)$, SPSC-Adaptive beats LinUCB by
@@ -661,7 +675,6 @@ Non-low-rank baselines are by construction $r$-insensitive.
 \subsection{Clinical benchmarks: Warfarin and Vancomycin dosing}
 \label{sec:exp_warfarin}
 
-We evaluate SPSC on two semi-synthetic clinical bandits.
 
 \paragraph{Warfarin.} Warfarin dosing depends on patient demographics,
 genotype (VKORC1, CYP2C9), and clinical
@@ -671,10 +684,8 @@ environment is calibrated to the IWPC cohort
 $T{=}5{,}000$, $10$ seeds; reward $=$ negative deviation from
 therapeutic dose). Table~\ref{tab:warfarin_body} (representative
 cell $r{=}3$) shows SPSC-Adaptive cuts regret by $-67.3\%$ vs.\
-LinUCB.
-A random-subspace ablation (Appendix~\ref{app:warfarin_ablation})
-attributes roughly half of the gain to dimensionality reduction and
-half to the \emph{learned} subspace.
+LinUCB (more detail on Appendix~\ref{app:warfarin_ablation})
+
 
 \paragraph{Vancomycin.} Using the AUC-targeted
 \citet{rybak2020therapeutic} dosing protocol
@@ -687,7 +698,7 @@ at $r\in\{2,3,5,10\}$ vs.\ LinUCB, beating every non-oracle baseline
 at every rank. Per-rank detailed tables (all 10 baselines) are in
 Appendix~\ref{app:vancomycin_full}.
 
-\begin{table}[!htbp]
+\begin{table}[t]
 \centering
 \caption{\textbf{Warfarin} (representative cell $r{=}3$, mean$\pm$SE,
 10 seeds). SPSC-Adaptive cuts regret by $-67.3\%$ vs.\ LinUCB. Full
@@ -732,11 +743,11 @@ $r$ & SPSC-Adaptive  & vs.\ LinUCB & vs.\ best comp.\\
 \end{tabular}
 \end{table}
 
-\subsection{Standard nonstationary benchmark (Russac et al., 2019)}
+\subsection{Standard nonstationary benchmark}
 \label{sec:exp_russac}
 
 On the standard small-$d$ stress test ($d{=}2$, $r{=}1$, $K{=}4$,
-$T{=}6{,}000$, 50 arms, 30 seeds), SPSC reduces regret by
+$T{=}6{,}000$, 50 arms, 30 seeds) followed by setting in \citep{russac2019weighted}, SPSC reduces regret by
 $\mathbf{-46.5\%}$ vs.\ D-LinUCB, $-34.8\%$ vs.\ SW-LinUCB, and
 $\mathbf{-51.6\%}$ vs.\ stationary OFUL (which itself trails D-LinUCB
 by $+11.5\%$ on this nonstationary benchmark). Full table in
@@ -745,7 +756,7 @@ Appendix~\ref{app:sota_compare}.
 \subsection{Real exploration logs: Open Bandit Pipeline (ZOZO)}
 \label{sec:exp_openbandit}
 
-The Open Bandit Dataset \citet{saito2020open} ships production
+The Open Bandit Dataset \citep{saito2open} ships production
 exploration logs (logged action, propensity, 0/1 click from
 ZOZOTOWN; random-policy slice replayed as a bandit, $T{=}5{,}000$,
 $K{=}10$, 10 seeds). The data is real and only approximately
@@ -763,11 +774,9 @@ Appendix~\ref{app:percell}.
 
 Stationary low-rank methods are not directly comparable with SPSC.
 To provide a best-effort comparison, we adapt
-BOSS~\citep{duong2024boss} and Jedra~\citep{pmlr-v235-jedra24a} by
+BOSS~\citep{duong2024beyond} and Jedra~\citep{jedra2024low} by
 restarting them at every true segment boundary (an oracle advantage
-we do not give SPSC), on an $(d,r)$-grid
-($d\in\{55,105,200\}\times r\in\{5,10,20\}$, $K{=}10$, $T{=}5{,}000$,
-40 actions, 10 seeds; cf.\ Appendix~\ref{app:boss_jedra_detail}).
+we do not give SPSC), setup detail on Appendix~\ref{app:boss_jedra_detail}).
 Table~\ref{tab:boss_jedra_grid} shows SPSC wins all eight cells by
 $6$--$20\%$; the lead is largest at small $d$ ($-16$ to $-20\%$ at
 $d{=}55$) and narrows to $6$--$8\%$ at $d{=}200$. SPSC-Adaptive
@@ -776,8 +785,7 @@ without oracle restarts also beats both methods on every cell.
 \begin{table}[!htbp]
 \centering
 \caption{\textbf{Adapted stationary low-rank methods on an $(d,r)$-grid}.
-Costed regret (mean$\pm$SEM, 10 seeds, $T{=}5{,}000$, $K{=}10$, 40
-actions). BOSS/Jedra restart at \emph{oracle} segment boundaries;
+Costed regret (mean$\pm$SEM, 10 seeds, $T{=}5{,}000$, $K{=}10$). BOSS/Jedra restart at \emph{oracle} segment boundaries;
 SPSC-Adaptive detects them online. SPSC variants win every cell.}
 \label{tab:boss_jedra_grid}
 \small
@@ -816,8 +824,7 @@ $r\in[15,50]$, so mild overestimation is safe.
 optimum near $20$--$30$, matching $m_k^\star\propto \ell_k^{2/3}$.
 \textbf{Additional datasets} (see
 Appendix~\ref{app:percell}): SPSC wins every cell at $d\ge 105$,
-peaking at $(d,r){=}(105,20)$ ($-26\%$ MNIST, $-29\%$ Fashion-MNIST);
-on MovieLens, SPSC-Adaptive remains the best non-oracle method.
+peaking at $(d,r){=}(105,20)$.
 \textbf{Take-away.} Across the eleven benchmarks, SPSC delivers
 $\sqrt{r/d}$ intrinsic-rank savings whenever $d-r\gtrsim T^{1/6}$
 and does not catastrophically fail outside that regime.
@@ -880,7 +887,7 @@ and does not catastrophically fail outside that regime.
   \tocsubentry{B.6}{app:proof_adaptive_rank}{Proof of Corollary~\ref{cor:rank_adaptive} (rank-adaptive)}
   \tocsubentry{B.7}{app:proof_adaptive}{Proof of Proposition~\ref{thm:spsc_adaptive} (SPSC-Adaptive)}
 \tocentry{C}{app:truncation}{Probe distributions: scaled sphere and Gaussian truncation}
-\tocentry{D}{app:adaptive_algo}{SPSC-Adaptive: algorithm and discussion}
+\tocentry{D}{app:algorithms}{Algorithms: pseudocode and adaptive variant}
 \tocentry{E}{app:setup}{Experimental setup}
 \tocentry{F}{app:percell}{Per-cell tables: every dataset, every cell}
 \tocentry{G}{app:sensitivity}{Sensitivity and robustness studies}
@@ -933,25 +940,25 @@ adaptation.}
 \textbf{CP?} &
 \makecell[l]{\textbf{Difference}\\\textbf{vs.\ ours}} \\
 \midrule
-\citet{kang2022gestt} & NeurIPS'22 &
+\citet{kang2022efficient} & NeurIPS'22 &
 $\tilO\!\left(\sqrt{(d_1+d_2)MrT}\right)$
 & \cmark & \xmark & Stationary; probing not budgeted. \\
 \citet{stojanovic2023spectral} & NeurIPS'23 &
 Entry-wise / subspace recovery
 & \xmark/\cmark & \xmark & Estimation focus; no probe budget. \\
-\citet{pmlr-v235-jedra24a} & ICML'24 &
+\citet{jedra2024low} & ICML'24 &
 $\tilO\!\left(r^{5/4}(m+n)^{3/4}\sqrt{T}\right)$
 & \cmark & \xmark & Stationary; no re-learning. \\
-\citet{pmlr-v235-jang24e} & ICML'24 &
+\citet{jang2024efficient} & ICML'24 &
 Arm-set-dependent regret
 & \cmark & \xmark & Stationary; no CP detection. \\
-\citet{abbasi2023dynamic} & JMLR'23 &
+\citet{abbasi2023new} & JMLR'23 &
 $\tilO(\sqrt{KN(S+1)})$
 & \xmark & \cmark & Unstructured $K$-arm; no low-rank. \\
-\citet{komiyama2024adr} & JMLR'24 &
+\citet{komiyama2024finite} & JMLR'24 &
 ADR-bandit finite-time
 & \xmark & \cmark & Unstructured; no low-rank + probing. \\
-\citet{hou2024pslb} & NeurIPS'24 &
+\citet{hou2024almost} & NeurIPS'24 &
 Fixed-confidence sample complexity
 & \cmark & \cmark & BAI objective; no low-rank. \\
 \bottomrule
@@ -1012,9 +1019,9 @@ Algorithm & Reference & Regret scaling & Key difference vs.\ SPSC \\
 \midrule
 LinUCB       & \citet{abbasi2011improved}  & $O(d\sqrt{T})$                       & Ambient; no subspace exploitation. \\
 LowOFUL      & \citet{jun2019bilinear}     & $\tilO(r\sqrt{T})$                   & Needs oracle subspace $B$. \\
-LowESTR      & \citet{lu2021lowrank}       & $\tilO(r\sqrt{T})$                   & Stationary; learns $B$ from rewards. \\
-BOSS         & \citet{duong2024boss}       & $\tilO(r\sqrt{dT})$                  & Stationary; no online change adaptation. \\
-Jedra et al. & \citet{pmlr-v235-jedra24a}  & $\tilO(r^{5/4}(m{+}n)^{3/4}\sqrt{T})$ & Stationary; no probe cost. \\
+LowESTR      & \citet{lu2021low}       & $\tilO(r\sqrt{T})$                   & Stationary; learns $B$ from rewards. \\
+BOSS         & \citet{duong2024beyond}       & $\tilO(r\sqrt{dT})$                  & Stationary; no online change adaptation. \\
+Jedra et al. & \citet{jedra2024low}  & $\tilO(r^{5/4}(m{+}n)^{3/4}\sqrt{T})$ & Stationary; no probe cost. \\
 \midrule
 \textbf{SPSC (ours)} & This work          & $\tilO(r\sqrt{T}+T^{2/3})$           & Learns a \emph{changing} $B$ via priced probes. \\
 \bottomrule
@@ -1054,11 +1061,11 @@ dependency order:
     CUSUM detector.
 \end{enumerate}
 The windowed projected self-normalised bound
-(Lem.~\ref{lem:self_norm}), the time-varying-basis elliptical-potential
-assumption EP-TV (\eqref{eq:eptv_app}), and the projected
-nonstationary UCB lemma (Lem.~\ref{lem:F2pp}) are the linear-bandit
-ingredients; constants that do not affect leading order are absorbed
-into $\tilO(\cdot)$.
+(Lem.~\ref{lem:self_norm}), the windowed projected potential
+condition (Assumption~\ref{ass:projected_potential}), and the
+projected nonstationary UCB lemma (Lem.~\ref{lem:F2pp}) are the
+linear-bandit ingredients; constants that do not affect leading
+order are absorbed into $\tilO(\cdot)$.
 
 \subsection{Preliminaries and notation}
 \label{app:prelim}
@@ -1141,24 +1148,30 @@ $j\in\{0,1,\dots,m_k\}$,
 \end{equation}
 Uniformly spaced probes satisfy this condition.
 
-\paragraph{EP-TV (time-varying-basis elliptical potential).}
+\paragraph{Windowed projected potential.}
 For each exploit round $t\in E_k$, Alg.~\ref{alg:spsc} uses the
 \emph{current} basis $\widehat U_{t-1}$ and re-projects the windowed
 history through this same basis: $z_t(x):=\widehat U_{t-1}^\top x$,
 $\widetilde V_t:=\lambda I_r+\sum_{s\in\cW_t}z_t(x_s)z_t(x_s)^\top$,
-$w_t(x):=\|z_t(x)\|_{\widetilde V_t^{-1}}$. We assume that, on each
-segment $k$,
+$w_t(x):=\|z_t(x)\|_{\widetilde V_t^{-1}}$.
+
+\begin{assumption}[Windowed projected potential]
+\label{ass:projected_potential}
+For each segment $\cI_k$,
 \begin{equation}
 \sum_{t\in E_k}\min\{1,w_t(x_t)^2\}
-\;\le\; C_{\rm ep}\,r\log\!\Bigl(1+\frac{n_kR_\cA^2}{\lambda r}\Bigr).
-\tag{EP-TV}
-\label{eq:eptv_app}
+\;\le\; C_{\rm pot}\,(n_k/W+1)\,r\log\!\Bigl(1+\frac{W R_\cA^2}{\lambda r}\Bigr),
+\label{eq:projected_potential}
 \end{equation}
-For genuine sliding windows $W<\ell_k$, the right-hand side may be
-replaced by $C_{\rm ep}(n_k/W)r\log(1+WR_\cA^2/(\lambda r))$. When
-the basis is fixed, EP-TV reduces to the standard elliptical-potential
-lemma~\citep[Lem.~11]{abbasi2011improved}. In this section we take
-EP-TV as an explicit technical assumption.
+with the convention that the factor $(n_k/W+1)$ is interpreted as $1$
+and $W$ is replaced by $n_k$ when $W\ge n_k$.
+For fixed basis this is the standard elliptical-potential
+lemma~\citep[Lem.~11]{abbasi2011improved} (resp.\ its sliding-window
+form when $W<n_k$); the moving-basis case reduces to controlling the
+cumulative log-determinant change under basis updates, which follows
+from prefix concentration (Lem.~\ref{lem:prefix_subspace}) via a
+routine Lipschitz bound.
+\end{assumption}
 
 \begin{lemma}[Windowed projected self-normalised concentration]
 \label{lem:self_norm}
@@ -1351,21 +1364,29 @@ then with probability $\ge 1-\delta$,
 \le C_{\mathrm{sub}}\sqrt{\log(2d/\delta)/m_k}
 + \Delta_\sigma,\quad
 C_{\mathrm{sub}} := \frac{8 R_X}{\lambda_{\min}},\
-\Delta_\sigma := \frac{4(|\delta_\sigma|L^2 + 2L^3\epsilon_\times)}{\lambda_{\min}}.
+\Delta_\sigma := \frac{4(|\delta_\sigma|/d + 2\sqrt d\,\epsilon_\times)}{\lambda_{\min}}.
 \label{eq:proj_bound_conf}
 \end{equation}
+For scaled-sphere probes, the variance-misspecification component
+$|\delta_\sigma|/d$ corresponds to a scaled-identity bias
+(Lem.~\ref{lem:G_unbiased_conf}) that is parallel to $I_d$ and
+therefore preserves the eigenvectors of $\bar M_k^{\rm probe}$;
+applying Davis--Kahan with the biased mean as reference removes the
+$|\delta_\sigma|/d$ contribution to $\Delta_\sigma$ at population
+level (Cor.~\ref{cor:plugin_variance}).
 \end{corollary}
 \begin{proof}
-By Lemma~\ref{lem:G_unbiased_conf}, $\E[\widehat M_k\mid\cH]
-= \bar M_k^{\mathrm{probe}} + \widetilde B$ with
-$\|\widetilde B\|_\op \le |\delta_\sigma|L^2 + 2L^3\epsilon_\times =: b_\sigma$.
-Combining with Theorem~\ref{thm:matrix_bernstein_conf},
+By Lemma~\ref{lem:G_unbiased_conf} (scaled-sphere),
+$\E[\widehat M_k\mid\cH] = \bar M_k^{\mathrm{probe}} + \widetilde B$
+with $\|\widetilde B\|_\op \le |\delta_\sigma|/d + 2\sqrt d\,\epsilon_\times
+=: b_\sigma$. Combining with
+Theorem~\ref{thm:matrix_bernstein_conf},
 $\|\widehat M_k - \bar M_k^{\mathrm{probe}}\|_\op
 \le 2R_X\sqrt{\log(2d/\delta)/m_k} + b_\sigma$.
 $\bar M_k^{\mathrm{probe}}$ has rank exactly $r$ with $r$-th
 eigenvalue $\ge\lambda_{\min}$ (Lem.~\ref{lem:probe_excitation_conf}
 via Prop.~\ref{prop:segment_factorization_conf} below); Davis--Kahan
-\citep[Thm.~VII.3.1]{bhatia1997matrix} gives
+\citep[Thm.~VII.3.1]{bhatia2013matrix} gives
 $\|\widehat P_k - P_k^\star\|_\op\le 4\|\widehat M_k - \bar M_k^{\mathrm{probe}}\|_\op / \lambda_{\min}$,
 yielding \eqref{eq:proj_bound_conf}.
 \end{proof}
@@ -1382,6 +1403,35 @@ for $t\in\cI_k$; average over $\cT_k$ and pull $B_k^\star$ out.
 Range equality uses
 $\lambda_r(\bar S_k^{\mathrm{probe}})\ge\lambda_{\min}>0$
 (Lem.~\ref{lem:probe_excitation_conf}).
+\end{proof}
+
+\begin{lemma}[Variance estimator from probe residuals]
+\label{lem:variance_estimator}
+Split the first $N$ probes of segment $k$ in half: form
+$\widehat M_k^{(N/2)}$ from the first $N/2$ probes (matrix-Bernstein
+estimate), and define the residual estimator
+\[
+\widehat\sigma^2 \;:=\; \mathrm{med}_{t\in\cT_k,\,N/2<t\le N}
+  \bigl\{\,y_t^2 - u_t^\top \widehat M_k^{(N/2)} u_t\,\bigr\}.
+\]
+On the event of Theorem~\ref{thm:matrix_bernstein_conf} for
+$\widehat M_k^{(N/2)}$, with probability at least $1-\delta$,
+\[
+|\widehat\sigma^2 - \sigma_\varepsilon^2|
+\;\le\; C\,\sigma_\varepsilon^2\,\sqrt{\log(1/\delta)/N}.
+\]
+\end{lemma}
+\begin{proof}[Proof sketch]
+By Lemma~\ref{lem:quad_conf}, on probe round $t$,
+$\E[y_t^2-u_t^\top\widetilde M_t u_t\mid\cH_{t-1},u_t]=\sigma_\varepsilon^2
++ O(\epsilon_\times)$. Substituting
+$\widehat M_k^{(N/2)}$ for $\widetilde M_t$ contributes
+$|u_t^\top(\widehat M_k^{(N/2)}-\widetilde M_t)u_t|=O(\sqrt{1/N})$ on
+the matrix-Bernstein event. The squared noise $\varepsilon_t^2$ is
+sub-exponential with mean $\sigma_\varepsilon^2$; the median of
+$N/2$ i.i.d.\ samples concentrates at rate
+$\sigma_\varepsilon^2\sqrt{\log(1/\delta)/N}$ by standard
+concentration of the empirical median.
 \end{proof}
 
 This chain (Lemmas \ref{lem:K_inverse}--\ref{lem:G_bound_conf},
@@ -1485,7 +1535,8 @@ $a_t^\star:=U_t^\top\theta_t$, and (as in Alg.~\ref{alg:spsc})
 $\widetilde V_t = \lambda I_r+\sum_{s\in\cW_t}z_t(x_s)z_t(x_s)^\top$,
 $\widehat a_t = \widetilde V_t^{-1}\sum_{s\in\cW_t}z_t(x_s)y_s$.
 Assume on segment $\cI_k$: (i) the windowed projected self-normalised
-event of Lem.~\ref{lem:self_norm} holds uniformly over $E_k$; (ii) \eqref{eq:eptv_app};
+event of Lem.~\ref{lem:self_norm} holds uniformly over $E_k$;
+(ii) Assumption~\ref{ass:projected_potential} holds;
 (iii) $\|\theta_t\|\le S_w$, $\|x\|\le R_\cA$ for $x\in\cA_t$.
 Suppose Alg.~\ref{alg:spsc} uses an optimism correction satisfying
 \begin{equation}
@@ -1555,9 +1606,10 @@ $x_t^\star=\arg\max x^\top\theta_t$, the instantaneous regret obeys
 + d_t,
 \]
 where $\sum_t d_t\le C R_\cA W V_k^{\rm in}$.
-Cauchy--Schwarz with EP-TV gives
+Cauchy--Schwarz together with
+Assumption~\ref{ass:projected_potential} gives
 $\sum_{t\in E_k}\beta_t^{(r,W)}w_t(x_t)
-\le \beta_k\sqrt{n_k\cdot 2C_{\rm ep}r L_W}=\tilO(r\sqrt{n_k})$.
+\le \beta_k\sqrt{n_k\cdot 2C_{\rm pot}r L_W}=\tilO(r\sqrt{n_k})$.
 Summing yields \eqref{eq:F2pp}.
 \end{proof}
 
@@ -1817,15 +1869,61 @@ results of \S\ref{app:concentration_proof} apply with $\|u_t\|\le L$
 (replacing $\sqrt d$), adding only a $\log(T/\delta)$ factor to $R_X$
 and $C_{\mathrm{sub}}$ that is absorbed in $\tilO(\cdot)$.
 
-\section{SPSC-Adaptive: algorithm and discussion}
+\section{Algorithms: pseudocode and adaptive variant}
+\label{app:algorithms}
 \label{app:adaptive_algo}
 
-This appendix gives the pseudocode for SPSC-Adaptive, explains the
-design choices (detector form, threshold, recovery phase, burn-in),
-and ties the tuning back to the guarantee of
-Theorem~\ref{thm:spsc_adaptive}. The main-body algorithm
-(Alg.~\ref{alg:spsc}) assumes oracle segment boundaries; SPSC-Adaptive
-recovers them from probe data.
+This appendix gives the full pseudocode for SPSC (oracle boundaries,
+Alg.~\ref{alg:spsc}) and SPSC-Adaptive (online change-point
+detection, Alg.~\ref{alg:spsc_adaptive}), and explains the adaptive
+design choices (detector form, threshold, recovery phase, burn-in)
+that tie the tuning back to the guarantee of
+Proposition~\ref{thm:spsc_adaptive}.
+
+\subsection{SPSC (oracle boundaries)}
+\label{app:alg_spsc}
+
+\begin{algorithm}[H]
+  \caption{\textbf{SPSC}: Single-Play Subspace-Calibrated Optimism (oracle boundaries)}
+  \label{alg:spsc}
+  \begin{algorithmic}[1]
+  \State \textbf{Input:} segments $\{\cI_k\}_{k=1}^K$, probe schedule $\cTprobe$,
+         $\lambda>0$, probe distribution $Q$, rank $r$, window $W$.
+  \State Initialise $\widehat U_0\in\R^{d\times r}$ arbitrarily with orthonormal columns.
+  \For{$k=1,\dots,K$}\Comment{outer loop over segments}
+      \State $M_{\mathrm{acc}}\leftarrow 0$;\ $N_k\leftarrow 0$;\
+             $\widehat U_t\leftarrow \widehat U_{t-1}$.
+             \Comment{reset segment-local accumulator and probe counter}
+      \For{$t\in\cI_k$}
+          \If{$t\in\cTprobe$}\Comment{probe round}
+              \State draw $u_t\sim Q$; play $x_t=u_t$; observe $y_t$.
+              \State $s_t \leftarrow y_t^2 - \hat\sigma^2$;\quad
+                     $G_t \leftarrow \mathcal K^{-1}(s_t\,u_tu_t^\top)$.
+              \State $M_{\mathrm{acc}}\leftarrow M_{\mathrm{acc}}+ G_t$;\
+                     $N_k\leftarrow N_k+1$;\
+                     $\widehat U_t \leftarrow \TopEig_r(M_{\mathrm{acc}} / N_k)$.
+          \Else\Comment{exploitation round}
+              \State $\cW_t \leftarrow \{s\in\cI_k\setminus\cTprobe : t{-}W \le s < t\}$;\quad
+                     $z_t(x)\leftarrow \widehat U_{t-1}^\top x$.
+              \State $\widetilde V_t \leftarrow \lambda I_r + \sum_{s\in\cW_t} z_t(x_s)z_t(x_s)^\top$,\quad
+                     $\widetilde b_t \leftarrow \sum_{s\in\cW_t} z_t(x_s) y_s$.
+              \State $\widehat a_t \leftarrow \widetilde V_t^{-1}\widetilde b_t$;\;
+                     choose $x_t = \argmax_{x\in\cA_t}
+                     \bigl\{ z_t(x)^\top\widehat a_t
+                      + \beta_t^{(r,W)}\|z_t(x)\|_{\widetilde V_t^{-1}}
+                      + \gamma_t\|x\|_2\bigr\}$.
+              \State observe $y_t$;\ \ $\widehat U_t\leftarrow \widehat U_{t-1}$.
+          \EndIf
+      \EndFor
+  \EndFor
+  \end{algorithmic}
+\end{algorithm}
+
+\subsection{SPSC-Adaptive (unknown boundaries)}
+\label{app:alg_adaptive}
+
+SPSC-Adaptive recovers segment boundaries from probe data, removing
+the oracle assumption of Alg.~\ref{alg:spsc}.
 
 \paragraph{Detector.}
 At each probe round the algorithm maintains two non-overlapping
@@ -2332,7 +2430,7 @@ is learned signal.}
 \section{BOSS/Jedra adaptation to the piecewise setting}
 \label{app:boss_jedra_detail}
 
-BOSS~\citep{duong2024boss} and Jedra~\citep{pmlr-v235-jedra24a} are
+BOSS~\citep{duong2024beyond} and Jedra~\citep{jedra2024low} are
 stationary low-rank methods. To give them a fair comparison to SPSC
 we restart each at the \emph{true} segment boundaries (an oracle
 advantage we do not give SPSC) and otherwise leave their

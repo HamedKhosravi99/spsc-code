@@ -29,7 +29,9 @@
       "WebFetch(domain:www.jmlr.org)",
       "WebFetch(domain:openreview.net)",
       "Bash(grep -oE '\\\\\\\\cite[a-z]?p?t?\\\\*?\\\\{[^}]+\\\\}' \"C:\\\\Users\\\\hamed\\\\Documents\\\\GitHub\\\\lowrank-bandits\\\\conference\\\\paper\\\\conf.tex\")",
-      "Bash(grep -v '^$')"
+      "Bash(grep -v '^$')",
+      "Bash(grep -nE \"thm:spsc_regret|Theorem~\\\\\\\\\\\\\\\\ref\\\\{thm:spsc_regret\\\\}\" C:/Users/hamed/Documents/GitHub/lowrank-bandits/conference/paper/conf.tex)",
+      "Bash(grep *)"
     ]
   }
 }
