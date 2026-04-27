@@ -222,7 +222,28 @@
       "Bash(echo \"p3=$?\")",
       "Bash(pdftotext -layout conf.pdf -)",
       "Bash(pdftotext conf.pdf -)",
-      "Bash(echo \"p=$?\")"
+      "Bash(echo \"p=$?\")",
+      "Bash(echo \"PASS1 EXIT: $?\")",
+      "Bash(echo \"BIBTEX EXIT: $?\")",
+      "Bash(echo \"PASS2 EXIT: $?\")",
+      "PowerShell($log = Get-Content C:\\\\tmp\\\\pass3.log -Raw; $undef = \\([regex]::Matches\\($log, 'undefined'\\)\\).Count; $warn = \\([regex]::Matches\\($log, 'Warning'\\)\\).Count; $err = \\([regex]::Matches\\($log, 'Error'\\)\\).Count; $emerg = \\([regex]::Matches\\($log, 'Emergency'\\)\\).Count; Write-Output \"Undefined: $undef\"; Write-Output \"Warning: $warn\"; Write-Output \"Error: $err\"; Write-Output \"Emergency: $emerg\"; $log | Select-String -Pattern 'Warning' | Select-Object -First 5)",
+      "PowerShell(pdflatex *)",
+      "Bash(rm -f conf.aux conf.log conf.out conf.pdf)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(echo \"PASS4: $?\")",
+      "PowerShell(Wait-Process *)",
+      "PowerShell(bibtex conf *)",
+      "Bash(cmd.exe *)",
+      "Bash(latexmk --version)",
+      "Bash(sed -i '2845,3088d' ../paper/conf.tex)",
+      "Bash(sed -n '2840,2848p' ../paper/conf.tex)",
+      "Bash(sed -i '1329,1435d' ../paper/conf.tex)",
+      "Bash(sed -n '1325,1335p' ../paper/conf.tex)",
+      "Bash(echo \"b=$?\")",
+      "Bash(echo \"p1b=$?\")",
+      "Bash(echo \"p2b=$?\")",
+      "Bash(echo \"p1c=$?\")",
+      "Bash(echo \"p2c=$?\")"
     ]
   }
 }

@@ -1,0 +1,35 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npm view *)",
+      "Bash(npm list *)",
+      "Bash(npm install *)",
+      "Bash(git -C \"C:\\\\Users\\\\hamed\\\\Documents\\\\GitHub\\\\lowrank-bandits\\\\conference\\\\paper\" log --oneline -10)",
+      "Bash(git -C \"C:\\\\Users\\\\hamed\\\\Documents\\\\GitHub\\\\lowrank-bandits\\\\conference\\\\paper\" status)",
+      "Bash(git -C \"C:\\\\Users\\\\hamed\\\\Documents\\\\GitHub\\\\lowrank-bandits\\\\conference\\\\paper\" diff --stat conf.tex)",
+      "Bash(git -C \"C:\\\\Users\\\\hamed\\\\Documents\\\\GitHub\\\\lowrank-bandits\\\\conference\\\\paper\" diff conf.tex)",
+      "Bash(git -C \"C:\\\\Users\\\\hamed\\\\Documents\\\\GitHub\\\\lowrank-bandits\\\\conference\\\\paper\" log --oneline -5 conf.tex)",
+      "Bash(git -C \"C:\\\\Users\\\\hamed\\\\Documents\\\\GitHub\\\\lowrank-bandits\\\\conference\\\\paper\" status conf.tex)",
+      "Bash(grep -nE \"^\\\\\\\\\\\\\\\\section|^\\\\\\\\\\\\\\\\subsection\" C:/Users/hamed/Documents/GitHub/lowrank-bandits/conference/paper/conf.tex)",
+      "Bash(awk '/\\\\\\\\begin{document}/{flag=1} /\\\\\\\\appendix/{flag=0} flag' C:/Users/hamed/Documents/GitHub/lowrank-bandits/conference/paper/conf.tex)",
+      "Bash(awk '/begin\\\\{document\\\\}/,/clearpage/' C:/Users/hamed/Documents/GitHub/lowrank-bandits/conference/paper/conf.tex)",
+      "WebSearch",
+      "Bash(grep -nE \"lower bound|lower-bound|Lower bound|Lower Bound|minimax|Omega\\\\\\(|\\\\\\\\\\\\\\\\Omega\" C:/Users/hamed/Documents/GitHub/lowrank-bandits/source/paper/main.tex)",
+      "WebFetch(domain:ieeexplore.ieee.org)",
+      "WebFetch(domain:proceedings.neurips.cc)",
+      "WebFetch(domain:icml.cc)",
+      "WebFetch(domain:arxiv.org)",
+      "Bash(pdflatex -interaction=nonstopmode -halt-on-error conf.tex)",
+      "Bash(echo \"exit=$?\")",
+      "Read(//tmp/**)",
+      "Bash(bibtex conf *)",
+      "Bash(grep -oE '\\\\\\\\cite[a-z]*\\\\{[^}]+\\\\}' \"C:\\\\Users\\\\hamed\\\\Documents\\\\GitHub\\\\lowrank-bandits\\\\conference\\\\paper\\\\conf.tex\")",
+      "Bash(grep -oE '\\\\\\\\cite[pt]?\\\\{[^}]*\\\\}' \"C:\\\\Users\\\\hamed\\\\Documents\\\\GitHub\\\\lowrank-bandits\\\\conference\\\\paper\\\\conf.tex\")",
+      "WebFetch(domain:proceedings.mlr.press)",
+      "WebFetch(domain:www.jmlr.org)",
+      "WebFetch(domain:openreview.net)",
+      "Bash(grep -oE '\\\\\\\\cite[a-z]?p?t?\\\\*?\\\\{[^}]+\\\\}' \"C:\\\\Users\\\\hamed\\\\Documents\\\\GitHub\\\\lowrank-bandits\\\\conference\\\\paper\\\\conf.tex\")",
+      "Bash(grep -v '^$')"
+    ]
+  }
+}
