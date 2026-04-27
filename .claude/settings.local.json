@@ -252,7 +252,8 @@
       "Bash(rm -f environments/criteo_environment.py environments/jester_environment.py environments/lastfm_environment.py environments/newsgroups_environment.py)",
       "Bash(rm -f results/experiment_action_set_size.json results/experiment_baseline_shared_subspace.json results/experiment_d_scaling.json results/experiment_discrete_probe.json results/experiment_synthetic_comparison.json)",
       "WebFetch(domain:neurips.cc)",
-      "WebFetch(domain:www.overleaf.com)"
+      "WebFetch(domain:www.overleaf.com)",
+      "Bash(echo \"bibtex=$?\")"
     ]
   }
 }
