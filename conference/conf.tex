@@ -25,6 +25,8 @@
 \usepackage{wrapfig}
 \usepackage{pifont}
 \usepackage{hyperref}
+\usepackage[textsize=footnotesize,backgroundcolor=yellow!40,linecolor=red!60!black,bordercolor=red!60!black]{todonotes}
+\newcommand{\reviewnote}[1]{\todo[inline]{\textbf{PROOFREAD:} #1}}
 
 \setlength{\emergencystretch}{6pt}
 
@@ -160,7 +162,7 @@ $x_t\in\cA_t$ and observes $y_t$ as above, with
 $\theta_t=B_k^\star w_t$ for the segment $k$ containing $t$, and the
 latent state $w_t\in\R^r$ follows a stable linear dynamical system
 $w_t=A_k w_{t-1}+\eta_{t-1}$ inside each segment $\cI_k$
-(with $A_k\in\R^{r\times r}$ and innovation $\eta_t\in\R^r$). The
+(with $A_k\in\R^{r\times r}$ and innovation $\eta_{t-1}\in\R^r$). The
 learner may designate a subset of rounds $\cTprobe\subseteq\{1,\dots,T\}$
 as \emph{probes}, on which it plays $x_t=u_t$ drawn from a fixed probe
 distribution $Q$ on $\R^d$ instead of an action in $\cA_t$. Performance
@@ -177,8 +179,9 @@ Scalar feedback makes subspace recovery nontrivial: a single
 $y_t = x_t^\top B_k^\star w_t + \varepsilon_t$ is a scalar projection
 of a rank-$r$ signal, so only \emph{second-order} information reveals
 $\range(B_k^\star)$. And priced probing creates a
-tradeoff (more probes reduce subspace error $O(1/\sqrt{m})$ but add
-cost $O(cm)$), whose optimum determines the leading rate.
+tradeoff (with $m_k$ probes inside segment $k$, subspace error
+shrinks as $O(1/\sqrt{m_k})$ but probe cost grows as $O(cm_k)$),
+whose optimum determines the leading rate.
 
 \paragraph{Identifiability boundary.}
   Three probe-side conditions, namely known noise variance, bounded
@@ -186,11 +189,15 @@ cost $O(cm)$), whose optimum determines the leading rate.
   individually necessary (in the unrestricted-second-moment problem)
   and jointly sufficient for recovering $\range(B_k^\star)$ from
   single-play scalar rewards, via a lifted operator $\mathcal K^{-1}$
-  acting on the centred statistic $y_t^2-\widehat\sigma^2$
+  (the inverse of the probe moment operator $\mathcal K$, defined
+  below) acting on the centred statistic $y_t^2-\widehat\sigma^2$
+  (with $\widehat\sigma^2$ a noise-variance estimate)
   (Theorem~\ref{thm:identification};
   Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}). Dropping any
-  one makes $\widetilde M_t$ unidentifiable from quadratic
-  measurements alone, irrespective of algorithm.
+  one makes the predictable second moment
+  $\widetilde M_t := \E[\theta_t\theta_t^\top\mid\cH_{t-1}]$
+  unidentifiable from quadratic measurements alone, irrespective of
+  algorithm.
 
 \paragraph{Contributions.}
 \begin{enumerate}[leftmargin=1.5em,itemsep=2pt]
@@ -273,7 +280,7 @@ $\alpha_0>0$ (used only to ensure $\|w_t\|\le S_w$ via the stationary
 covariance bound) and zero-mean innovation $\eta_{t-1}$ with
 covariance $\Sigma_{\eta,k}\succ 0$. We
 assume uniform action-boundedness $\sup_{x\in\cA_t}\|x\|\le R_\cA$,
-a known probe distribution $Q$ with $\E[uu^\top]\succeq \rho I_d$ and
+a known probe distribution $Q$ with $\E[uu^\top]\succeq \rho_Q I_d$ and
 sub-Gaussian marginals (bounded $\|u\|\le L$ is a special case; see
 Remark~\ref{rem:subgauss_probe}), conditionally
 $\sigma_\varepsilon$-sub-Gaussian noise with unknown variance, bounded
@@ -282,7 +289,10 @@ $\|\E[\varepsilon_t\theta_t]\|_2 \le \epsilon_\times$, and
 full-dimensional probe coverage. Theorem~\ref{thm:identification}
 below shows these three probe-side conditions are individually
 necessary and jointly sufficient for identifying the changing
-subspace from single-play scalar rewards.
+subspace from single-play scalar rewards. Throughout, $\delta\in(0,1)$
+denotes the global confidence parameter (concentration bounds hold
+with probability $\ge 1-\delta$) and $\lambda>0$ denotes the ridge
+regularizer used by the windowed estimator of \S\ref{sec:algorithm}.
 
 \begin{remark}[Probe distribution: scaled sphere]
 \label{rem:subgauss_probe}
@@ -301,8 +311,9 @@ truncation at $L=\sqrt{2d\log(2T/\delta)}$
 \paragraph{Quadratic measurement identity.}
 Let $\hat\sigma^2$ be the algorithm's estimate of the noise variance
 and define the centred probe statistic $s_t := y_t^2 - \hat\sigma^2$
-on every probe round $t\in\cTprobe$. Under Assumption on the probe
-noise, for $\delta_\sigma := \hat\sigma^2-\sigma_\varepsilon^2$,
+on every probe round $t\in\cTprobe$. Under the probe-noise
+assumptions of \S\ref{sec:setting}, for
+$\delta_\sigma := \hat\sigma^2-\sigma_\varepsilon^2$,
 \begin{equation}
 \E[s_t \mid \cH_{t-1},u_t]
   = u_t^\top \widetilde{M}_t u_t + 2 u_t^\top
@@ -842,7 +853,7 @@ and does not catastrophically fail outside that regime.
   unknown change points. Stationary low-rank, nonstationary, and
   cost-aware bandits each cover one piece; none recover a changing
   subspace under priced single-play scalar feedback. We close this gap. Three probe-side conditions, known noise
-  variance, bounded state/noise coupling, and full-dimensional probe
+  variance, bounded state-noise coupling, and full-dimensional probe
   support, are each individually necessary and jointly sufficient for
   subspace recovery from quadratic functionals of scalar rewards
   (Theorem~\ref{thm:identification}). Based on this, we propose SPSC,
@@ -1087,6 +1098,10 @@ $\mathcal G_w$ holds deterministically; for sub-Gaussian innovations
 one may take $S_w = \tilO(\sqrt r)$ via union bound (the failure
 probability is absorbed into the overall $\delta$ budget). In what
 follows we implicitly condition on $\mathcal G_w$.
+\reviewnote{Item 10 (unused constant). $R_\eta$ is introduced here
+but never appears again. Either drop it (the sub-Gaussian route
+already supplies $S_w$) or use it as a tighter alternative
+quantitative bound.}
 The \emph{predictable second moment} is
 $\widetilde M_t := \E[\theta_t\theta_t^\top\mid\cH_{t-1}]
 = B_k^\star \E[w_tw_t^\top\mid\cH_{t-1}](B_k^\star)^\top$, and the
@@ -1098,7 +1113,7 @@ $r$-th eigenvalue $\lambda_{\min}>0$ is uniformly bounded below in
 $k$ (Lem.~\ref{lem:probe_excitation_conf} below; stability of $A_k$
 is used only to bound $\|w_t\|\le S_w$, not for this lower bound).
 Constants $C,C',\ldots$ depend only on
-$\sigma_\varepsilon, R_\cA, L, \rho, S_w, \lambda_{\min}$ and may
+$\sigma_\varepsilon, R_\cA, L, \rho_Q, S_w, \lambda_{\min}$ and may
 change line to line.
 
 \begin{lemma}[Predictable probe-time excitation]
@@ -1254,7 +1269,8 @@ Expand $y_t^2 = (u_t^\top\theta_t)^2 + 2\varepsilon_t u_t^\top\theta_t
 + \varepsilon_t^2$ and condition on $\sigma(\cH_{t-1},u_t)$; the middle
 term contributes $2u_t^\top m_t$ with
 $m_t := \E[\varepsilon_t\theta_t\mid\cH_{t-1},u_t]$ bounded by
-$\epsilon_\times$ by Assumption; the last term contributes
+$\epsilon_\times$ via the bounded state-noise coupling assumption
+(\S\ref{sec:setting}); the last term contributes
 $\sigma_\varepsilon^2$, and subtracting $\hat\sigma^2$ leaves
 $-\delta_\sigma$. Independence of $u_t$ from $(\theta_t,\cH_{t-1})$
 gives $\E[(u_t^\top\theta_t)^2\mid\cH_{t-1},u_t] = u_t^\top\widetilde M_t u_t$.
@@ -1304,6 +1320,14 @@ $\|\widetilde B_t\|_\op \le \frac{|\delta_\sigma|}{d} + 2\sqrt d\,\epsilon_\time
 For Gaussian odd-moment vanishing (sphere or Gaussian), the
 $\epsilon_\times$ term is zero exactly.
 \end{proof}
+\reviewnote{Item 7 (internal contradiction). The bound
+$\|\widetilde B_t\|_\op\le |\delta_\sigma|/d + 2\sqrt d\,\epsilon_\times$
+includes a $2\sqrt d\,\epsilon_\times$ term, but the lemma is stated
+for scaled-sphere probes only, where $u\mapsto -u$ symmetry kills the
+third moment exactly (zero coupling-bias). Either drop the
+$2\sqrt d\,\epsilon_\times$ summand entirely, or restate the lemma
+for general symmetric probes (where the worst-case bound applies)
+and explicitly note that scaled-sphere is the zero case.}
 
 \begin{lemma}[Uniform a.s.\ bound on $G_t$]
 \label{lem:G_bound_conf}
@@ -1973,7 +1997,7 @@ $\tau_{\mathrm{burn}}$ is a short burn-in period after recovery that
 prevents the detector from firing on its own freshly-reset state.
 The overall regret overhead is $2R_\cA S_w\sum_k D_k = O(K
 W_{\mathrm{det}})$, which is lower-order in the rate of
-Theorem~\ref{thm:spsc_adaptive}.
+Proposition~\ref{thm:spsc_adaptive}.
 
 \begin{algorithm}[H]
 \caption{\textbf{SPSC-Adaptive}: unknown boundaries via CUSUM-style detection}
@@ -2122,6 +2146,12 @@ and the detector's adaptivity wins.
 Table~\ref{tab:app-synthetic} gives the full synthetic grid underlying
 Figure~\ref{fig:synthetic-phase}. SPSC wins on $34/39$ cells; losses
 are confined to $d\le 10$ or $r\le 1$ (probe-cost dominant).
+\reviewnote{Item 8 (denominator unclear). The body sweep at
+\S\ref{sec:exp_phase} is $(d,r)\in\{4,\ldots,120\}\times\{1,\ldots,30\}$
+(thousands of cells), while Table~\ref{tab:app-synthetic} tabulates 9
+representative rows. Where do the 39 cells in ``$34/39$'' come from?
+Restate the denominator (e.g.\ refer to a specific evaluation grid)
+or update the count to match what is actually shown.}
 
 \begin{table}[!htbp]
 \centering
@@ -2504,6 +2534,12 @@ LinUCB                       & $825.3\pm 6.1$   & $825.3\pm 6.1$   & $825.3\pm 6
 \bottomrule
 \end{tabular}
 \end{table}
+\reviewnote{Item 9 (missing $^\star$ at $r{=}2$). The caption says
+$^\star$ marks the strongest non-oracle baseline per column. At
+$r{=}2$, the strongest is LowOFUL ($740.1$) --- the
+$-17.1\%$ ``vs.\ best comp.'' figure is computed against it --- but
+its entry has no $^\star$. Add $^\star$ to LowOFUL at $r{=}2$ for
+consistency.}
 
 \section{When the adaptive variant wins}
 \label{app:adaptive_winner}
