@@ -1,7 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(ls C:\\\\Users\\\\hamed\\\\Documents\\\\GitHub\\\\lowrank-bandits\\\\conference\\\\paper\\\\chunks *)"
-    ]
-  }
-}

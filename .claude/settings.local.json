@@ -243,7 +243,14 @@
       "Bash(echo \"p1b=$?\")",
       "Bash(echo \"p2b=$?\")",
       "Bash(echo \"p1c=$?\")",
-      "Bash(echo \"p2c=$?\")"
+      "Bash(echo \"p2c=$?\")",
+      "Bash(rm -rf chunks/ .claude/)",
+      "Bash(rm -f C:tmp*.log conf.tex.bak.beforerevert extensions.tex lb_extensions.tex lb_extensions.log proposed_additions.tex conf.aux conf.blg conf.fdb_latexmk conf.fls conf.log conf.out)",
+      "Bash(rm -rf __pycache__/ environments/__pycache__/)",
+      "Bash(rm -f experiment1_final_figure.py experiment1_main_benchmark.py experiment1_synthetic_final.py experiment_action_set_size.py experiment_baseline_shared_subspace.py experiment_covertype.py experiment_covertype_extended.py experiment_covertype_quicktest.py experiment_covertype_single.py experiment_d_scaling.py experiment_discrete_probe.py experiment_jester.py experiment_jester_grid.py experiment_lastfm_grid.py experiment_movielens_real.py experiment_movielens_single.py experiment_neurips_main.py experiment_newsgroups_grid.py experiment_pendigits_quick.py experiment_real_bandit.py experiment_synthetic_comparison.py sweep2.py sweep2seed1.py texput.log)",
+      "Bash(rm -f experiment1_synthetic_phase.png experiment_covertype_extended.png experiment_d_scaling.png experiment_discrete_probe.png experiment_openbandit.png experiment_pendigits_extended.png experiment_synthetic_extended.png experiment_vancomycin_extended.png experiment_warfarin_extended.png neurips_adaptive_comparison.png neurips_sota_d20_r3.png neurips_sota_d60_r3.png)",
+      "Bash(rm -f environments/criteo_environment.py environments/jester_environment.py environments/lastfm_environment.py environments/newsgroups_environment.py)",
+      "Bash(rm -f results/experiment_action_set_size.json results/experiment_baseline_shared_subspace.json results/experiment_d_scaling.json results/experiment_discrete_probe.json results/experiment_synthetic_comparison.json)"
     ]
   }
 }
