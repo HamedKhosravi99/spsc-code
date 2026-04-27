@@ -253,7 +253,29 @@
       "Bash(rm -f results/experiment_action_set_size.json results/experiment_baseline_shared_subspace.json results/experiment_d_scaling.json results/experiment_discrete_probe.json results/experiment_synthetic_comparison.json)",
       "WebFetch(domain:neurips.cc)",
       "WebFetch(domain:www.overleaf.com)",
-      "Bash(echo \"bibtex=$?\")"
+      "Bash(echo \"bibtex=$?\")",
+      "Read",
+      "Edit",
+      "Bash(pdflatex *)",
+      "Bash(bibtex *)",
+      "Bash(latexmk *)",
+      "Bash(pdftotext *)",
+      "Bash(pdfinfo *)",
+      "Bash(pip *)",
+      "Bash(git *)",
+      "Bash(cat *)",
+      "Bash(head *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(find *)",
+      "Bash(echo *)",
+      "Bash(which *)",
+      "Bash(rm *)",
+      "Bash(mv *)",
+      "Bash(cp *)",
+      "Bash(mkdir *)",
+      "Bash(rmdir *)",
+      "Bash(cd *)"
     ]
   }
 }

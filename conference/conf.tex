@@ -106,7 +106,7 @@
   adaptive variant removes the oracle-boundary assumption at the same
   leading rate. On eleven benchmarks (a synthetic phase-transition grid, six
   UCI/MovieLens environments, two semi-synthetic clinical datasets,
-  and two production stress tests), SPSC attains regret reductions
+  and two additional stress tests), SPSC attains regret reductions
   over state-of-the-art nonstationary and low-rank baselines whenever
   $d-r\gtrsim T^{1/6}$, matching the analytical crossover prediction.
 
@@ -132,8 +132,8 @@ feature directions live on a thin slice of the ambient space.
 Second, that thin slice is \emph{not static}: tastes drift, cohorts
 change, treatment regimes get revised, and the subspace
 $\range(B_k^\star)$ itself moves across unknown changepoints
-$0=\tau_0<\tau_1<\dots<\tau_K=T$ that delimit the segments
-$\cI_k=[\tau_{k-1}+1,\tau_k]$. Crucially, the learner sees only a
+$1=\tau_0<\tau_1<\dots<\tau_K=T{+}1$ that delimit the segments
+$\cI_k=[\tau_{k-1},\tau_k)$. Crucially, the learner sees only a
 scalar reward $y_t=x_t^\top\theta_t+\varepsilon_t$ for an action
 $x_t\in\cA_t\subset\R^d$ and noise $\varepsilon_t\in\R$, so the
 low-rank structure can neither be read off nor refreshed from direct
@@ -268,8 +268,10 @@ $1=\tau_0<\tau_1<\dots<\tau_K=T{+}1$, and the latent state $w_t\in
 \[
  w_t = A_k w_{t-1} + \eta_{t-1}, \qquad t \in \cI_k,
 \]
-with unknown $A_k$ satisfying $\rho(A_k)\le 1{-}\alpha_0$ and zero-mean
-innovation $\eta_{t-1}$ with covariance $\Sigma_{\eta,k}\succ 0$. We
+with unknown $A_k$ satisfying $\rho(A_k)\le 1{-}\alpha_0$ for some
+$\alpha_0>0$ (used only to ensure $\|w_t\|\le S_w$ via the stationary
+covariance bound) and zero-mean innovation $\eta_{t-1}$ with
+covariance $\Sigma_{\eta,k}\succ 0$. We
 assume uniform action-boundedness $\sup_{x\in\cA_t}\|x\|\le R_\cA$,
 a known probe distribution $Q$ with $\E[uu^\top]\succeq \rho I_d$ and
 sub-Gaussian marginals (bounded $\|u\|\le L$ is a special case; see
@@ -292,7 +294,7 @@ probes by drawing $\tilde u\sim\mathcal N(0,I_d)$ and rescaling
 $u\leftarrow \sqrt d\,\tilde u/\|\tilde u\|$, which is exactly the
 scaled-sphere distribution. The same argument applies to isotropic
 Gaussian probes $u_t\sim\mathcal N(0,I_d)$ via a $\chi^2_d$
-truncation at $L=\sqrt{2d\log(T/\delta)}$
+truncation at $L=\sqrt{2d\log(2T/\delta)}$
 (Appendix~\ref{app:truncation}).
 \end{remark}
 
@@ -335,7 +337,7 @@ G_t := \mathcal K^{-1}(s_t\,u_tu_t^\top),\qquad
 \E[G_t\mid \cH_{t-1}] = \widetilde M_t + \widetilde B_t,
 \label{eq:lifted_sample}
 \end{equation}
-with bias $\|\widetilde B_t\|_\op \le |\delta_\sigma|+
+with bias $\|\widetilde B_t\|_\op \le |\delta_\sigma|/d+
 2\sqrt d\,\epsilon_\times$ on scaled-sphere probes (since
 $\|uu^\top\|_\op = d$ deterministically; cf.\
 Lemma~\ref{lem:G_unbiased_conf}). Averaging lifted samples across
@@ -412,7 +414,7 @@ $x_t = \argmax_{x\in\cA_t}
 \end{itemize}
 The confidence radius
 $\beta_t^{(r,W)}=\sigma_\varepsilon\sqrt{r\log(1+WR_\cA^2/(\lambda r))
-+2\log(1/\delta)}+\sqrt{\lambda}S_w$
++2\log(2K/\delta)}+\sqrt{\lambda}S_w$
 scales with $\sqrt{r}$, not $\sqrt{d}$: this is where the intrinsic-rank
 improvement enters. The correction term
 $\gamma_t = \Gamma_k + V_{k,t}(W)$
@@ -685,7 +687,7 @@ environment is calibrated to the IWPC cohort
 $T{=}5{,}000$, $10$ seeds; reward $=$ negative deviation from
 therapeutic dose). Table~\ref{tab:warfarin_body} (representative
 cell $r{=}3$) shows SPSC-Adaptive cuts regret by $-67.3\%$ vs.\
-LinUCB (more detail on Appendix~\ref{app:warfarin_ablation})
+LinUCB (more detail in Appendix~\ref{app:warfarin_ablation}).
 
 
 \paragraph{Vancomycin.} Using the AUC-targeted
@@ -748,7 +750,7 @@ $r$ & SPSC-Adaptive  & vs.\ LinUCB & vs.\ best comp.\\
 \label{sec:exp_russac}
 
 On the standard small-$d$ stress test ($d{=}2$, $r{=}1$, $K{=}4$,
-$T{=}6{,}000$, 50 arms, 30 seeds) followed by setting in \citep{russac2019weighted}, SPSC reduces regret by
+$T{=}6{,}000$, 50 arms, 30 seeds) following the setting of \citep{russac2019weighted}, SPSC reduces regret by
 $\mathbf{-46.5\%}$ vs.\ D-LinUCB, $-34.8\%$ vs.\ SW-LinUCB, and
 $\mathbf{-51.6\%}$ vs.\ stationary OFUL (which itself trails D-LinUCB
 by $+11.5\%$ on this nonstationary benchmark). Full table in
@@ -777,7 +779,7 @@ Stationary low-rank methods are not directly comparable with SPSC.
 To provide a best-effort comparison, we adapt
 BOSS~\citep{duong2024beyond} and Jedra~\citep{jedra2024low} by
 restarting them at every true segment boundary (an oracle advantage
-we do not give SPSC), setup detail on Appendix~\ref{app:boss_jedra_detail}).
+we do not give SPSC); setup detail in Appendix~\ref{app:boss_jedra_detail}.
 Table~\ref{tab:boss_jedra_grid} shows SPSC wins all eight cells by
 $6$--$20\%$; the lead is largest at small $d$ ($-16$ to $-20\%$ at
 $d{=}55$) and narrows to $6$--$8\%$ at $d{=}200$. SPSC-Adaptive
@@ -1020,7 +1022,7 @@ Algorithm & Reference & Regret scaling & Key difference vs.\ SPSC \\
 \midrule
 LinUCB       & \citet{abbasi2011improved}  & $O(d\sqrt{T})$                       & Ambient; no subspace exploitation. \\
 LowOFUL      & \citet{jun2019bilinear}     & $\tilO(r\sqrt{T})$                   & Needs oracle subspace $B$. \\
-LowESTR      & \citet{lu2021low}       & $\tilO(r\sqrt{T})$                   & Stationary; learns $B$ from rewards. \\
+LowRank-Reward & \citet{lu2021low}     & $\tilO(r\sqrt{T})$                   & Stationary; learns $B$ from rewards. \\
 BOSS         & \citet{duong2024beyond}       & $\tilO(r\sqrt{dT})$                  & Stationary; no online change adaptation. \\
 Jedra et al. & \citet{jedra2024low}  & $\tilO(r^{5/4}(m{+}n)^{3/4}\sqrt{T})$ & Stationary; no probe cost. \\
 \midrule
@@ -1090,11 +1092,11 @@ $\widetilde M_t := \E[\theta_t\theta_t^\top\mid\cH_{t-1}]
 = B_k^\star \E[w_tw_t^\top\mid\cH_{t-1}](B_k^\star)^\top$, and the
 probe-time average is
 $\bar M_k^{\mathrm{probe}} := m_k^{-1}\sum_{t\in\cT_k}\widetilde M_t$.
-By the stable-LDS assumption of \S\ref{sec:setting}
-($\rho(A_k)\le 1-\alpha_0$, $\Sigma_{\eta,k}\succ 0$), $\bar M_k^{\mathrm{probe}}$ has rank $r$
-and its $r$-th eigenvalue $\lambda_{\min}>0$ is uniformly bounded
-below in $k$ (cf.\ proof of
-Lem.~\ref{lem:probe_excitation_conf} below).
+By the non-degenerate-innovation assumption $\Sigma_{\eta,k}\succ 0$ of
+\S\ref{sec:setting}, $\bar M_k^{\mathrm{probe}}$ has rank $r$ and its
+$r$-th eigenvalue $\lambda_{\min}>0$ is uniformly bounded below in
+$k$ (Lem.~\ref{lem:probe_excitation_conf} below; stability of $A_k$
+is used only to bound $\|w_t\|\le S_w$, not for this lower bound).
 Constants $C,C',\ldots$ depend only on
 $\sigma_\varepsilon, R_\cA, L, \rho, S_w, \lambda_{\min}$ and may
 change line to line.
@@ -1334,6 +1336,12 @@ $X_t := G_t - \E[G_t\mid\cH_{t-1}]$. Conditional on
 Lemma~\ref{lem:G_bound_conf}, $\{X_t\}$ is a bounded matrix-valued
 MDS with $\|X_t\|_\op\le 2R_X$ a.s.\ and
 $\|\sum_{t\in\cT_k}\E[X_t^2\mid\cH_{t-1}]\|_\op\le m_k R_X^2$.
+Here $\widetilde B$ denotes the segment-level bias; for
+scaled-sphere probes under the standing assumptions of
+\S\ref{sec:setting}, $\widetilde B_t$ from
+Lem.~\ref{lem:G_unbiased_conf} collapses to the deterministic
+constant $-(\delta_\sigma/d)I_d$, so we drop the subscript when no
+ambiguity arises and write $\widetilde B$ for the common value.
 Freedman's matrix inequality \citep{tropp2011freedman} gives, with
 probability at least $1-\delta$,
 \begin{equation}
@@ -1961,7 +1969,7 @@ $\delta_{\mathrm{FA}}$ false alarms across the horizon. Under $H_1$ at
 time $\tau_k$, a separation $\Delta_k \ge 2b$ forces a fire within
 delay $D_{\max} = 2n/\mu + \tau_{\mathrm{burn}}$ — the $2n/\mu$ term is
 the time for the recent window to refill with post-change probes, and
-$\tau_{\mathrm{burn}}$ is a short arm-in period after recovery that
+$\tau_{\mathrm{burn}}$ is a short burn-in period after recovery that
 prevents the detector from firing on its own freshly-reset state.
 The overall regret overhead is $2R_\cA S_w\sum_k D_k = O(K
 W_{\mathrm{det}})$, which is lower-order in the rate of
@@ -2073,8 +2081,9 @@ stationary subspace estimators (not shown) yields strictly worse
 baseline numbers and larger SPSC margins.
 
 \paragraph{Implementation and compute.}
-All experiments use NumPy/SciPy only. A full grid (all 9 cells, 10
-seeds, 10 methods) takes 6--20\,h on a single 16-core CPU. Covertype
+All experiments use NumPy/SciPy only. A full $(d,r)$ grid (9 cells,
+10 seeds, 11 baselines plus Oracle-LinUCB and the two SPSC variants)
+takes 6--20\,h on a single 16-core CPU. Covertype
 is the longest ($T=10{,}000$). JSON logs and plotting scripts are in
 the supplementary material.
 
@@ -2100,10 +2109,14 @@ signature of ambient-rate baselines.
 (ii) \emph{Subspace-aware competitors} (LowOFUL, VOFUL, LowRank-Reward)
 do improve with $d$ increasing but they assume a fixed subspace and
 therefore still trail SPSC on segments where the subspace changes.
-(iii) \emph{SPSC-Adaptive is uniformly $\ge$ SPSC-Alg.1} except in the
-probe-cost-dominant cells ($d{=}5$ or $r{=}1$ with small $d-r$); in
-those cells, the detector's false-alarm budget dominates the
-(negligible) low-rank benefit.
+(iii) \emph{Within the synthetic and UCI grids, SPSC-Adaptive
+typically trails SPSC-Alg.\,1 by a small margin}, the gap reflecting
+the detector's false-alarm budget. The ordering reverses on the
+clinical benchmarks (most strikingly Vancomycin at $r{=}1$, where
+SPSC-Adaptive cuts regret by $37\%$ vs.\ SPSC-Alg.\,1; see
+Table~\ref{tab:vancomycin_full}), where the oracle schedule of
+Alg.~\ref{alg:spsc} is misaligned with the true cohort changepoints
+and the detector's adaptivity wins.
 
 \paragraph{Synthetic $(d,r)$ grid.}
 Table~\ref{tab:app-synthetic} gives the full synthetic grid underlying
