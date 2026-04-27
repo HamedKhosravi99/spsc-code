@@ -32,9 +32,8 @@ python run_all_experiments.py            # all experiments
 python experiment1_synthetic_final.py    # one experiment
 ```
 
-Figures are written to `exps/`/`figs/` locations (relative to the original
-repo). Re-point the output paths inside each script or run from the root
-repo if you prefer the previous layout.
+JSON outputs are written to `code/results/` (created on demand) via
+`results_io.save_results`, which keys off each script's directory.
 
 ## Figure → script map
 
