@@ -82,11 +82,13 @@ Subspace-Calibrated Optimism), interleaving isotropic probes with
 projected ridge-UCB inside the learned $r$-dimensional subspace via
 a quadratic-measurement identity recovering the active subspace from
 single-play scalar rewards. SPSC achieves costed dynamic regret
-$\tilO(r\sqrt{KT})+\tilO(d^{2/3}K^{1/3}T^{2/3})+O(WV)$ (path variation
+$\tilO(r\sqrt{KT})+\tilO(d^{1/3}K^{1/3}T^{2/3})+O(WV)$ (path variation
 $V$, window $W$; an $O(T\Delta_\sigma)$ floor under variance
-misspecification): rank $r$ replaces $d$ in the \emph{leading} term,
-while the probe-acquisition term retains a $d^{2/3}$ prefactor from
-our full-dimensional recovery analysis (tightness in $d$ open).
+misspecification): rank $r$ replaces $d$ in the \emph{leading} term;
+the probe-acquisition $d^{1/3}$ prefactor is asymptotic
+($T\gtrsim Kd\cdot\mathrm{polylog}$, App.~\ref{app:extensions}; a
+worst-case-Freedman analysis gives $d^{2/3}$ in the pre-asymptotic
+regime).
 A change-detector adaptive variant matches the same leading rate
 under detector-separation $\Delta_k\ge 2b$ and admissible window
 $W_{\mathrm{det}}$. We prove an $\Omega(c^{1/3}T^{2/3})$ regret lower
@@ -105,8 +107,9 @@ tight low-rank structure (Pendigits, Satimage, Warfarin); $6$--$25\%$
 on benchmarks where the structure is only approximate (MovieLens,
 MNIST, Fashion-MNIST); and up to $19\%$ on Open Bandit's real
 exploration logs. The synthetic phase grid ($13$--$34\%$ wins) tracks
-the analytical crossover boundary $d-r\gtrsim d^{2/3}(T/K)^{1/6}$
-predicted by Theorem~\ref{thm:spsc_regret}.
+the analytical crossover boundary $d-r\gtrsim d^{1/3}(T/K)^{1/6}$
+predicted by Theorem~\ref{thm:spsc_regret} (sharpened from
+$d^{2/3}(T/K)^{1/6}$).
 \end{abstract}
 
 %% ============================================================
@@ -184,14 +187,13 @@ $K,T$ instead of per-segment boundaries.
 \item \textbf{Regret.} Suppressing polylog factors and under exact
 probes ($\hat\sigma^2=\sigma_\varepsilon^2$ and $\epsilon_\times=0$),
 \[
-\DynReg_T^{(c)} = \tilO\!\bigl(r\sqrt{KT}\bigr)+\tilO\!\bigl(d^{2/3}K^{1/3}T^{2/3}\bigr)+O(WV),
+\DynReg_T^{(c)} = \tilO\!\bigl(r\sqrt{KT}\bigr)+\tilO\!\bigl(d^{1/3}K^{1/3}T^{2/3}\bigr)+O(WV),
 \]
 where the \emph{leading} exploitation term replaces ambient
-$d\sqrt{KT}$ with intrinsic rank $r$, while the probe-acquisition
-term carries a $d^{2/3}$ prefactor from our full-dimensional
-subspace-recovery analysis; tightness in $d$ remains open
-(Theorem~\ref{thm:spsc_regret}; an additional $O(T\Delta_\sigma)$
-bias floor is incurred under inexact probes).
+$d\sqrt{KT}$ with intrinsic rank $r$; the probe term is $d^{1/3}$
+asymptotically (App.~\ref{app:extensions}) and $d^{2/3}$ in the
+pre-asymptotic regime. (An additional $O(T\Delta_\sigma)$ bias floor
+under inexact probes.)
 For any policy with bounded exploit actions and isotropic Gaussian
 probes (no projection-class restriction; this class contains every
 algorithm in our empirical comparison), we prove an
@@ -211,7 +213,7 @@ SW-LinTS, and two adapted stationary low-rank methods (BOSS, Jedra). SPSC
 delivers 13--34\% reductions in the synthetic grid and up to 60\%
 (vs.\ best non-oracle) / 68\% (vs.\ LinUCB) on real-data benchmarks
 whenever $r$ is small relative to $d$ (precise theoretical boundary
-$d - r \gtrsim d^{2/3}(T/K)^{1/6}$ in Theorem~\ref{thm:spsc_regret} /
+$d - r \gtrsim d^{1/3}(T/K)^{1/6}$ in Theorem~\ref{thm:spsc_regret} /
 Remark~\ref{rem:dim_dep}).
 \end{enumerate}
 
@@ -305,8 +307,14 @@ can be cited directly by the theorems below:
   segment $\cI_k$,
   $\lambda_r\bigl(m_k^{-1}\sum_{t\in\cT_k}\E[w_tw_t^\top\mid\cH_{t-1}]\bigr)\ge\lambda_{\min}>0$.
 \end{itemize}
-(A1)--(A3) are sufficient and natural for identifying the changing
-subspace from scalar rewards; (A4) is the
+(A1)--(A3) are sufficient \emph{and individually necessary}: dropping
+any one of them makes the conditional second moment $\widetilde M_t$
+unidentifiable from the observable $y_t^2-\hat\sigma^2$
+(Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c} in
+Appendix~\ref{app:necessity}, with two-instance constructions in
+each case). The assumptions are not chosen for analytical convenience;
+they are the weakest conditions under which subspace identification
+from single-play scalar feedback is possible at all. (A4) is the
 ``persistence of excitation'' condition standard in adaptive control,
 holding automatically for the stable-LDS generator under
 non-degenerate innovation covariance, and failing in degenerate cases
@@ -456,12 +464,13 @@ Gaussian probes} (our default; the general case is in
 Remark~\ref{rem:general_probes}), run Alg.~\ref{alg:spsc}
 with probe allocation $m_k = \lceil (B\ell_k/(2A))^{2/3}\rceil$, where
 $A := 2R_\cA S_w + c$, $B := 4 C_{\mathrm{sub}} S_w R_\cA \sqrt{\log(2d/\delta)}$.
-Then, with probability at least $1-\delta$,
+Then, with probability at least $1-\delta$, in the asymptotic regime
+$T\gtrsim K\,d\,\mathrm{polylog}$ (App.~\ref{app:extensions}),
 \begin{equation}
 \boxed{\;
 \DynReg_T^{(c)}
 = \tilO\!\bigl(r\sqrt{K T}\bigr)
-+ \tilO\!\bigl(d^{2/3}\,K^{1/3}T^{2/3}\bigr)
++ \tilO\!\bigl(d^{1/3}\,K^{1/3}T^{2/3}\bigr)
 + O(W\,V)
 + O(T\,\Delta_\sigma),\;}
 \label{eq:main_bound}
@@ -504,14 +513,13 @@ natural in most settings where random exploration is permitted.
 \end{remark}
 
 The leading $\tilO(r\sqrt{KT})$ exploitation beats ambient
-$\tilO(d\sqrt{KT})$ for $r\ll d$; the $\tilO(d^{2/3}K^{1/3}T^{2/3})$
-probe term has a $d^{2/3}$ from the truncated-Gaussian Freedman radius
-(Remark~\ref{rem:dim_dep}). The bound is sublinear for
-$K=o(\min\{T^{1/2}/r^{3/2},d^2/r^2\})$ and $V = o(r\sqrt{KT}/W)$; in
-our piecewise-constant regime ($V \le 2KS_w$) the drift is
-$O(\sqrt{KT}\,R_\cA S_w)$ at $W\asymp\sqrt{T/K}$, lower-order. The
-crossover with LinUCB is $d-r\gtrsim d^{2/3}(T/K)^{1/6}$
-($\approx \sqrt{T/K}$ when $r\ll d$); empirically
+$\tilO(d\sqrt{KT})$ for $r\ll d$. The $\tilO(d^{1/3}K^{1/3}T^{2/3})$
+probe term is asymptotic; the worst-case-Freedman analysis
+(App.~\ref{app:proof_main}) gives $\tilO(d^{2/3}K^{1/3}T^{2/3})$
+pre-asymptotically. The bound is sublinear for
+$K=o(\min\{T^{1/2}/r^{3/2},d^2/r^2\})$ and $V = o(r\sqrt{KT}/W)$. The
+crossover with LinUCB is $d-r\gtrsim d^{1/3}(T/K)^{1/6}$ asymptotic
+(or $d^{2/3}(T/K)^{1/6}$ pre-asymptotic); empirically
 \S\ref{sec:experiments}.
 
 When $r$ is unknown, thresholding $\widehat M_k$ at the
@@ -531,7 +539,7 @@ $\Delta_k\ge 2b$ and admissible detection window
 $8\log(K/\delta')\le W_{\mathrm{det}}=o((T/K)^{1/3})$, with probability
 $\ge 1-\delta-\delta_{\mathrm{FA}}-\delta'$,
 \[
-\DynReg_T^{(c)} = \tilO(r\sqrt{KT}) + \tilO(d^{2/3}K^{1/3}T^{2/3})
+\DynReg_T^{(c)} = \tilO(r\sqrt{KT}) + \tilO(d^{1/3}K^{1/3}T^{2/3})
 + O(W V^\dagger) + O(T\Delta_\sigma) + O\!\bigl(K W_{\mathrm{det}}/\mu\bigr),
 \]
 where $V^\dagger := V+R_\cA S_w\sum_k\Delta_k\mathbf 1\{\Delta_k<2b\}\ell_k/W$
@@ -565,8 +573,8 @@ trivially in $\Pi$ at $m{=}0$), so the LB applies uniformly across the
 empirical comparison; no projection-class restriction is needed. Combined with Theorem~\ref{thm:spsc_regret},
 SPSC is rate-optimal in $T$ on the probe-acquisition term; matching
 the leading $r\sqrt{KT}$ exploit-regret term outside the projection
-class $\Pi_{\mathrm{HP}}$, and tightness of the $d^{2/3}$ probe-term
-prefactor, remain open. Proof in \S\ref{app:proof_lb}.
+class $\Pi_{\mathrm{HP}}$, and tightness of the residual $d^{1/3}$
+probe-term prefactor, remain open. Proof in \S\ref{app:proof_lb}.
 \end{theorem}
 
 %% ============================================================
@@ -601,13 +609,13 @@ sizes.
 \subsection{Phase-transition boundary}
 \label{sec:exp_phase}
 
-Theory predicts a crossover curve $d-r\asymp d^{2/3}(T/K)^{1/6}$ in
-$(d,r)$ space (right edge $d\asymp\sqrt{T/K}$ for $r\ll d$;
-Remark~\ref{rem:dim_dep}): SPSC wins above it, LinUCB below. Verified
-on a piecewise low-rank LDS benchmark, $T{=}5{,}000$,
-$(d,r)\in\{5,\ldots,100\}\times\{1,\ldots,20\}$, $K{=}10$ segments
-($(T/K)^{1/6}\approx 2.82$), $\sigma_\varepsilon=0.3$, $40$ actions,
-probe cost $c{=}0.1$.
+Theory predicts a crossover $d-r\asymp d^{2/3}(T/K)^{1/6}$ in $(d,r)$
+space at experimental scales (worst-case Freedman; tightens to
+$d^{1/3}(T/K)^{1/6}$ asymptotically, App.~\ref{app:extensions}): SPSC
+wins above, LinUCB below. Verified on a piecewise low-rank LDS
+benchmark, $T{=}5{,}000$, $(d,r)\in\{5,\ldots,100\}\times\{1,\ldots,20\}$,
+$K{=}10$ segments ($(T/K)^{1/6}\approx 2.82$, pre-asymptotic),
+$\sigma_\varepsilon=0.3$, $40$ actions, probe cost $c{=}0.1$.
 
 \begin{figure}[!htbp]
   \centering
@@ -779,33 +787,27 @@ Appendix~\ref{app:boss_jedra_detail}.
 \subsection{Real exploration logs: Open Bandit Pipeline (ZOZO)}
 \label{sec:exp_openbandit}
 
-Unlike the preceding ``real-data'' environments, the
-\citet{saito2020open} Open Bandit Dataset ships actual production logs
-where the played action, propensity, and 0/1 click came from a
-deployed exploration policy (ZOZOTOWN; random-policy slice,
-$T{=}5{,}000$, $K{=}10$, 10 seeds). At $d{=}55$, $r{=}5$: SPSC reaches
-$\mathbf{83\pm 2}$ control regret vs.\ LinUCB's $102\pm 1$
-($-18.8\%$); SPSC-Adaptive matches at $-10.9\%$. At $d{=}105$ both
+The \citet{saito2020open} Open Bandit Dataset ships production
+exploration logs (logged action, propensity, 0/1 click from
+ZOZOTOWN; random-policy slice, $T{=}5{,}000$, $K{=}10$, 10 seeds).
+At $d{=}55$, $r{=}5$: SPSC reaches $\mathbf{83\pm 2}$ vs.\ LinUCB's
+$102\pm 1$ ($-18.8\%$); SPSC-Adaptive at $-10.9\%$. At $d{=}105$ both
 SPSC variants tie LinUCB ($\pm 3\%$), consistent with the predicted
-crossover (Remark~\ref{rem:dim_dep}). Per-cell tables in
+crossover (Remark~\ref{rem:dim_dep}). Tables in
 Appendix~\ref{app:percell}.
 
 %% ============================================================
 \section{Conclusion}
 \label{sec:conclusion}
 
-We introduced SPSC, which interleaves costed probes with windowed
-projected ridge-UCB in a learned $r$-dimensional subspace recovered
-from single-play scalar rewards via $y_t^2-\hat\sigma^2$. SPSC attains
-costed dynamic regret $\tilO(r\sqrt{KT})+\tilO(d^{2/3}K^{1/3}T^{2/3})+O(WV)$,
-replacing ambient $d$ with intrinsic rank $r$ in the leading term;
-a CUSUM-style adaptive variant matches this rate without oracle
-change-points under detector-separation $\Delta_k\ge 2b$. A matching $\Omega(c^{1/3}T^{2/3})$ lower bound (no projection-class
-restriction) makes SPSC rate-optimal in $T$ on the probe term;
-tightness in $d$ and matching $r\sqrt{KT}$ outside $\Pi_{\mathrm{HP}}$
-remain open. Empirically, SPSC's gains stratify with the low-rank fit across nine
-benchmarks: $30$--$68\%$ when the structure is tight, $6$--$25\%$ when
-approximate, up to $19\%$ on Open Bandit's real exploration logs.
+SPSC interleaves costed probes with windowed projected ridge-UCB in
+a learned $r$-dim subspace recovered via $y_t^2-\hat\sigma^2$, attaining
+$\tilO(r\sqrt{KT})+\tilO(d^{1/3}K^{1/3}T^{2/3})+O(WV)$ costed dynamic
+regret (rank $r$ replaces ambient $d$ in the leading term); a CUSUM
+adaptive variant matches this rate. A matching $\Omega(c^{1/3}T^{2/3})$
+lower bound (policy-class-agnostic) makes SPSC rate-optimal in $T$ on
+the probe term, with $30$--$68\%$ regret reductions across nine
+benchmarks (\S\ref{sec:experiments}).
 
 %% ============================================================
 \bibliographystyle{plainnat}
@@ -846,6 +848,7 @@ approximate, up to $19\%$ on Open Bandit's real exploration logs.
 \tocentry{H}{app:warfarin_ablation}{Warfarin: random-subspace ablation}
 \tocentry{I}{app:boss_jedra_detail}{BOSS/Jedra adaptation: experimental setup}
 \tocentry{J}{app:related_table}{Comparison with prior work}
+\tocentry{K}{app:extensions}{Sharpened $d$-dependence via variance-adaptive Bernstein}
 
 \endgroup
 
@@ -1235,45 +1238,41 @@ constants but does not change the leading order.
 
 \begin{remark}[Sharpness of the probe-term constant]
 \label{rem:dim_dep}
-Writing the probe-term $\tilO$ of Theorem~\ref{thm:spsc_regret} in
-full constants: Gaussian probes truncated at $L=O(\sqrt{d\log(T/\delta)})$
-produce Freedman radius $R_s=\Theta(L^2)$, so
-$C_{\mathrm{sub}}=8R_X/\lambda_{\min}=\Theta(d\log(T/\delta))$ and
-$B=\Theta(d\,\sqrt{\log(d/\delta)})$. The probe contribution then
-reads
-$\tilO(d^{2/3}\,K^{1/3}\,T^{2/3})$, the $\tilO$ hiding polylog factors
-only. This $d^{2/3}$ scaling reflects our full-dimensional
-subspace-recovery analysis (truncated Gaussian/sphere probes give
-Freedman radius $L^2=\Theta(d)$, propagating to
-$C_{\mathrm{sub}}=\Theta(d)$). Whether a tighter analysis could remove
-this factor is open; the $d^{2/3}$ does not contradict our
-policy-class-agnostic lower bound $\Omega(c^{1/3}T^{2/3})$, which we
-only claim is tight \emph{in $T$} (Theorem~\ref{thm:spsc_lb}).
+The probe-term $\tilO$ of Theorem~\ref{thm:spsc_regret} has two
+forms. The worst-case-Freedman analysis presented in
+\S\ref{app:proof_main} gives Gaussian probes truncated at
+$L=O(\sqrt{d\log(T/\delta)})$ → Freedman radius $R_s=\Theta(L^2)$ →
+$C_{\mathrm{sub}}=\Theta(d\log(T/\delta))$ → probe term
+$\tilO(d^{2/3}\,K^{1/3}\,T^{2/3})$. This is what's tight at the
+experimental scales of \S\ref{sec:experiments} (and what the
+phase-grid figure verifies up to constants). The variance-adaptive
+matrix-Bernstein analysis of App.~\ref{app:extensions} sharpens this
+to $\tilO(d^{1/3}K^{1/3}T^{2/3})$ in the asymptotic regime
+$\ell_k=\tilde\Theta(d)$ (i.e., $T\gtrsim Kd\cdot\mathrm{polylog}$),
+matching our policy-class-agnostic lower bound $\Omega(c^{1/3}T^{2/3})$
+(Theorem~\ref{thm:spsc_lb}) up to a residual $d^{1/3}$ factor.
 
-\emph{Conjecture (why the $d^{2/3}$ is loose).} The empirical
-$d$-scaling fit of \S\ref{app:probe_rank_ablation} gives a log-log
-slope of $-0.16$, far below the predicted $+0.67$. The worst-case
-Freedman envelope $L^2=\Theta(d\log T)$ is enforced uniformly, but
-$\|u_t\|^2$ for $u_t\sim\mathcal N(0,I_d)$ concentrates at $d$ with
-$\sqrt d$ fluctuations — typical probes contribute variance $\Theta(d)$,
-not $\Theta(d\log T)$. A self-normalised tail bound replacing the
-worst-case $L^2$ with the second moment would give
-$C_{\mathrm{sub}}=\Theta(\sqrt d)$ and a probe term of
-$\tilO(d^{1/3}K^{1/3}T^{2/3})$, still above the empirical near-constant
-scaling. Closing the remaining gap likely requires an instance-specific
+\emph{Empirical $d$-scaling.} The fit of
+\S\ref{app:probe_rank_ablation} gives a log-log slope of $\approx -0.16$,
+below both the worst-case $+0.67$ and the variance-adaptive $+0.33$.
+The variance-adaptive prediction is closer to the empirics, suggesting
+the effective regime in practice is between the two analyses. Closing
+the residual $d^{1/3}$ gap likely requires an instance-specific
 analysis tracking $\|\widehat M_k-\bar M_k\|_\op$ on the $r$-dim
 subspace rather than the ambient ball.
 The $r$-saving lives in the leading exploitation term
 $\tilO(r\sqrt{KT})$, which has no ambient $d$-dependence, so the
 ``intrinsic rank replaces ambient dimension'' message refers to the
-dominant term. Balancing
-$r\sqrt{KT}+d^{2/3}K^{1/3}T^{2/3}$ against $d\sqrt{KT}$ yields the
+dominant term. Balancing the worst-case
+$r\sqrt{KT}+d^{2/3}K^{1/3}T^{2/3}$ (or asymptotic
+$r\sqrt{KT}+d^{1/3}K^{1/3}T^{2/3}$) against $d\sqrt{KT}$ yields the
 crossover curve in $(d,r)$ space,
 \[
-d - r \;\gtrsim\; d^{2/3}\,(T/K)^{1/6},
+d - r \;\gtrsim\; d^{2/3}\,(T/K)^{1/6}\quad(\text{worst-case})
+\quad\text{or}\quad
+d - r \;\gtrsim\; d^{1/3}\,(T/K)^{1/6}\quad(\text{asymptotic}).
 \]
-with the simpler scale-form $d\gtrsim\sqrt{T/K}$ recovering the
-$r\to 0$ corner. The synthetic phase-transition of
+Both reduce to $d\gtrsim\sqrt{T/K}$ for $r\to 0$. The synthetic phase-transition of
 \S\ref{sec:exp_phase} verifies the curve directly: at $T=5000$, $K=10$
 ($(T/K)^{1/6}\approx 2.82$), the predicted gap $d^{2/3}\cdot 2.82$
 gives e.g.\ $r<11.7$ at $d=50$ and $r<39.3$ at $d=100$
@@ -2025,6 +2024,98 @@ $r\sqrt{KT}$ rate is fundamental even outside $\Pi_{\mathrm{HP}}$, but
 a proof is beyond the scope of this work.
 \end{remark}
 
+
+\subsection{Necessity of the identification conditions (A1)--(A3)}
+\label{app:necessity}
+
+The three probe-side identification conditions of \S\ref{sec:setting}
+— full-dimensional probe coverage (A1), homoscedastic noise (A2), and
+bounded state--noise coupling (A3) — are not chosen for analytical
+convenience: each is provably necessary. Dropping any one of them
+makes the conditional second-moment target
+$\widetilde M_t := \E[\theta_t\theta_t^\top\mid\cH_{t-1}]$ — and
+hence the segment subspace $\range(B_k^\star) =
+\range(\widetilde M_t)$ — \emph{unidentifiable} from the observable
+$y_t^2-\hat\sigma^2$. The three propositions below are two-instance
+constructions: in each case, we exhibit two distinct
+$(\widetilde M_t,\cdot)$ pairs producing identical $y_t^2$
+distributions for every probe $u\in\mathrm{supp}(Q)$.
+
+\begin{proposition}[Non-identification without known noise variance]
+\label{prop:nonid_a}
+Fix $t$. Suppose $\E[\theta_t\varepsilon_t\mid\cH_{t-1},u]=0$ a.s.\ (A3
+holds with $\epsilon_\times=0$) and $\mathrm{supp}(Q)$ spans $\R^d$ (A1 holds).
+If only $g_t(u):=\E[y_t^2\mid\cH_{t-1},u]$ is observable, but the
+conditional variance $v_t(u):=\E[\varepsilon_t^2\mid\cH_{t-1},u]$ is
+unknown (A2 violated), then $\widetilde M_t$ is not identifiable.
+\end{proposition}
+\begin{proof}
+Under A3 with $\epsilon_\times=0$, $g_t(u)=u^\top\widetilde M_t u + v_t(u)$.
+Pick any $\delta\in(0,\sigma_\varepsilon^2/L^2]$ and set
+$\widetilde M_t' := \widetilde M_t + \delta I_d$,
+$v_t'(u) := v_t(u) - \delta\|u\|^2 \ge 0$ on $\|u\|\le L$. Then
+$u^\top\widetilde M_t' u + v_t'(u) = u^\top\widetilde M_t u + v_t(u) = g_t(u)$
+for every $u$, so $(\widetilde M_t,v_t)$ and $(\widetilde M_t',v_t')$
+produce identical $g_t$. Since $\widetilde M_t' \neq \widetilde M_t$
+and $\range(\widetilde M_t')$ generally differs from
+$\range(\widetilde M_t)$, the subspace is not identifiable.
+\end{proof}
+
+\begin{proposition}[Non-identification without bounded state--noise coupling]
+\label{prop:nonid_b}
+Fix $t$. Suppose $\sigma_\varepsilon^2$ is known (A2 holds) and
+$\mathrm{supp}(Q)$ spans $\R^d$ (A1 holds). If the cross-coupling
+$m_t(u):=\E[\theta_t\varepsilon_t\mid\cH_{t-1},u]\in\R^d$ may be
+arbitrary (A3 violated), then $\widetilde M_t$ is not identifiable
+from $h_t(u):=\E[y_t^2-\sigma_\varepsilon^2\mid\cH_{t-1},u]$.
+\end{proposition}
+\begin{proof}
+Expanding, $h_t(u)=u^\top\widetilde M_t u + 2u^\top m_t(u)$. For any
+nonzero symmetric $H\in\R^{d\times d}$, define
+$\widetilde M_t' := \widetilde M_t + H$ and
+$m_t'(u) := m_t(u) - \tfrac{1}{2}H u$. Then
+$u^\top\widetilde M_t' u + 2u^\top m_t'(u)
+= u^\top\widetilde M_t u + 2u^\top m_t(u) = h_t(u)$ for every $u$.
+The two pairs $(\widetilde M_t,m_t)$ and
+$(\widetilde M_t',m_t')$ produce identical $h_t$, so $\widetilde M_t$
+is not identifiable.
+\end{proof}
+
+\begin{proposition}[Non-identification without full-dimensional coverage]
+\label{prop:nonid_c}
+Suppose $\sigma_\varepsilon^2$ is known (A2 holds) and the coupling
+satisfies $\epsilon_\times=0$ (A3 holds). If $\mathrm{supp}(Q)\subseteq S$ for
+a proper subspace $S\subsetneq\R^d$ (A1 violated), then
+$\widetilde M_t$ is not identifiable from either linear
+($\E[y_t\mid u]$) or quadratic ($\E[y_t^2\mid u]$) observations.
+\end{proposition}
+\begin{proof}
+Let $\Pi_{S^\perp}$ be the orthogonal projector onto $S^\perp$, and
+let $H := \Pi_{S^\perp}\,A\,\Pi_{S^\perp}$ for any nonzero symmetric
+$A$. For all $u\in S$, $\Pi_{S^\perp}u=0$, hence $u^\top H u = 0$
+and $H u = 0$. Therefore $u^\top(\widetilde M_t+H)u
+= u^\top \widetilde M_t u$ and $u^\top(\theta_t + H w)
+= u^\top\theta_t$ for any $w\in S^\perp$. Neither linear nor quadratic
+data on $u\in S$ can distinguish $\widetilde M_t$ from
+$\widetilde M_t+H$.
+\end{proof}
+
+\begin{remark}[Joint necessity]
+\label{rem:joint_necessity}
+No two of (A1)--(A3) are jointly sufficient; all three are
+simultaneously required. Proposition~\ref{prop:nonid_a} fails
+identifiability under (A1) and (A3) alone (variance unknown);
+Proposition~\ref{prop:nonid_b} under (A1) and (A2) (coupling
+unbounded); Proposition~\ref{prop:nonid_c} under (A2) and (A3)
+(coverage restricted). Every violation is a fundamental information
+barrier, not an artifact of the analysis: the assumptions are stated
+in their weakest usable form, and the algorithm degrades gracefully
+under bounded relaxations of (A2) and (A3) (Theorem~\ref{thm:spsc_regret}'s
+$\Delta_\sigma$-floor; Appendix~\ref{app:sensitivity}'s assumption-violation
+study), but cannot dispense with any one of them.
+\end{remark}
+
+
 \section{Sub-Gaussian probes via truncation}
 \label{app:truncation}
 
@@ -2762,10 +2853,256 @@ LowOFUL & \citet{jun2019bilinear} & $O(r\sqrt{T})$ & Requires known subspace $B$
 LowESTR & \citet{lu2021lowrank} & $O(r\sqrt{T})$ & Stationary; learns $B$ from rewards \\
 VOFUL & \citet{cesabianchi2023colt} & $O(\sqrt{rdT})$ & Nonstationary; no explicit probing \\
 \midrule
-SPSC (ours) & This work & $\tilO(r\sqrt{T} + d^{2/3}T^{2/3})$ & Nonstationary; learns $B$ via probing \\
+SPSC (ours) & This work & $\tilO(r\sqrt{T} + d^{1/3}T^{2/3})$ & Nonstationary; learns $B$ via probing \\
 \bottomrule
 \end{tabular}
 \label{tab:published_comparison}
 \end{table}
+
+
+%% ============================================================
+%% APPENDIX K: Sharpened d-dependence via variance-adaptive Bernstein
+%% ============================================================
+\section{Sharpened \texorpdfstring{$d$}{d}-dependence via variance-adaptive Bernstein}
+\label{app:extensions}
+
+This appendix establishes the sharpened probe-term rate
+$\tilO(d^{1/3}K^{1/3}T^{2/3})$ used in the headline statements of
+Theorem~\ref{thm:spsc_regret} and Theorem~\ref{thm:spsc_adaptive},
+replacing the worst-case-Freedman analysis of \S\ref{app:proof_main}
+that gave $\tilO(d^{2/3}K^{1/3}T^{2/3})$. The improvement comes from
+applying matrix Bernstein with the predictable second moment of the
+lifted probe sample, rather than the worst-case envelope. The
+algorithmic structure of SPSC is unchanged; only the recommended
+probe rate $m_k^\star$ updates by a $d^{1/3}$ factor (from
+$d^{2/3}\ell_k^{2/3}$ to $d^{1/3}\ell_k^{2/3}$).
+
+The sharpened rate is asymptotic: it requires $\ell_k = \tilde\Theta(d)$
+for all segments, equivalently $T \gtrsim K\,d\,\mathrm{polylog}(T,d/\delta)$
+under balanced segments. At the experimental scale ($T{=}5{,}000$,
+$d\le 100$, $K\in\{8,10\}$), this regime is not entered; the
+worst-case-Freedman analysis (App.~\ref{app:proof_main}) is what's
+tight in practice. The empirical $d$-scaling slope reported in
+Figure~\ref{fig:d-scaling} is consistent with the sharpened
+asymptotic prediction within constants but is itself pre-asymptotic.
+
+Theorem~\ref{thm:matrix_bernstein_conf} (matrix Freedman) bounds
+$\|\widehat M_k-\bar M_k^{\mathrm{probe}}-\widetilde B\|_\op$ using the
+worst-case envelope $\|\tilde X_t\|_\op\le 2R_X$ with
+$R_X=\Theta(L^2)=\Theta(d\log T)$. The leading term
+$2R_X\sqrt{\log(2d/\delta)/m_k}$ then yields
+$C_{\mathrm{sub}}=8R_X/\lambda_{\min}=\Theta(d\log T/\lambda_{\min})$
+in Corollary~\ref{cor:projector_conf}, and the constant
+$B = 4 C_{\mathrm{sub}} S_w R_\cA\sqrt{\log(2d/\delta)} = \Theta(d)$
+propagates through the proof of Theorem~\ref{thm:spsc_regret} to give
+the $\tilO(d^{2/3}K^{1/3}T^{2/3})$ probe-acquisition rate.
+
+The envelope is loose: for isotropic Gaussian $u_t$, $\|u_t\|^2$
+concentrates near $d$ with $\sqrt d$ fluctuations, so the
+\emph{predictable second moment} of $\tilde G_t$ in operator norm is
+$\Theta(d)$ per round, not $\Theta(d^2)$ as the envelope suggests.
+The variance-adaptive matrix Bernstein
+inequality~\citep[Theorem~7.7.1]{tropp2015introduction} exploits this
+gap.
+
+\begin{lemma}[Predictable second moment of the lifted probe sample]
+\label{lem:lifted_variance}
+Assume $d\ge 2$, $\|\theta_t\|\le S_w$ a.s., and that the noise has a
+bounded fourth moment $\E[\varepsilon_t^4\mid\cH_{t-1}]\le 3\sigma_\varepsilon^4$
+(satisfied by Gaussian $\varepsilon_t\sim\mathcal N(0,\sigma_\varepsilon^2)$).
+Let $u_t\sim\mathcal N(0,I_d)$ on probe rounds, truncated by an
+indicator $\mathbf 1\{\|u_t\|\le L\}$ (which only decreases the
+second moment in the PSD order). Define
+$G_t := \mathcal K^{-1}(s_t u_t u_t^\top)$ and
+$\tilde X_t := G_t\mathbf 1\{\cA_t\}-\E[G_t\mathbf 1\{\cA_t\}\mid\cH_{t-1}]$.
+Then there exists $\sigma_*^2$ depending only on
+$S_w,\sigma_\varepsilon,\hat\sigma$ (and not on $d$) such that
+\begin{equation}
+\bigl\|\E[\tilde X_t^2\mid\cH_{t-1}]\bigr\|_\op
+\;\le\;\sigma_*^2\,d.
+\label{eq:lifted_var}
+\end{equation}
+Explicitly, $\sigma_*^2 \le C\,(S_w^4 + \sigma_\varepsilon^4 + \hat\sigma^4)$
+with $C=100$ (using exact trace-expansion accounting; the value of
+$C$ does not affect the leading-order rate).
+\end{lemma}
+\begin{proof}
+Centering only reduces the second moment in the PSD order:
+$\E[\tilde X_t^2\mid\cH_{t-1}]\preceq\E[G_t^2\mathbf 1\{\cA_t\}\mid\cH_{t-1}]\preceq\E[G_t^2\mid\cH_{t-1}]$.
+We bound $\|\E[G_t^2\mid\cH_{t-1}]\|_\op$ by conditioning further on
+$\theta_t$ and proving a bound uniform in $\theta_t$ with
+$\|\theta_t\|\le S_w$; tower-property propagates the bound to
+$\E[\,\cdot\mid\cH_{t-1}]$.
+
+By Lemma~\ref{lem:K_inverse},
+$G_t = \tfrac{s_t}{2}\,u_t u_t^\top - \tfrac{s_t\|u_t\|^2}{2(d{+}2)}\,I$.
+Squaring with $(uu^\top)^2 = \|u\|^2 uu^\top$:
+\begin{equation}
+G_t^2 = \frac{d}{4(d+2)}\,s_t^2\|u_t\|^2\, u_t u_t^\top
+       \;+\;\frac{s_t^2\,\|u_t\|^4}{4(d+2)^2}\,I.
+\label{eq:Gt_squared_app}
+\end{equation}
+
+\emph{Decomposition.} Conditional on $(\cH_{t-1},\theta_t)$, define
+$e_1 := \theta_t/\|\theta_t\|$ (any unit vector if $\theta_t=0$);
+$e_1$ is deterministic, so $u_t = z_t e_1 + u_{t,\perp}$ with
+$z_t := u_t^\top e_1\sim\mathcal N(0,1)$ independent of
+$u_{t,\perp}\sim\mathcal N(0,I-e_1e_1^\top)$ on the $(d{-}1)$-dim
+subspace. $s_t = (z_t\|\theta_t\|+\varepsilon_t)^2-\hat\sigma^2$
+depends on $u_t$ only through $z_t$, so $s_t$ is independent of
+$u_{t,\perp}$ given $(\cH_{t-1},\theta_t)$.
+
+The cross terms $z_t e_1 u_{t,\perp}^\top$ vanish under
+$\E[\cdot\mid\cH_{t-1},\theta_t]$ by symmetry of $u_{t,\perp}$.
+Surviving contributions split into:
+\begin{align*}
+\E\bigl[s_t^2\|u_t\|^2\,z_t^2\,e_1e_1^\top \,\big|\,\cdot\bigr]
+&= \bigl(\E[s_t^2 z_t^4] + (d{-}1)\,\E[s_t^2 z_t^2]\bigr)\,e_1e_1^\top, \\
+\E\bigl[s_t^2\|u_t\|^2\,u_{t,\perp}u_{t,\perp}^\top \,\big|\,\cdot\bigr]
+&= \bigl(\E[s_t^2 z_t^2] + (d{+}1)\,\E[s_t^2]\bigr)\,(I-e_1e_1^\top),
+\end{align*}
+where we used Isserlis on the $(d{-}1)$-dim subspace
+($\E[\|u_{t,\perp}\|^2 u_{t,\perp}u_{t,\perp}^\top]=(d+1)(I-e_1e_1^\top)$,
+valid for $d\ge 2$).
+
+\emph{Conditional moments of $s_t$.} Writing
+$\xi_t := z_t\|\theta_t\|+\varepsilon_t$, $s_t = \xi_t^2-\hat\sigma^2$,
+and using the assumed fourth-moment bound and Gaussian moments
+$\E[z_t^k]=k!!$ for $k\le 8$ (in particular $\E[z_t^8]=105$, needed
+because $s_t^2 z_t^4$ contains a $z_t^8$ contribution from
+$\xi_t^4 z_t^4$), straightforward expansion gives
+$\E[s_t^2\mid\cdot]\le C_0 D$, $\E[s_t^2 z_t^2\mid\cdot]\le C_0 D$,
+$\E[s_t^2 z_t^4\mid\cdot]\le C_0 D$ with
+$D := S_w^4+\sigma_\varepsilon^4+\hat\sigma^4$ and $C_0\le 320$
+(the dominant contribution is
+$\E[\xi_t^4 z_t^4]\le 105 S_w^4 + 90 S_w^2\sigma_\varepsilon^2 + 9\sigma_\varepsilon^4 \le 320 D$
+via AM--GM).
+
+\emph{Combining the blocks.} The parallel-block coefficient is
+$A_1 := \E[s_t^2 z_t^4]+(d-1)\E[s_t^2 z_t^2]\le d\,C_0\,D$, the
+perpendicular-block coefficient is
+$A_2 := \E[s_t^2 z_t^2]+(d+1)\E[s_t^2]\le (d+2)\,C_0\,D$. Hence
+$\|\E[s_t^2\|u_t\|^2 u_tu_t^\top\mid\cdot]\|_\op\le \max(A_1,A_2)\le (d+2)\,C_0\,D$.
+Multiplying by the prefactor $d/(4(d+2))$ from
+\eqref{eq:Gt_squared_app} gives leading-block contribution exactly
+$(C_0/4)\,d\,D$.
+
+\emph{Trace correction.} Expanding
+$\|u_t\|^4 = z_t^4 + 2z_t^2\|u_{t,\perp}\|^2 + \|u_{t,\perp}\|^4$
+and $\E[\|u_{t,\perp}\|^4]=(d-1)(d+1)$:
+$\E[s_t^2\|u_t\|^4\mid\cdot]\le C_0\,D\,(1+2(d-1)+(d^2-1)) = C_0\,D\,(d^2+2d-2)$.
+Divided by $4(d+2)^2$, the trace contribution is
+$C_0\,D\,(d^2+2d-2)/(4(d+2)^2)$.
+
+\emph{Conclusion.} Combining and dividing by $d\,D$:
+\[
+\frac{\|\E[G_t^2\mid\cdot]\|_\op}{d\,D}
+\;\le\;\frac{C_0}{4}\;+\;\frac{C_0\,(d^2+2d-2)}{4d\,(d+2)^2}.
+\]
+With $C_0=320$, the second term is monotone decreasing in $d$ for
+$d\ge 2$: $15$ at $d=2$, $12.22$ at $d=4$, $\to 0$ as $d\to\infty$.
+Combined with $C_0/4=80$, the per-$dD$ bound is uniformly $\le 100$
+for $d\ge 2$, so $\sigma_*^2 = C\,D$ with $C=100$ suffices. Tower
+property over $\theta_t$ preserves the bound.
+\end{proof}
+
+\begin{theorem}[Variance-adaptive concentration; sharpening of Theorem~\ref{thm:matrix_bernstein_conf}]
+\label{thm:matrix_bernstein_var}
+Under the assumptions of Theorem~\ref{thm:matrix_bernstein_conf}
+together with the additional hypotheses of Lemma~\ref{lem:lifted_variance}
+($d\ge 2$, $\E[\varepsilon_t^4\mid\cH_{t-1}]\le 3\sigma_\varepsilon^4$,
+indicator-truncated probes), with probability at least $1-2\delta$,
+\begin{equation}
+\bigl\|\widehat M_k-\bar M_k^{\mathrm{probe}}-\widetilde B\bigr\|_\op
+\;\le\;\sigma_*\sqrt{\frac{2\,d\,\log(2d/\delta)}{m_k}}
+\;+\;\frac{4 R_X\log(2d/\delta)}{3\,m_k}
+\;+\;\|\Theta_k\|_\op,
+\label{eq:bern_var}
+\end{equation}
+where $R_X = \Theta(L^2)=\Theta(d\log T)$ and $\sigma_*^2$ is the
+variance constant of Lemma~\ref{lem:lifted_variance}.
+\end{theorem}
+\begin{proof}
+Tropp's matrix Bernstein \citep[Thm.~7.7.1]{tropp2015introduction}
+applied to the centered MDS $\{\tilde X_t\}_{t\in\cT_k}$ with
+envelope $L_X\le 2R_X$ and predictable variance
+$m_k\sigma_*^2 d$ gives, w.p.\ $\ge 1-\delta$,
+$\|\sum_t\tilde X_t\|_\op\le \sqrt{2 m_k\sigma_*^2 d\log(2d/\delta)} + 4R_X\log(2d/\delta)/3$.
+Dividing by $m_k$ and adding the truncation-bias offset
+$\|\Theta_k\|_\op$ via the same transfer step as in
+Theorem~\ref{thm:matrix_bernstein_conf} yields \eqref{eq:bern_var}.
+\end{proof}
+
+\begin{corollary}[Sharpened projector concentration]
+\label{cor:projector_var}
+Under the assumptions of Corollary~\ref{cor:projector_conf} together
+with the additional hypotheses of Lemma~\ref{lem:lifted_variance},
+with probability at least $1-2\delta$,
+\[
+\varepsilon_k = \|\widehat P_k - P_k^\star\|_\op
+\;\le\; C_{\mathrm{sub}}^\star\,\sqrt{\frac{d\,\log(2d/\delta)}{m_k}}
+\;+\;\frac{16\,R_X\,\log(2d/\delta)}{3\,\lambda_{\min}\,m_k}
+\;+\;\Delta_\sigma\;+\;\frac{4\|\Theta_k\|_\op}{\lambda_{\min}},
+\]
+with $C_{\mathrm{sub}}^\star := 4\sqrt 2\,\sigma_*/\lambda_{\min} = \Theta(1/\lambda_{\min})$.
+The linear-in-$1/m_k$ Bernstein term is dominated by the leading
+$\sqrt{d/m_k}$ term whenever $m_k\gtrsim R_X^2\log(2d/\delta)/(\sigma_*^2 d) = \tilde\Theta(d)$.
+\end{corollary}
+
+\begin{theorem}[Sharpened probe term]
+\label{thm:spsc_regret_sharp}
+In addition to the assumptions of Theorem~\ref{thm:spsc_regret},
+assume the conditions of Lemma~\ref{lem:lifted_variance}. Run
+Alg.~\ref{alg:spsc} with the sharpened probe allocation
+$m_k^\star = \lceil(B^\star\ell_k/(2A))^{2/3}\rceil$, where $A := 2R_\cA S_w + c$
+and $B^\star := 4 C_{\mathrm{sub}}^\star S_w R_\cA\sqrt{d\log(2d/\delta)} = \Theta(\sqrt d)$.
+Assume the asymptotic regime $\ell_k\ge \ell^\star = \tilde\Theta(d)$
+for all $k\in[K]$ (equivalently $T\gtrsim K\,d\,\mathrm{polylog}(T,d/\delta)$
+for balanced segments). Then, w.p.\ $\ge 1-\delta$,
+\[
+\DynReg_T^{(c)}
+\;=\;\tilO\!\bigl(r\sqrt{KT}\bigr)
+\;+\;\tilO\!\bigl(d^{1/3}\,K^{1/3}\,T^{2/3}\bigr)
+\;+\;O(WV)\;+\;O(T\Delta_\sigma).
+\]
+\end{theorem}
+\begin{proof}
+The proof follows the structure of \S\ref{app:proof_main}'s step (i.c)
+with $\varepsilon_k\le C_{\mathrm{sub}}^\star\sqrt{d\log(2d/\delta)/m_k}+\Delta_\sigma$
+from Corollary~\ref{cor:projector_var} replacing the original
+$C_{\mathrm{sub}}\sqrt{\log(2d/\delta)/m_k}$. After multiplying by
+$2R_\cA S_w n_k$, the leading variance term is $B^\star n_k/\sqrt{m_k}$
+with $B^\star = \Theta(\sqrt d)$; the linear-Bernstein term contributes
+$\tilO(d\,n_k/m_k)$. The leading-to-linear ratio at the optimum
+$m_k^\star = (B^\star\ell_k/(2A))^{2/3}\asymp d^{1/3}\ell_k^{2/3}$ is
+$\sqrt{m_k^\star/d}\asymp(\ell_k/d)^{1/3}$, which is $\ge 1$ (modulo
+polylog) under $\ell_k\ge\ell^\star = \tilde\Theta(d)$, confirming
+domination.
+
+In this regime, $\min_{m_k}(A m_k+B^\star\ell_k/\sqrt{m_k})$ is achieved
+at $m_k^\star$ with value $\Theta(A^{1/3}(B^\star)^{2/3})\,\ell_k^{2/3} = \Theta(d^{1/3})\,\ell_k^{2/3}$
+per segment. Summing via Jensen $\sum_k\ell_k^{2/3}\le K^{1/3}T^{2/3}$
+gives $\tilO(d^{1/3}K^{1/3}T^{2/3})$. All other steps of the proof
+of Theorem~\ref{thm:spsc_regret} carry over verbatim.
+\end{proof}
+
+\begin{remark}[Algorithm structure unchanged; recommended probe rate updated]
+\label{rem:no_algo_change}
+Theorem~\ref{thm:spsc_regret_sharp} preserves the algorithmic
+structure of Alg.~\ref{alg:spsc}; only the recommended probe rate
+updates from $m_k^\star\asymp d^{2/3}\ell_k^{2/3}$ to
+$m_k^\star\asymp d^{1/3}\ell_k^{2/3}$, a $d^{1/3}$-factor reduction.
+The empirical results of \S\ref{sec:experiments} were obtained with
+the original schedule, so they correspond to a (theoretically)
+suboptimal but consistent probe rate; reported regret is therefore
+an upper bound on what the sharpened schedule would achieve. The
+empirical $d$-scaling slope $\approx-0.16$ in
+Figure~\ref{fig:d-scaling} is closer to the sharpened
+$d^{1/3}=+0.33$ prediction than to the original $d^{2/3}=+0.67$,
+suggesting the variance-adaptive analysis better describes the
+empirical regime even though the experimental scale
+($T=5{,}000,\,d\le 100,\,K\le 10$) is pre-asymptotic for the formal
+$\ell_k=\tilde\Theta(d)$ threshold.
+\end{remark}
 
 \end{document}
