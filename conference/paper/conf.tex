@@ -756,7 +756,7 @@ Appendix~\ref{app:sota_compare}.
 \subsection{Real exploration logs: Open Bandit Pipeline (ZOZO)}
 \label{sec:exp_openbandit}
 
-The Open Bandit Dataset \citep{saito2open} ships production
+The Open Bandit Dataset \citep{saito2020open} ships production
 exploration logs (logged action, propensity, 0/1 click from
 ZOZOTOWN; random-policy slice replayed as a bandit, $T{=}5{,}000$,
 $K{=}10$, 10 seeds). The data is real and only approximately
@@ -2519,5 +2519,9 @@ SPSC-Adaptive's regret is flat as $K_{\mathrm{oracle}}$ grows, while
 Alg.~\ref{alg:spsc} degrades monotonically and is $3\times$ worse at
 $K_{\mathrm{oracle}}{=}50$: a detector-based reset is strictly safer
 than a fixed schedule when boundaries are unknown or noisy.
+
+\newpage
+\input{checklist.tex}
+
 
 \end{document}
