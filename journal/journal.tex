@@ -2983,7 +2983,14 @@ For fixed $K$, delay and recovery terms are $O(1)$ in $T$.
 \label{thm:ambient_regret}
 Under Assumptions~\ref{assum:latent_dynamics}--\ref{assum:probe_noise},
 with probability at least $1-\delta$:
-$\DynReg_T^{(c)}\le\tilO(d\sqrt{T}+T^{2/3})$.
+$\DynReg_T^{(c)}\le\tilO(d\sqrt{T}+T^{2/3})$.%
+\footnote{Throughout, we write $g(T)=\tilO(f(T))$ to mean that
+there exist constants $c>0$ and $p\ge 0$ such that
+$g(T)\le c\,f(T)\,\bigl(\log(T+d+r+1/\delta)\bigr)^{p}$ for all
+$T$ large enough; equivalently, $\tilO(\cdot)$ is the standard $O(\cdot)$
+notation that suppresses factors polylogarithmic in the horizon $T$,
+the ambient dimension $d$, the rank $r$, and the confidence parameter
+$1/\delta$.}
 The improvement from $d\sqrt{T}$ to $r\sqrt{T}$ is achieved by the projected
 exploitation layer.
 \end{theorem}
