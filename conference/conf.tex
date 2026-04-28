@@ -97,7 +97,7 @@
   cannot track changing subspaces; nonstationary methods ignore
   low-rank structure and pay the full ambient rate
   $\tilO(d\sqrt{T})$. We first establish an \emph{identification boundary}: three
-  probe-side conditions (known noise variance, bounded state--noise
+  probe-side conditions (known noise variance, bounded state-noise
   coupling, full-dimensional probe support) are each individually
   necessary and jointly sufficient for recovering
   $\range(B_k^\star)$ from quadratic functionals of scalar rewards.
@@ -206,7 +206,7 @@ whose optimum determines the leading rate.
 
 \paragraph{Identifiability boundary.}
   Three probe-side conditions, namely known noise variance, bounded
-  state--noise coupling, and full-dimensional probe support, are each
+  state-noise coupling, and full-dimensional probe support, are each
   individually necessary (in the unrestricted-second-moment problem)
   and jointly sufficient for recovering $\range(B_k^\star)$ from
   single-play scalar rewards, via a lifted operator $\mathcal K^{-1}$
@@ -1275,7 +1275,8 @@ symmetric matrices for $d\ge 2$.
 \begin{lemma}[Quadratic measurement identity]
 \label{lem:quad_conf}
 On every probe round $t\in\cTprobe$, with
-$\delta_\sigma := \hat\sigma^2 - \sigma_\varepsilon^2$,
+$\delta_\sigma := \hat\sigma^2 - \sigma_\varepsilon^2$ and
+$m_t := \E[\varepsilon_t\theta_t\mid\cH_{t-1},u_t]$,
 \[
 \E[s_t\mid\sigma(\cH_{t-1},u_t)]
 = u_t^\top \widetilde M_t u_t + 2 u_t^\top m_t
@@ -1287,10 +1288,9 @@ collapses to $\E[s_t\mid\cdot] = u_t^\top\widetilde M_t u_t$.
 \begin{proof}
 Expand $y_t^2 = (u_t^\top\theta_t)^2 + 2\varepsilon_t u_t^\top\theta_t
 + \varepsilon_t^2$ and condition on $\sigma(\cH_{t-1},u_t)$; the middle
-term contributes $2u_t^\top m_t$ with
-$m_t := \E[\varepsilon_t\theta_t\mid\cH_{t-1},u_t]$ bounded by
-$\epsilon_\times$ via the bounded state-noise coupling assumption
-(\S\ref{sec:setting}); the last term contributes
+term contributes $2u_t^\top m_t$ with $m_t$ as defined in the lemma,
+bounded by $\epsilon_\times$ via the bounded state-noise coupling
+assumption (\S\ref{sec:setting}); the last term contributes
 $\sigma_\varepsilon^2$, and subtracting $\hat\sigma^2$ leaves
 $-\delta_\sigma$. Independence of $u_t$ from $(\theta_t,\cH_{t-1})$
 gives $\E[(u_t^\top\theta_t)^2\mid\cH_{t-1},u_t] = u_t^\top\widetilde M_t u_t$.
@@ -1783,7 +1783,7 @@ $O(\ell_k)$, absorbed into the same burn-in order. Hence
 \label{eq:per_segment_opt}
 \end{equation}
 
-\paragraph{Sum over segments.} By Cauchy-Schwarz,
+\paragraph{Sum over segments.} By Cauchy--Schwarz,
 $\sum_k r\sqrt{n_k}\le r\sqrt{KT}$. By H\"older,
 $\sum_k\ell_k^{2/3}\le K^{1/3}T^{2/3}$ and
 $\sum_k\ell_k^{1/3}\le K^{2/3}T^{1/3}$, and $\sum_k V_k^{\rm in}=V_{\rm in}$.
@@ -2019,7 +2019,7 @@ $\eta_{\mathrm{det}} = C_{\mathrm{sub}}\sqrt{\log(dT/\delta_{\mathrm{FA}})/n}$;
 choosing $b = 2\eta_{\mathrm{det}}$ and union-bounding gives at most
 $\delta_{\mathrm{FA}}$ false alarms across the horizon. Under $H_1$ at
 time $\tau_k$, a separation $\Delta_k \ge 2b$ forces a fire within
-delay $D_{\max} = 2n/\mu + \tau_{\mathrm{burn}}$ — the $2n/\mu$ term is
+delay $D_{\max} = 2n/\mu + \tau_{\mathrm{burn}}$ --- the $2n/\mu$ term is
 the time for the recent window to refill with post-change probes, and
 $\tau_{\mathrm{burn}}$ is a short burn-in period after recovery that
 prevents the detector from firing on its own freshly-reset state.
@@ -2172,7 +2172,7 @@ and the detector's adaptivity wins.
 
 \paragraph{Synthetic $(d,r)$ grid.}
 Table~\ref{tab:app-synthetic} gives the full synthetic grid underlying
-Figure~\ref{fig:synthetic-phase}. SPSC wins on $34/39$ cells; losses
+Figure~\ref{fig:synthetic-phase}. SPSC wins on $37/40$ cells; losses
 are confined to $d\le 10$ or $r\le 1$ (probe-cost dominant).
 \reviewnote{Item 8 (denominator unclear). The body sweep at
 \S\ref{sec:exp_phase} is $(d,r)\in\{4,\ldots,120\}\times\{1,\ldots,30\}$
@@ -2184,7 +2184,7 @@ or update the count to match what is actually shown.}
 \fixnote{Item 8 addressed. Two clarifications:
   (i) the original ``$34/39$'' counted the 34 SPSC wins among the 39
   \emph{decisive} (non-tie) cells of the 40-cell grid; the denominator
-  convention was not clear as you kindly mentioned, so  I revides to make it clear. The body \S\ref{sec:exp_phase} sweep description now
+  convention was not clear as you kindly mentioned, so I revised it to make it clear. The body \S\ref{sec:exp_phase} sweep description now
   spells out the actual experimental grid
   $\{5,10,20,30,45,60,80,100\}\times\{1,3,5,10,15,20\}$ restricted to
   $r<d$ (40 valid cells).
@@ -2491,8 +2491,8 @@ transition: SPSC/LinUCB $\approx 1.01$ for $\rho\le 0.70$, drops to
 $0.861$ at $\rho{=}0.95$, and to $0.582$ at $\rho{=}0.99$. Subspace
 error is nearly constant across $\rho$ ($0.28$--$0.33$), so the
 missing benefit at low $\rho$ is a signal-energy effect, not
-estimation failure: low-rank structure in an already nearly-noise
-signal has little signal to extract.
+estimation failure: low-rank structure in a signal already
+dominated by noise leaves little to extract.
 
 \begin{figure}[!htbp]
 \centering
@@ -2626,7 +2626,7 @@ Method & $r{=}1$ & $r{=}2$ & $r{=}3$ & $r{=}5$ & $r{=}10$ \\
 Oracle LinUCB                & $34.3\pm 1.5$    & $115.1\pm 2.0$   & $197.2\pm 3.0$         & $268.1\pm 3.4$         & $373.2\pm 5.7$ \\
 SPSC Alg.\,1 (ours)          & $840.3\pm 24.5$  & $805.9\pm 15.4$  & $802.3\pm 12.3$        & $805.3\pm 9.5$         & $811.0\pm 12.2$ \\
 \textbf{SPSC-Adaptive}       & $\mathbf{525.3\pm 45.8}$ & $\mathbf{613.6\pm 33.1}$ & $\mathbf{640.3\pm 33.0}$ & $\mathbf{665.9\pm 27.2}$ & $\mathbf{705.6\pm 19.5}$ \\
-LowOFUL                      & $1049.9\pm 12.8$ & $740.1\pm 36.3 ^\star$  & $734.5\pm 37.8$        & $791.5\pm 26.0$        & $801.9\pm 20.1$ \\
+LowOFUL                      & $1049.9\pm 12.8$ & $740.1\pm 36.3^\star$  & $734.5\pm 37.8$        & $791.5\pm 26.0$        & $801.9\pm 20.1$ \\
 VOFUL                        & $1063.5\pm 5.5$  & $789.7\pm 24.8$  & $712.5\pm 25.5^\star$  & $763.0\pm 30.6^\star$  & $758.6\pm 27.9^\star$ \\
 LowRank-Reward               & $1175.6\pm 11.6$ & $806.8\pm 11.2$  & $835.1\pm 10.7$        & $898.8\pm 6.7$         & $880.5\pm 5.5$ \\
 SW-LinUCB                    & $875.6\pm 6.7$   & $875.6\pm 6.7$   & $875.6\pm 6.7$         & $875.6\pm 6.7$         & $875.6\pm 6.7$ \\
