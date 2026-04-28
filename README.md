@@ -2,7 +2,7 @@
 
 Research repository for
 
-> **Optimism on a Moving Subspace: Priced-Probe Identification for Piecewise Low-Rank Bandits**
+> **Catching a Moving Subspace: Low-Rank Bandits Beyond Stationarity**
 
 The project studies bandit problems in which the reward vector lies in a
 low-rank subspace that can jump at unknown change points, and introduces
