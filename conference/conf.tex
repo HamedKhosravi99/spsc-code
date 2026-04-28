@@ -423,8 +423,10 @@ $d-r$ smallest eigenvalues; (ii) and (iii) remain needed (Proof in Appendix~\ref
 
 SPSC (Alg.~\ref{alg:spsc}) alternates two phases:
 \begin{itemize}[leftmargin=1.5em,nosep]
-\item \textbf{Probe rounds} ($t\in\cTprobe$): draw $u_t\sim Q$, observe
-$y_t$, accumulate $G_t$ in the current-segment estimator $\widehat M_t$,
+\item \textbf{Probe rounds} ($t\in\cTprobe$): draw $u_t\sim Q$ (the
+probe distribution from \S\ref{sec:setting}; e.g.\ the scaled-sphere
+distribution of Remark~\ref{rem:subgauss_probe}), observe $y_t$,
+accumulate $G_t$ in the current-segment estimator $\widehat M_t$,
 and refresh $\widehat U_t = \TopEig_r(\widehat M_t)$.
 \item \textbf{Exploitation rounds} ($t\notin\cTprobe$): project each
 action $x\in\cA_t$ to $z_t(x) = \widehat U_{t-1}^\top x\in\R^r$, maintain a
