@@ -66,7 +66,7 @@
 \newcommand{\cmark}{\ding{51}}
 \newcommand{\xmark}{\ding{55}}
 
-\title{Catching a Moving Subspace:\\Low-Rank Bandits Beyond Stationarity}
+\title{Optimism on a Moving Subspace:\\Priced-Probe Identification for Piecewise Low-Rank Bandits}
 
 \author{%
   Anonymous Authors%
@@ -77,21 +77,16 @@
 
 \begin{abstract}
 
-  Low-rank linear bandits replace the ambient dimension $d$ with an
-  intrinsic rank $r \ll d$ in the regret rate, but only while the
-  reward subspace stays fixed; once it moves, the rank advantage
-  disappears and existing low-rank methods break. We study what it
-  takes to \emph{catch a moving subspace} from scalar rewards.
-  Concretely, we consider linear contextual bandits over a horizon of
-  $T$ rounds, in which the reward parameter $\theta_t \in \R^d$ lies
-  in a piecewise-constant rank-$r$ subspace ($r \ll d$) that
+ We study linear contextual bandits over a horizon of $T$ rounds, in
+  which the reward parameter $\theta_t \in \R^d$ lies in a
+  piecewise-constant rank-$r$ subspace ($r \ll d$) that
   \emph{changes} across an unknown number $K$ of segments. The
   learner sees only a scalar reward
   $y_t = x_t^\top \theta_t + \varepsilon_t$ for action
   $x_t \in \cA_t \subset \R^d$ with noise $\varepsilon_t$, and may
   purchase information by designating rounds as \emph{probes} at
   per-probe cost $c > 0$. Within each segment $k$, the parameter
-  factorizes as $\theta_t = B_k^\star w_t$ for an orthonormal
+  factorises as $\theta_t = B_k^\star w_t$ for an orthonormal
   $B_k^\star \in \R^{d\times r}$ and latent state $w_t \in \R^r$.
   Existing low-rank bandit methods assume a fixed representation and
   cannot track changing subspaces; nonstationary methods ignore
@@ -126,20 +121,13 @@
 \section{Introduction}
 \label{sec:intro}
 
-The promise of low-rank bandits is to replace the ambient dimension
-$d$ with an intrinsic rank $r \ll d$ in the regret rate, but only
-while the underlying subspace stays fixed. Once it moves, neither
-stationary low-rank nor ambient nonstationary methods are equipped
-to track it. This paper asks how to \emph{catch a moving subspace}
-efficiently, given only scalar rewards.
-
-High-dimensional sequential decision problems, such as personalized
+High-dimensional sequential decision problems, such as personalised
 recommendation, clinical dosing, and targeted scientific
 experimentation, share two properties that the linear-bandit
 literature has so far handled only in isolation. First, the reward
 parameter $\theta_t\in\R^d$ at round $t\in\{1,\dots,T\}$ (where $T$
 is the horizon and $d$ is the ambient dimension) typically admits a
-\emph{low-rank} factorization $\theta_t=B_k^\star w_t$ with intrinsic
+\emph{low-rank} factorisation $\theta_t=B_k^\star w_t$ with intrinsic
 rank $r\ll d$, where $B_k^\star\in\R^{d\times r}$ has orthonormal
 columns, $w_t\in\R^r$ is a latent state, and the segment index
 $k\in\{1,\dots,K\}$ ranges over $K\ge 1$ piecewise pieces of the
@@ -186,7 +174,7 @@ is measured by the \emph{costed dynamic regret}
   - x_t^\top \theta_t\Bigr) + c\,|\cTprobe|,
 \label{eq:intro_costed_regret}
 \end{equation}
-which jointly penalizes suboptimal actions and the number of probe
+which jointly penalises suboptimal actions and the number of probe
 rounds (each charged at per-probe cost $c>0$).
 
 Scalar feedback makes subspace recovery nontrivial: a single
@@ -204,7 +192,7 @@ whose optimum determines the leading rate.
   and jointly sufficient for recovering $\range(B_k^\star)$ from
   single-play scalar rewards, via a lifted operator $\mathcal K^{-1}$
   (the inverse of the probe moment operator $\mathcal K$, defined
-  below) acting on the centered statistic $y_t^2-\widehat\sigma^2$
+  below) acting on the centred statistic $y_t^2-\widehat\sigma^2$
   (with $\widehat\sigma^2$ a noise-variance estimate)
   (Theorem~\ref{thm:identification};
   Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}). Dropping any
@@ -280,7 +268,7 @@ Appendix~\ref{app:related_table} gives the full positioning
 \label{sec:setting}
 
 \paragraph{Piecewise low-rank model.}
-At every round $t$ the reward parameter admits a factorization
+At every round $t$ the reward parameter admits a factorisation
 $\theta_t = B_k^\star w_t$, where $B_k^\star \in \R^{d\times r}$ has
 orthonormal columns and is piecewise constant over $K\ge 1$ segments
 $\cI_k$ with unknown change points
@@ -324,7 +312,7 @@ truncation at $L=\sqrt{2d\log(2T/\delta)}$
 
 \paragraph{Quadratic measurement identity.}
 Let $\hat\sigma^2$ be the algorithm's estimate of the noise variance
-and define the centered probe statistic $s_t := y_t^2 - \hat\sigma^2$
+and define the centred probe statistic $s_t := y_t^2 - \hat\sigma^2$
 on every probe round $t\in\cTprobe$. Under the probe-noise
 assumptions of \S\ref{sec:setting}, for
 $\delta_\sigma := \hat\sigma^2-\sigma_\varepsilon^2$,
@@ -549,7 +537,7 @@ $\theta_t$). This is the regime that class- or cohort-induced segment
 shifts approximate empirically.
 \end{corollary}
 
-\paragraph{Scope of the bound.} Theorem~\ref{thm:spsc_regret} analyzes
+\paragraph{Scope of the bound.} Theorem~\ref{thm:spsc_regret} analyses
 exactly the practical Alg.~\ref{alg:spsc}: probes are interleaved
 according to a balanced schedule, $\widehat U_t$ is refreshed online,
 and exploitation rounds re-project the windowed history through the
@@ -1083,7 +1071,7 @@ dependency order:
     SPSC-Adaptive (Prop.~\ref{thm:spsc_adaptive}) by controlling the
     CUSUM detector.
 \end{enumerate}
-The windowed projected self-normalized bound
+The windowed projected self-normalised bound
 (Lem.~\ref{lem:self_norm}), the windowed projected potential
 condition (Assumption~\ref{ass:projected_potential}), and the
 projected nonstationary UCB lemma (Lem.~\ref{lem:F2pp}) are the
@@ -1200,7 +1188,7 @@ from prefix concentration (Lem.~\ref{lem:prefix_subspace}) via a
 routine Lipschitz bound.
 \end{assumption}
 
-\begin{lemma}[Windowed projected self-normalized concentration]
+\begin{lemma}[Windowed projected self-normalised concentration]
 \label{lem:self_norm}
 For a fixed $a^\star\in\R^r$ and $\sigma_\varepsilon$-sub-Gaussian
 noise on the projected covariates $z_t=\widehat U_t^\top x_t\in\R^r$,
@@ -1213,7 +1201,7 @@ for all $t\in E_k$,
 \qquad
 \beta_t^{(r,W)} := \sigma_\varepsilon\sqrt{r\log\bigl(1+WR_\cA^2/(\lambda r)\bigr)+2\log(2K/\delta)}+\sqrt\lambda\,S_w.
 \]
-This is the windowed projected specialization of
+This is the windowed projected specialisation of
 \citet[Thm.~1,~2]{abbasi2011improved}.
 \end{lemma}
 
@@ -1252,7 +1240,7 @@ $M = \tfrac{d+2}{2d}N - \tfrac{\tr(N)}{2d}I_d$.
 For the operator-norm bound: $\mathcal K^{-1}(N)$ is diagonalised in
 the eigenbasis of $N$; if $N$ has eigenvalues $\mu_1,\dots,\mu_d$,
 then $\mathcal K^{-1}(N)$ has eigenvalues
-$\nu_i = \tfrac{d+2}{2d}\mu_i - \tfrac{\tr(N)}{2d}$. Maximizing
+$\nu_i = \tfrac{d+2}{2d}\mu_i - \tfrac{\tr(N)}{2d}$. Maximising
 $|\nu_i|$ over $\|N\|_\op = 1$ (i.e.\ $\max_i|\mu_i|=1$): at
 $\mu_1=1,\mu_2=\cdots=\mu_d=-1$, $\tr(N)=2-d$ and
 $\nu_1 = \tfrac{d+2-(2-d)}{2d} = 1$; at $\mu_1=-1,\mu_2=\cdots=\mu_d=1$,
@@ -1438,7 +1426,7 @@ $\|\widehat P_k - P_k^\star\|_\op\le 4\|\widehat M_k - \bar M_k^{\mathrm{probe}}
 yielding \eqref{eq:proj_bound_conf}.
 \end{proof}
 
-\begin{proposition}[Segment factorization]
+\begin{proposition}[Segment factorisation]
 \label{prop:segment_factorization_conf}
 $\bar M_k^{\mathrm{probe}} = B_k^\star \bar S_k^{\mathrm{probe}} (B_k^\star)^\top$ where
 $\bar S_k^{\mathrm{probe}} := m_k^{-1}\sum_{t\in\cT_k}\E[w_tw_t^\top\mid\cH_{t-1}]$.
@@ -1501,7 +1489,7 @@ dropped.
 
 \emph{Scope.} These propositions establish identifiability
 obstructions in the unrestricted-second-moment problem and serve as
-sanity checks for the probe-side modeling assumptions. They are not
+sanity checks for the probe-side modelling assumptions. They are not
 lower bounds inside the rank-$r$ LDS class of \S\ref{sec:setting}:
 the counterexample second moments need not be rank-$r$ or compatible
 with a stable LDS $w_t$.
@@ -1581,7 +1569,7 @@ $U_t:=\widehat U_{t-1}$, $P_t:=U_t U_t^\top$, $z_t(x):=U_t^\top x$,
 $a_t^\star:=U_t^\top\theta_t$, and (as in Alg.~\ref{alg:spsc})
 $\widetilde V_t = \lambda I_r+\sum_{s\in\cW_t}z_t(x_s)z_t(x_s)^\top$,
 $\widehat a_t = \widetilde V_t^{-1}\sum_{s\in\cW_t}z_t(x_s)y_s$.
-Assume on segment $\cI_k$: (i) the windowed projected self-normalized
+Assume on segment $\cI_k$: (i) the windowed projected self-normalised
 event of Lem.~\ref{lem:self_norm} holds uniformly over $E_k$;
 (ii) Assumption~\ref{ass:projected_potential} holds;
 (iii) $\|\theta_t\|\le S_w$, $\|x\|\le R_\cA$ for $x\in\cA_t$.
@@ -1622,7 +1610,7 @@ $\widehat a_t-a_t^\star
 = \widetilde V_t^{-1}\sum_{s\in\cW_t}z_t(x_s)\varepsilon_s
 + \widetilde V_t^{-1}\sum_{s\in\cW_t}z_t(x_s)b_{s,t}
 - \lambda\widetilde V_t^{-1}a_t^\star.$
-On the self-normalized event of Lem.~\ref{lem:self_norm} the noise+ridge contribution has weighted norm
+On the self-normalised event of Lem.~\ref{lem:self_norm} the noise+ridge contribution has weighted norm
 $\le \beta_t^{(r,W)}=\tilO(\sqrt r)$.
 
 For the deterministic subspace-bias part, let $b_t^{\rm sub}\in\R^{|\cW_t|}$
@@ -1750,8 +1738,8 @@ $B=C R_\cA S_w(1+R_\cA\sqrt{r/\lambda})\sqrt{\log(2KdT/\delta)}$.
 \label{eq:per_segment}
 \end{equation}
 
-\paragraph{Optimizing the probe-estimation tradeoff.}
-Ignoring the lower-order burn-in term, minimize
+\paragraph{Optimising the probe-estimation tradeoff.}
+Ignoring the lower-order burn-in term, minimise
 $f_k(m):=A m+B \ell_k m^{-1/2}$. Setting
 $f_k'(m)=A-B\ell_k/(2m^{3/2})=0$ gives
 $m_k^\star=(B\ell_k/(2A))^{2/3}$, and
@@ -1781,7 +1769,7 @@ Summing \eqref{eq:per_segment_opt} over $k$ gives
 + \tilO\!\bigl(K^{2/3}T^{1/3}/\lambda_{\min}^2\bigr)
 + O(R_\cA W V_{\rm in}).
 \]
-Union-bounding the windowed self-normalized event, the prefix
+Union-bounding the windowed self-normalised event, the prefix
 subspace concentration, and the noise event at total $\delta$
 yields \eqref{eq:main_bound}. For fixed $K$, the leading term is
 $\tilO(r\sqrt T)$, the probe term is $\tilO(T^{2/3})$, and the
@@ -1852,7 +1840,7 @@ Let $\tau_k$ be a true change-point with eigengap
 $\Delta_k:=\|P_k^\star-P_{k-1}^\star\|_{\op}\ge 2b$ for the
 threshold $b>2\eta_{\mathrm{det}}$. Take $t=\tau_k+W_{\mathrm{det}}$:
 the recent window now lies entirely in segment $k$ while the past
-window lies entirely in segment $k-1$. By the segment-factorization
+window lies entirely in segment $k-1$. By the segment-factorisation
 of the predictable probe moment
 (Proposition~\ref{prop:segment_factorization_conf}) and probe-time
 excitation (Lemma~\ref{lem:probe_excitation_conf}),
@@ -2070,7 +2058,7 @@ $R\in\R^{d\times d_0}$. For Covertype, segments correspond to disjoint
 size-$K$ cover-type subsets of the 7 classes; for Pendigits and
 Satimage, to disjoint digit/class subsets, $K=10$. Actions at round
 $t$ are $|\cA_t|=40$ examples drawn from the active segment's class
-pool. Reward is centered target label. $\lambda=0.01$, probe
+pool. Reward is centred target label. $\lambda=0.01$, probe
 period $10$, window $W=400$, $\delta=0.05$, $c=0.02$.
 
 \paragraph{Pixelized MNIST / Fashion-MNIST.}
@@ -2079,10 +2067,10 @@ projection. Segments are class-subset swaps as above. Same
 hyperparameters as UCI datasets.
 
 \paragraph{MovieLens-100K with real ratings.}
-Standard MovieLens-100K user-item matrix centered by per-item mean.
+Standard MovieLens-100K user-item matrix centred by per-item mean.
 Features $\phi(\text{user},\text{item})$ are item-side latent
 factors from a rank-$d$ SVD of the observed-entry mask; reward is
-the raw user rating ($1$--$5$), centered. Segments correspond to
+the raw user rating ($1$--$5$), centred. Segments correspond to
 disjoint time-bucketed user cohorts, $K=10$. This is a
 \emph{fully real} benchmark (we do \emph{not} generate rewards from
 a low-rank surrogate), so the data is only approximately low-rank and
@@ -2591,7 +2579,7 @@ online}, which is SPSC's core capability.
 
 This appendix gives the per-rank Vancomycin results
 ($d{=}93$, $K{=}8$, $T{=}5{,}000$, $\sigma_\varepsilon{=}0.3$, 10
-seeds, probe period 10, window 200, probe cost $c{=}0.1$) summarized
+seeds, probe period 10, window 200, probe cost $c{=}0.1$) summarised
 in Table~\ref{tab:vancomycin_body} of the main body. SPSC-Adaptive
 beats every non-oracle baseline at every rank.
 
