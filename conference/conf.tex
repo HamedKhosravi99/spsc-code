@@ -25,10 +25,6 @@
 \usepackage{wrapfig}
 \usepackage{pifont}
 \usepackage{hyperref}
-\usepackage[textsize=footnotesize,backgroundcolor=yellow!40,linecolor=red!60!black,bordercolor=red!60!black]{todonotes}
-\newcommand{\reviewnote}[1]{\todo[inline]{\textbf{PROOFREAD:} #1}}
-
-\newcommand{\fixnote}[1]{\todo[inline,color=green!25,bordercolor=green!60!black]{\textbf{ADDRESSED:} #1}}
 
 \setlength{\emergencystretch}{6pt}
 
@@ -1114,14 +1110,7 @@ $\mathcal G_w := \bigl\{\max_{t\le T}\|w_t\|_2\le S_w\bigr\}$. For sub-Gaussian 
 one may take $S_w = \tilO(\sqrt r)$ via union bound (the failure
 probability is absorbed into the overall $\delta$ budget);  for bounded innovations $\mathcal G_w$ holds deterministically. In what
 follows we implicitly condition on $\mathcal G_w$.
-\reviewnote{Item 10 (unused constant). $R_\eta$ is introduced here
-but never appears again. Either drop it (the sub-Gaussian route
-already supplies $S_w$) or use it as a tighter alternative
-quantitative bound.}
 
-\fixnote{Item 10 addressed. Dropped the unused constant $R_\eta$.
-The deterministic-innovations case is still mentioned but without naming a constant we never propagate. The sub-Gaussian route supplies $S_w=\tilO(\sqrt r)$, which is what the proofs use.}
-  
 The \emph{predictable second moment} is
 $\widetilde M_t := \E[\theta_t\theta_t^\top\mid\cH_{t-1}]
 = B_k^\star \E[w_tw_t^\top\mid\cH_{t-1}](B_k^\star)^\top$, and the
@@ -1333,30 +1322,7 @@ $\widetilde M_t$.
   coupling term contributes zero, and
   $\widetilde B_t = -\tfrac{\delta_\sigma}{d}\,I_d$.
 \end{proof}
-\reviewnote{Item 7 (internal contradiction). The bound
-$\|\widetilde B_t\|_\op\le |\delta_\sigma|/d + 2\sqrt d\,\epsilon_\times$
-includes a $2\sqrt d\,\epsilon_\times$ term, but the lemma is stated
-for scaled-sphere probes only, where $u\mapsto -u$ symmetry kills the
-third moment exactly (zero coupling-bias). Either drop the
-$2\sqrt d\,\epsilon_\times$ summand entirely, or restate the lemma
-for general symmetric probes (where the worst-case bound applies)
-and explicitly note that scaled-sphere is the zero case.}
-  \fixnote{Item 7 fixed (going with your option 1 --- drop the slack).
-  You were right that the $2\sqrt d\,\epsilon_\times$ term shouldn't be
-  there: the lemma is for sphere probes, and on sphere probes the
-  $u\mapsto -u$ symmetry kills any odd-moment expectation, so the
-  coupling term is exactly zero. So the lemma is now stated as an
-  equality, $\widetilde B_t=-(\delta_\sigma/d)\,I_d$, with
-  $\|\widetilde B_t\|_\op=|\delta_\sigma|/d$. Cleaner than before since
-  it's an equality, and it makes clear the bias is just a scaled
-  identity (so it shifts eigenvalues but doesn't rotate eigenvectors).
-  I removed the $2\sqrt d\,\epsilon_\times$ wherever it appeared:
-  the body §\ref{sec:setting} paragraph, Theorem~\ref{thm:identification}
-  part (a) (which now just says the lifted sample is exactly unbiased
-  under condition (i) plus sphere symmetry), and
-  Corollary~\ref{cor:projector_conf}, where $\Delta_\sigma$ collapses
-  to $4|\delta_\sigma|/(d\lambda_{\min})$. Theorem~\ref{thm:spsc_regret}
-  doesn't change since it already assumed $\delta_\sigma=0$ anyway.}
+
 \begin{lemma}[Uniform a.s.\ bound on $G_t$]
 \label{lem:G_bound_conf}
 For scaled-sphere probes $\|u_t\| = \sqrt d$ deterministically; on
@@ -2174,22 +2140,6 @@ and the detector's adaptivity wins.
 Table~\ref{tab:app-synthetic} gives the full synthetic grid underlying
 Figure~\ref{fig:synthetic-phase}. SPSC wins on $37/40$ cells; losses
 are confined to $d\le 10$ or $r\le 1$ (probe-cost dominant).
-\reviewnote{Item 8 (denominator unclear). The body sweep at
-\S\ref{sec:exp_phase} is $(d,r)\in\{4,\ldots,120\}\times\{1,\ldots,30\}$
-(thousands of cells), while Table~\ref{tab:app-synthetic} tabulates 9
-representative rows. Where do the 39 cells in ``$34/39$'' come from?
-Restate the denominator (e.g.\ refer to a specific evaluation grid)
-or update the count to match what is actually shown.}
-
-\fixnote{Item 8 addressed. Two clarifications:
-  (i) the original ``$34/39$'' counted the 34 SPSC wins among the 39
-  \emph{decisive} (non-tie) cells of the 40-cell grid; the denominator
-  convention was not clear as you kindly mentioned, so I revised it to make it clear. The body \S\ref{sec:exp_phase} sweep description now
-  spells out the actual experimental grid
-  $\{5,10,20,30,45,60,80,100\}\times\{1,3,5,10,15,20\}$ restricted to
-  $r<d$ (40 valid cells).
-  (ii) Table~\ref{tab:app-synthetic} now shows all 40 cells
-  (previously 9 representative rows). Body and appendix grids now match.}
 
  \begin{table}[!htbp]
   \centering
@@ -2639,15 +2589,6 @@ LinUCB                       & $825.3\pm 6.1$   & $825.3\pm 6.1$   & $825.3\pm 6
 \bottomrule
 \end{tabular}
 \end{table}
-\reviewnote{Item 9 (missing $^\star$ at $r{=}2$). The caption says
-$^\star$ marks the strongest non-oracle baseline per column. At
-$r{=}2$, the strongest is LowOFUL ($740.1$) --- the
-$-17.1\%$ ``vs.\ best comp.'' figure is computed against it --- but
-its entry has no $^\star$. Add $^\star$ to LowOFUL at $r{=}2$ for
-consistency.}
-
-\fixnote{Item 9 addressed. Added $^\star$ to LowOFUL at $r{=}2$ in
-Table~\ref{tab:vancomycin_full}.}
 
 \section{When the adaptive variant wins}
 \label{app:adaptive_winner}
