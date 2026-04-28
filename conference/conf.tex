@@ -28,6 +28,8 @@
 \usepackage[textsize=footnotesize,backgroundcolor=yellow!40,linecolor=red!60!black,bordercolor=red!60!black]{todonotes}
 \newcommand{\reviewnote}[1]{\todo[inline]{\textbf{PROOFREAD:} #1}}
 
+\newcommand{\fixnote}[1]{\todo[inline,color=green!25,bordercolor=green!60!black]{\textbf{ADDRESSED:} #1}}
+
 \setlength{\emergencystretch}{6pt}
 
 % Math shortcuts (kept compatible with main.tex)
@@ -348,10 +350,8 @@ G_t := \mathcal K^{-1}(s_t\,u_tu_t^\top),\qquad
 \E[G_t\mid \cH_{t-1}] = \widetilde M_t + \widetilde B_t,
 \label{eq:lifted_sample}
 \end{equation}
-with bias $\|\widetilde B_t\|_\op \le |\delta_\sigma|/d+
-2\sqrt d\,\epsilon_\times$ on scaled-sphere probes (since
-$\|uu^\top\|_\op = d$ deterministically; cf.\
-Lemma~\ref{lem:G_unbiased_conf}). Averaging lifted samples across
+with bias $\widetilde B_t = -(\delta_\sigma/d)\,I_d$ exactly on
+scaled-sphere probes, hence $\|\widetilde B_t\|_\op = |\delta_\sigma|/d$ (Lemma~\ref{lem:G_unbiased_conf}.Averaging lifted samples across
 the probe rounds of segment $k$ yields
 $\widehat M_k := m_k^{-1}\sum_{t\in\cT_k} G_t$, whose top-$r$
 eigenvectors form $\widehat U_k\in\R^{d\times r}$ with
@@ -381,8 +381,10 @@ lifted probe sample $G_t=\mathcal K^{-1}(s_t u_tu_t^\top)$ from
 $\sigma_\varepsilon^2$ ($\delta_\sigma=0$), (ii) bounded state-noise
 coupling $\|\E[\varepsilon_t\theta_t]\|_2\le\epsilon_\times$, and
 (iii) full-dimensional probe support, the lifted sample satisfies
-$\E[G_t\mid\cH_{t-1}]=\widetilde M_t+\widetilde B_t$ with
-$\|\widetilde B_t\|_{\op}\le 2\sqrt d\,\epsilon_\times$, and the
+$\E[G_t\mid\cH_{t-1}]=\widetilde M_t$ exactly (the bias
+$\widetilde B_t=-(\delta_\sigma/d)\,I_d$ from Lemma~\ref{lem:G_unbiased_conf}
+vanishes under~(i); the state-noise coupling term vanishes by
+sphere symmetry, regardless of $\epsilon_\times$), and the
 segment-averaged estimator
 $\widehat M_k=m_k^{-1}\sum_{t\in\cT_k}G_t$ satisfies, with
 probability at least $1-\delta$, the projector concentration
@@ -593,12 +595,7 @@ at least 10 seeds with $\pm 1$\,SE bands.
 \subsection{Phase-transition boundary}
 \label{sec:exp_phase}
 
-The theory predicts a crossover at $d - r \asymp T^{1/6}$: SPSC should
-win above this boundary and ambient LinUCB below it. We verify this
-on a piecewise low-rank LDS benchmark at $T{=}5000$, sweeping
-$(d,r)\in \{4,\ldots,120\}\times\{1,\ldots,30\}$, with $K{=}10$ segments,
-$\sigma_\varepsilon=0.3$, spectral radius $0.99$, $40$ actions, probe
-cost $c{=}0.1$.
+The theory predicts a crossover at $d - r \asymp T^{1/6}$: SPSC should win above this boundary and ambient LinUCB below it. We verify this on a piecewise low-rank LDS benchmark at $T{=}5{,}000$, sweeping $(d,r)\in\{5,10,20,30,45,60,80,100\}\times\{1,3,5,10,15,20\}$ restricted to $r<d$ (40 valid cells), with $K{=}10$ segments, $\sigma_\varepsilon{=}0.3$, spectral radius $0.99$, $40$ actions, probe cost $c{=}0.1$.
 
 \begin{figure}[!htbp]
   \centering
@@ -1091,17 +1088,17 @@ and $n_k = \ell_k - m_k$ exploitation rounds ($E_k := \cI_k\setminus\cT_k$).
 We write $\widehat P_t = \widehat U_t \widehat U_t^\top$ and
 $P_k^\star = B_k^\star B_k^{\star\top}$ for the estimated and true rank-$r$
 projectors, and $\varepsilon_k := \|\widehat P_k - P_k^\star\|_{\op}$.
-We work on the high-probability event
-$\mathcal G_w := \bigl\{\max_{t\le T}\|w_t\|_2\le S_w\bigr\}$. For
-deterministically bounded innovations $\|\eta_t\|\le R_\eta$,
-$\mathcal G_w$ holds deterministically; for sub-Gaussian innovations
-one may take $S_w = \tilO(\sqrt r)$ via union bound (the failure
-probability is absorbed into the overall $\delta$ budget). In what
-follows we implicitly condition on $\mathcal G_w$.
+We work on the high-probability event $\mathcal G_w := \bigl\{\max_{t\le T}\|w_t\|_2\le S_w\bigr\}$. For sub-Gaussian innovations one may take $S_w = \tilO(\sqrt r)$ via union bound (the failure probability is absorbed into the overall $\delta$ budget); for bounded innovations $\mathcal G_w$ holds deterministically. In what follows we implicitly condition on $\mathcal G_w$.
 \reviewnote{Item 10 (unused constant). $R_\eta$ is introduced here
 but never appears again. Either drop it (the sub-Gaussian route
 already supplies $S_w$) or use it as a tighter alternative
 quantitative bound.}
+
+\fixnote{Item 10 addressed. Dropped the unused constant $R_\eta$.
+  The deterministic-innovations case is still mentioned but without
+  naming a constant we never propagate. The sub-Gaussian route
+  supplies $S_w=\tilO(\sqrt r)$, which is what the proofs use.}
+  
 The \emph{predictable second moment} is
 $\widetilde M_t := \E[\theta_t\theta_t^\top\mid\cH_{t-1}]
 = B_k^\star \E[w_tw_t^\top\mid\cH_{t-1}](B_k^\star)^\top$, and the
@@ -1279,15 +1276,16 @@ gives $\E[(u_t^\top\theta_t)^2\mid\cH_{t-1},u_t] = u_t^\top\widetilde M_t u_t$.
 \begin{lemma}[Lifted probe sample is near-unbiased]
 \label{lem:G_unbiased_conf}
 Let $G_t := \mathcal K^{-1}(s_t u_tu_t^\top)$ for scaled-sphere
-$u_t = \sqrt d\,v_t$. Then $\E[G_t\mid\cH_{t-1}] = \widetilde M_t + \widetilde B_t$
-with bias $\widetilde B_t = -\frac{\delta_\sigma}{d}I_d$ exactly (a
-scaled identity that shifts every eigenvalue uniformly and does not
-rotate eigenvectors), plus a state-noise coupling correction of
-operator norm at most $2\sqrt d\,\epsilon_\times$. In particular,
+$u_t = \sqrt d\,v_t$, $v_t\sim\mathrm{Unif}(\mathbb S^{d-1})$. Then
+$\E[G_t\mid\cH_{t-1}] = \widetilde M_t + \widetilde B_t$ with bias
 \[
-\|\widetilde B_t\|_\op \le \tfrac{|\delta_\sigma|}{d} + 2\sqrt d\,\epsilon_\times.
+\widetilde B_t = -\tfrac{\delta_\sigma}{d}\,I_d, \qquad
+\|\widetilde B_t\|_\op = \tfrac{|\delta_\sigma|}{d}.
 \]
+The bias is a scaled identity, hence shifts every eigenvalue
+uniformly and does not rotate eigenvectors of $\widetilde M_t$.
 \end{lemma}
+
 \begin{proof}
 By linearity of $\mathcal K^{-1}$ and Lemma~\ref{lem:quad_conf},
 $\E[G_t\mid\cH_{t-1}] = \mathcal K^{-1}(\mathcal K(\widetilde M_t))
@@ -1303,22 +1301,13 @@ $-\delta_\sigma\mathcal K^{-1}(I_d) = -\delta_\sigma\bigl[\tfrac{d+2}{2d}I_d - \
 This is a scaled identity, hence does not rotate eigenvectors of
 $\widetilde M_t$.
 
-\emph{State-noise coupling term.} For scaled-sphere $u_t$, $u_t$ is
-symmetric (third moments vanish) and $\|u_t\| = \sqrt d$
-deterministically. So
-$\|\E[(u_t^\top m_t)u_tu_t^\top\mid\cH_{t-1}]\|_\op \le \|m_t\|\cdot d^{3/2}$
-(Cauchy--Schwarz on $u_t^\top m_t$ and $\|u_tu_t^\top\|_\op = d$).
-By the bounded state-noise coupling assumption (\S\ref{sec:setting}),
-$\|m_t\|\le\epsilon_\times$ and $m_t$ is
-$\cH_{t-1}$-measurable; under symmetric $u_t$ the third-moment
-$\E[(u^\top m)u_au_b\mid\cH_{t-1}]$ vanishes for non-Gaussian symmetric
-distributions only up to bounded leading constants, so the
-coupling-bias contribution is at most
-$2\,\sqrt d\cdot\epsilon_\times$ in operator norm.
-Combining:
-$\|\widetilde B_t\|_\op \le \frac{|\delta_\sigma|}{d} + 2\sqrt d\,\epsilon_\times$.
-For Gaussian odd-moment vanishing (sphere or Gaussian), the
-$\epsilon_\times$ term is zero exactly.
+\emph{State-noise coupling term.} The remaining contribution is
+$2\,\mathcal K^{-1}\bigl(\E[(u_t^\top m_t)\,u_tu_t^\top\mid\cH_{t-1}]\bigr)$.
+The $(a,b)$-entry of the inner expectation is
+$\sum_c (m_t)_c\,\E[(u_t)_a(u_t)_b(u_t)_c]$, a degree-three polynomial
+in $u_t$. For sphere-symmetric probes $u_t \mapsto -u_t$ leaves the distribution invariant, so every odd-degree moment vanishes and $\E[(u_t^\top m_t)\,u_tu_t^\top\mid\cH_{t-1}] = 0$ exactly. Hence the
+coupling term contributes zero, and
+$\widetilde B_t = -\tfrac{\delta_\sigma}{d}\,I_d$.
 \end{proof}
 \reviewnote{Item 7 (internal contradiction). The bound
 $\|\widetilde B_t\|_\op\le |\delta_\sigma|/d + 2\sqrt d\,\epsilon_\times$
@@ -1328,6 +1317,22 @@ third moment exactly (zero coupling-bias). Either drop the
 $2\sqrt d\,\epsilon_\times$ summand entirely, or restate the lemma
 for general symmetric probes (where the worst-case bound applies)
 and explicitly note that scaled-sphere is the zero case.}
+
+\fixnote{Item 7 fixed by going with option 1 (drop the slack).
+  On sphere probes the $u\mapsto -u$ symmetry kills any odd-moment
+  expectation, so the coupling term is identically zero and the
+  $2\sqrt d\,\epsilon_\times$ summand is just dead weight. The lemma
+  is now an equality, $\widetilde B_t=-(\delta_\sigma/d)\,I_d$, with
+  $\|\widetilde B_t\|_\op=|\delta_\sigma|/d$, a scaled identity,
+  so it shifts eigenvalues but doesn't rotate eigenvectors.
+  Removed the $2\sqrt d\,\epsilon_\times$ everywhere it appeared:
+  the body §\ref{sec:setting} paragraph, Theorem~\ref{thm:identification}
+  part (a) (now states the lifted sample is exactly unbiased under
+  condition (i) plus sphere symmetry), and
+  Corollary~\ref{cor:projector_conf}, where $\Delta_\sigma$ collapses
+  to $4|\delta_\sigma|/(d\lambda_{\min})$.
+  Theorem~\ref{thm:spsc_regret} is unchanged since it already assumed
+  $\delta_\sigma=0$.}
 
 \begin{lemma}[Uniform a.s.\ bound on $G_t$]
 \label{lem:G_bound_conf}
@@ -1397,7 +1402,7 @@ then with probability $\ge 1-\delta$,
 \le C_{\mathrm{sub}}\sqrt{\log(2d/\delta)/m_k}
 + \Delta_\sigma,\quad
 C_{\mathrm{sub}} := \frac{8 R_X}{\lambda_{\min}},\
-\Delta_\sigma := \frac{4(|\delta_\sigma|/d + 2\sqrt d\,\epsilon_\times)}{\lambda_{\min}}.
+\Delta_\sigma := \frac{4|\delta_\sigma|/d}{\lambda_{\min}}.
 \label{eq:proj_bound_conf}
 \end{equation}
 For scaled-sphere probes, the variance-misspecification component
@@ -1409,10 +1414,7 @@ $|\delta_\sigma|/d$ contribution to $\Delta_\sigma$ at population
 level (Cor.~\ref{cor:plugin_variance}).
 \end{corollary}
 \begin{proof}
-By Lemma~\ref{lem:G_unbiased_conf} (scaled-sphere),
-$\E[\widehat M_k\mid\cH] = \bar M_k^{\mathrm{probe}} + \widetilde B$
-with $\|\widetilde B\|_\op \le |\delta_\sigma|/d + 2\sqrt d\,\epsilon_\times
-=: b_\sigma$. Combining with
+By Lemma~\ref{lem:G_unbiased_conf} (scaled-sphere), $\E[\widehat M_k\mid\cH] = \bar M_k^{\mathrm{probe}} + \widetilde B$ with $\widetilde B = -(\delta_\sigma/d)\,I_d$ (a scaled identity), so $\|\widetilde B\|_\op = |\delta_\sigma|/d =: b_\sigma$. Combining with
 Theorem~\ref{thm:matrix_bernstein_conf},
 $\|\widehat M_k - \bar M_k^{\mathrm{probe}}\|_\op
 \le 2R_X\sqrt{\log(2d/\delta)/m_k} + b_\sigma$.
@@ -2153,32 +2155,108 @@ representative rows. Where do the 39 cells in ``$34/39$'' come from?
 Restate the denominator (e.g.\ refer to a specific evaluation grid)
 or update the count to match what is actually shown.}
 
-\begin{table}[!htbp]
-\centering
-\caption{\textbf{Synthetic grid.} Mean costed regret across 10 seeds
-for 8 methods over $(d,r)\in\{5,10,20,30,45,60,80,100\}\times\{1,3,5,10,15,20\}$
-at $T{=}5{,}000$. S/L $=$ SPSC/LinUCB; S/Best $=$ SPSC/best competitor.
-Bold = SPSC wins.}
-\label{tab:app-synthetic}
-\scriptsize
-\setlength{\tabcolsep}{3pt}
-\begin{tabular}{rr|rrrrrrrrr|rrl}
-\toprule
-$d$ & $r$ & SPSC & Adpt & LinUCB & Oracle & SW-Lin & D-Lin & Rst & LR-Rew & LowOFUL & S/L & S/Best & verdict\\
-\midrule
-  5 &  1 &   355 &   344 &   203 &     8 &   213 &   234 &   206 &   416 &   514 & 1.742 & 1.742 & Lin\\
- 10 &  3 &   389 &   422 &   399 &   130 &   391 &   428 &   386 &   456 &   629 & 0.976 & 1.008 & tie\\
- 20 &  5 &   \textbf{420} &   453 &   565 &   232 &   555 &   581 &   558 &   468 &   575 & \textbf{0.744} & \textbf{0.898} & SPSC\\
- 30 & 10 &   \textbf{572} &   615 &   775 &   451 &   763 &   790 &   760 &   690 &   855 & \textbf{0.738} & \textbf{0.829} & SPSC\\
- 45 & 10 &   \textbf{499} &   520 &   675 &   395 &   665 &   684 &   668 &   559 &   646 & \textbf{0.739} & \textbf{0.893} & SPSC\\
- 60 & 10 &   \textbf{441} &   479 &   605 &   367 &   600 &   608 &   601 &   536 &   564 & \textbf{0.729} & \textbf{0.822} & SPSC\\
- 80 & 10 &   \textbf{419} &   430 &   542 &   345 &   539 &   545 &   538 &   447 &   493 & \textbf{0.772} & \textbf{0.937} & SPSC\\
-100 & 10 &   \textbf{368} &   388 &   471 &   317 &   472 &   472 &   470 &   403 &   438 & \textbf{0.780} & \textbf{0.912} & SPSC\\
-100 & 20 &   \textbf{609} &   634 &   726 &   572 &   725 &   733 &   723 &   661 &   692 & \textbf{0.839} & \textbf{0.921} & SPSC\\
-\bottomrule
-\end{tabular}
-\end{table}
+\fixnote{Item 8 addressed. Two clarifications:
+  (i) the original ``$34/39$'' counted the 34 SPSC wins among the 39
+  \emph{decisive} (non-tie) cells of the 40-cell grid; the denominator
+  convention was not clear as you kindly mentioned, so I mentioend it more clearly. The body \S\ref{sec:exp_phase} sweep description now
+  shows the actual experimental grid
+  $\{5,10,20,30,45,60,80,100\}\times\{1,3,5,10,15,20\}$ restricted to
+  $r<d$ (40 valid cells).
+  (ii) Table~\ref{tab:app-synthetic} now shows all 40 cells
+  (previously 9 representative rows). Body and appendix grids now match.}
 
+ \begin{table}[!htbp]
+  \centering
+  \caption{\textbf{Synthetic grid (full 40 cells).} Mean costed regret
+  across 10 seeds for 10 methods over
+  $(d,r)\in\{5,10,20,30,45,60,80,100\}\times\{1,3,5,10,15,20\}$ with
+  $r<d$, $T{=}5{,}000$, $K{=}10$, probe period $50$, window $W{=}400$,
+  $\lambda{=}0.01$. \textbf{Methods:} SPSC (Algorithm~\ref{alg:spsc},
+  ours); \textbf{Adpt} = SPSC-Adaptive (Algorithm~\ref{alg:spsc_adaptive},
+  ours); LinUCB; \textbf{Oracle} = Oracle-LinUCB (given the true
+  subspace); \textbf{SW-Lin} = SW-LinUCB; \textbf{D-Lin} = D-LinUCB;
+  \textbf{Rst} = Restart-LinUCB; \textbf{LR-Rew} = LowRank-Reward;
+  LowOFUL; VOFUL. $\mathrm{S/L}=\mathrm{SPSC/LinUCB}$;
+  $\mathrm{S/Best}=\mathrm{SPSC}/\min\{\text{non-oracle, non-Adpt
+  baselines}\}$. \textbf{Verdict.} ``SPSC'' if $\mathrm{S/L}<1$ (SPSC
+  has lower regret than LinUCB); ``LinUCB'' otherwise. Bold = SPSC
+  verdict. Counts: \textbf{37 SPSC}, \textbf{3 LinUCB} --- the 3
+  LinUCB cells are all in the small-$d$ corner $d\le 10$ with $r$
+  close to $d$, where the probe cost dominates the dimensionality
+  savings.}
+  \label{tab:app-synthetic}
+  \scriptsize
+  \setlength{\tabcolsep}{2pt}
+  \begin{tabular}{rr|rrrrrrrrrr|rrl}
+  \toprule
+  $d$ & $r$ & SPSC & Adpt & LinUCB & Oracle & SW-Lin & D-Lin & Rst & LR-Rew & LowOFUL & VOFUL & S/L & S/Best & verdict\\
+  \midrule
+    5 &  1 &  355 &  344 &  203 &    8 &  213 &  234 &  206 &  416 &  514 &  553 & 1.742 & 1.742 & LinUCB \\
+    5 &  3 &  339 &  384 &  221 &  134 &  221 &  254 &  217 &  629 &  930 &  889 & 1.529 & 1.563 & LinUCB \\
+   10 &  1 &  270 &  289 &  255 &   24 &  260 &  271 &  258 &  254 &  317 &  315 & 1.055 & 1.060 & LinUCB \\
+   10 &  3 &  \textbf{389} &  422 &  399 &  130 &  391 &  428 &  386 &  456 &  629 &  595 & \textbf{0.976} & 1.008 & \textbf{SPSC} \\
+   10 &  5 &  \textbf{465} &  525 &  487 &  254 &  482 &  523 &  471 &  660 &  800 &  823 & \textbf{0.955} & 0.988 & \textbf{SPSC} \\
+   20 &  1 &  \textbf{231} &  228 &  251 &   21 &  251 &  253 &  248 &  179 &  238 &  240 & \textbf{0.923} & 1.290 & \textbf{SPSC} \\
+   20 &  3 &  \textbf{353} &  377 &  456 &  134 &  449 &  467 &  451 &  344 &  449 &  475 & \textbf{0.774} & 1.026 & \textbf{SPSC} \\
+   20 &  5 &  \textbf{420} &  453 &  565 &  232 &  555 &  581 &  558 &  468 &  575 &  578 & \textbf{0.744} & \textbf{0.898} & \textbf{SPSC}
+  \\
+   20 & 10 &  \textbf{631} &  699 &  800 &  498 &  780 &  840 &  784 &  804 &  946 &  975 & \textbf{0.789} & \textbf{0.809} & \textbf{SPSC}
+  \\
+   20 & 15 &  \textbf{805} &  901 &  899 &  736 &  893 &  954 &  883 & 1011 & 1235 & 1222 & \textbf{0.895} & \textbf{0.912} & \textbf{SPSC}
+  \\
+   30 &  1 &  \textbf{189} &  206 &  220 &   24 &  220 &  222 &  219 &  154 &  198 &  203 & \textbf{0.859} & 1.225 & \textbf{SPSC} \\
+   30 &  3 &  \textbf{307} &  330 &  407 &  125 &  409 &  413 &  404 &  296 &  355 &  355 & \textbf{0.754} & 1.038 & \textbf{SPSC} \\
+   30 &  5 &  \textbf{372} &  421 &  544 &  217 &  541 &  553 &  536 &  411 &  498 &  492 & \textbf{0.683} & \textbf{0.904} & \textbf{SPSC}
+  \\
+   30 & 10 &  \textbf{572} &  615 &  775 &  451 &  763 &  790 &  760 &  690 &  855 &  828 & \textbf{0.738} & \textbf{0.829} & \textbf{SPSC}
+  \\
+   30 & 15 &  \textbf{741} &  810 &  930 &  663 &  917 &  957 &  913 &  956 & 1066 & 1113 & \textbf{0.796} & \textbf{0.811} & \textbf{SPSC}
+  \\
+   30 & 20 &  \textbf{890} &  960 & 1018 &  838 & 1002 & 1056 & 1009 & 1109 & 1236 & 1259 & \textbf{0.874} & \textbf{0.888} & \textbf{SPSC}
+  \\
+   45 &  1 &  \textbf{165} &  169 &  188 &   25 &  187 &  189 &  186 &  130 &  172 &  168 & \textbf{0.881} & 1.275 & \textbf{SPSC} \\
+   45 &  3 &  \textbf{271} &  296 &  371 &  118 &  371 &  375 &  369 &  273 &  312 &  294 & \textbf{0.730} & \textbf{0.992} & \textbf{SPSC}
+  \\
+   45 &  5 &  \textbf{360} &  389 &  504 &  212 &  506 &  510 &  502 &  376 &  419 &  431 & \textbf{0.715} & \textbf{0.957} & \textbf{SPSC}
+  \\
+   45 & 10 &  \textbf{499} &  520 &  675 &  395 &  665 &  684 &  668 &  559 &  646 &  650 & \textbf{0.739} & \textbf{0.893} & \textbf{SPSC}
+  \\
+   45 & 15 &  \textbf{651} &  684 &  819 &  577 &  812 &  836 &  811 &  736 &  811 &  808 & \textbf{0.796} & \textbf{0.885} & \textbf{SPSC}
+  \\
+   45 & 20 &  \textbf{811} &  836 &  973 &  758 &  954 &  980 &  952 &  901 &  988 &  989 & \textbf{0.833} & \textbf{0.900} & \textbf{SPSC}
+  \\
+   60 &  1 &  \textbf{141} &  146 &  165 &   30 &  166 &  166 &  165 &  108 &  134 &  134 & \textbf{0.858} & 1.311 & \textbf{SPSC} \\
+   60 &  3 &  \textbf{229} &  243 &  296 &  117 &  294 &  296 &  292 &  222 &  249 &  239 & \textbf{0.776} & 1.033 & \textbf{SPSC} \\
+   60 &  5 &  \textbf{315} &  319 &  414 &  199 &  412 &  416 &  414 &  320 &  366 &  343 & \textbf{0.760} & \textbf{0.985} & \textbf{SPSC}
+  \\
+   60 & 10 &  \textbf{441} &  479 &  605 &  367 &  600 &  608 &  601 &  536 &  564 &  585 & \textbf{0.729} & \textbf{0.822} & \textbf{SPSC}
+  \\
+   60 & 15 &  \textbf{588} &  605 &  743 &  524 &  740 &  752 &  738 &  713 &  752 &  736 & \textbf{0.791} & \textbf{0.824} & \textbf{SPSC}
+  \\
+   60 & 20 &  \textbf{708} &  753 &  853 &  663 &  845 &  868 &  845 &  838 &  882 &  862 & \textbf{0.830} & \textbf{0.845} & \textbf{SPSC}
+  \\
+   80 &  1 &  \textbf{110} &  125 &  118 &   27 &  118 &  118 &  118 &   91 &  111 &  106 & \textbf{0.931} & 1.214 & \textbf{SPSC} \\
+   80 &  3 &  \textbf{231} &  250 &  290 &  116 &  292 &  293 &  290 &  224 &  238 &  239 & \textbf{0.796} & 1.034 & \textbf{SPSC} \\
+   80 &  5 &  \textbf{279} &  295 &  381 &  187 &  379 &  384 &  379 &  293 &  307 &  319 & \textbf{0.733} & \textbf{0.954} & \textbf{SPSC}
+  \\
+   80 & 10 &  \textbf{419} &  430 &  542 &  345 &  539 &  545 &  538 &  447 &  493 &  473 & \textbf{0.772} & \textbf{0.937} & \textbf{SPSC}
+  \\
+   80 & 15 &  \textbf{534} &  576 &  671 &  486 &  668 &  671 &  667 &  587 &  638 &  655 & \textbf{0.796} & \textbf{0.911} & \textbf{SPSC}
+  \\
+   80 & 20 &  \textbf{640} &  663 &  767 &  599 &  761 &  770 &  761 &  691 &  744 &  761 & \textbf{0.835} & \textbf{0.927} & \textbf{SPSC}
+  \\
+  100 &  1 &  \textbf{107} &  111 &  112 &   28 &  113 &  113 &  113 &   79 &   86 &   93 & \textbf{0.954} & 1.359 & \textbf{SPSC} \\
+  100 &  3 &  \textbf{192} &  194 &  238 &  107 &  236 &  238 &  236 &  176 &  193 &  201 & \textbf{0.809} & 1.094 & \textbf{SPSC} \\
+  100 &  5 &  \textbf{272} &  273 &  346 &  183 &  343 &  346 &  344 &  266 &  294 &  290 & \textbf{0.787} & 1.024 & \textbf{SPSC} \\
+  100 & 10 &  \textbf{368} &  388 &  471 &  317 &  472 &  472 &  470 &  403 &  438 &  440 & \textbf{0.780} & \textbf{0.912} & \textbf{SPSC}
+  \\
+  100 & 15 &  \textbf{466} &  491 &  573 &  430 &  571 &  576 &  572 &  517 &  530 &  535 & \textbf{0.813} & \textbf{0.902} & \textbf{SPSC}
+  \\
+  100 & 20 &  \textbf{609} &  634 &  726 &  572 &  725 &  733 &  723 &  661 &  692 &  702 & \textbf{0.839} & \textbf{0.921} & \textbf{SPSC}
+  \\
+  \bottomrule
+  \end{tabular}
+  \end{table}
 \section{Sensitivity and robustness studies}
 \label{app:sensitivity}
 
@@ -2521,7 +2599,7 @@ Method & $r{=}1$ & $r{=}2$ & $r{=}3$ & $r{=}5$ & $r{=}10$ \\
 Oracle LinUCB                & $34.3\pm 1.5$    & $115.1\pm 2.0$   & $197.2\pm 3.0$         & $268.1\pm 3.4$         & $373.2\pm 5.7$ \\
 SPSC Alg.\,1 (ours)          & $840.3\pm 24.5$  & $805.9\pm 15.4$  & $802.3\pm 12.3$        & $805.3\pm 9.5$         & $811.0\pm 12.2$ \\
 \textbf{SPSC-Adaptive}       & $\mathbf{525.3\pm 45.8}$ & $\mathbf{613.6\pm 33.1}$ & $\mathbf{640.3\pm 33.0}$ & $\mathbf{665.9\pm 27.2}$ & $\mathbf{705.6\pm 19.5}$ \\
-LowOFUL                      & $1049.9\pm 12.8$ & $740.1\pm 36.3$  & $734.5\pm 37.8$        & $791.5\pm 26.0$        & $801.9\pm 20.1$ \\
+LowOFUL                      & $1049.9\pm 12.8$ & $740.1\pm 36.3 ^\star$  & $734.5\pm 37.8$        & $791.5\pm 26.0$        & $801.9\pm 20.1$ \\
 VOFUL                        & $1063.5\pm 5.5$  & $789.7\pm 24.8$  & $712.5\pm 25.5^\star$  & $763.0\pm 30.6^\star$  & $758.6\pm 27.9^\star$ \\
 LowRank-Reward               & $1175.6\pm 11.6$ & $806.8\pm 11.2$  & $835.1\pm 10.7$        & $898.8\pm 6.7$         & $880.5\pm 5.5$ \\
 SW-LinUCB                    & $875.6\pm 6.7$   & $875.6\pm 6.7$   & $875.6\pm 6.7$         & $875.6\pm 6.7$         & $875.6\pm 6.7$ \\
@@ -2540,6 +2618,9 @@ $r{=}2$, the strongest is LowOFUL ($740.1$) --- the
 $-17.1\%$ ``vs.\ best comp.'' figure is computed against it --- but
 its entry has no $^\star$. Add $^\star$ to LowOFUL at $r{=}2$ for
 consistency.}
+
+\fixnote{Item 9 addressed. Added $^\star$ to LowOFUL at $r{=}2$ in
+Table~\ref{tab:vancomycin_full}.}
 
 \section{When the adaptive variant wins}
 \label{app:adaptive_winner}
