@@ -1,7 +1,11 @@
 {
   "permissions": {
     "allow": [
-      "Bash(grep -oE \"\\\\\\\\\\\\\\\\cite[a-z]?\\\\{[^}]*\\\\}\" C:/Users/hamed/Documents/GitHub/lowrank-bandits/conference/paper/conf.tex)"
+      "Bash(grep -oE \"\\\\\\\\\\\\\\\\cite[a-z]?\\\\{[^}]*\\\\}\" C:/Users/hamed/Documents/GitHub/lowrank-bandits/conference/paper/conf.tex)",
+      "Bash(magick -version)",
+      "Bash(python3 -c \"from PIL import Image; print\\('Pillow:', Image.__version__ if hasattr\\(Image, '__version__'\\) else 'ok'\\)\")",
+      "Bash(python3 -c ' *)",
+      "Bash(python3 *)"
     ]
   }
 }

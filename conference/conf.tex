@@ -53,12 +53,12 @@
 \DeclareMathOperator*{\argmax}{arg\,max}
 \DeclareMathOperator{\tr}{tr}
 
-\newtheorem{assumption}{Assumption}
-\newtheorem{theorem}{Theorem}
-\newtheorem{corollary}{Corollary}
-\newtheorem{proposition}{Proposition}
-\newtheorem{lemma}{Lemma}
-\newtheorem{remark}{Remark}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{assumption}[theorem]{Assumption}
+\newtheorem{corollary}[theorem]{Corollary}
+\newtheorem{proposition}[theorem]{Proposition}
+\newtheorem{lemma}[theorem]{Lemma}
+\newtheorem{remark}[theorem]{Remark}
 \newcommand{\cmark}{\ding{51}}
 \newcommand{\xmark}{\ding{55}}
 
@@ -78,42 +78,34 @@
   reward subspace stays fixed; once it moves, the rank advantage
   disappears and existing low-rank methods break. We study what it
   takes to \emph{catch a moving subspace} from scalar rewards.
-  Concretely, we consider linear contextual bandits over a horizon of
-  $T$ rounds, in which the reward parameter $\theta_t \in \R^d$ lies
-  in a piecewise-constant rank-$r$ subspace ($r \ll d$) that
-  \emph{changes} across an unknown number $K$ of segments. The
-  learner sees only a scalar reward
-  $y_t = x_t^\top \theta_t + \varepsilon_t$ for action
-  $x_t \in \cA_t \subset \R^d$ with noise $\varepsilon_t$, and may
-  purchase information by designating rounds as \emph{probes} at
-  per-probe cost $c > 0$. Within each segment $k$, the parameter
-  factorizes as $\theta_t = B_k^\star w_t$ for an orthonormal
-  $B_k^\star \in \R^{d\times r}$ and latent state $w_t \in \R^r$.
-  Existing low-rank bandit methods assume a fixed representation and
-  cannot track changing subspaces; nonstationary methods ignore
-  low-rank structure and pay the full ambient rate
-  $\tilO(d\sqrt{T})$. We first establish an \emph{identification boundary}: three
-  probe-side conditions (known noise variance, bounded state-noise
-  coupling, full-dimensional probe support) are each individually
-  necessary and jointly sufficient for recovering
-  $\range(B_k^\star)$ from quadratic functionals of scalar rewards.
-  We then introduce \textbf{SPSC} (Single-Play Subspace-Calibrated
-  Optimism), an algorithm that interleaves isotropic probes with
-  ridge-UCB exploitation \emph{inside} the learned $r$-dimensional
-  subspace, using a quadratic-measurement identity to recover the
-  active subspace from single-play scalar rewards. The costed dynamic
-  regret satisfies
-  $\tilO(r\sqrt{T})+\tilO(T^{2/3})+O(W V_{\rm in})$, where $W$ is the
-  exploitation window and
-  $V_{\rm in}$
-  is the within-segment path variation, replacing the ambient
-  $d\sqrt{T}$ dependence with intrinsic rank $r$. A CUSUM-style
-  adaptive variant removes the oracle-boundary assumption at the same
-  leading rate. On eleven benchmarks (a synthetic phase-transition grid, six
-  UCI/MovieLens environments, two semi-synthetic clinical datasets,
-  and two additional stress tests), SPSC attains regret reductions
-  over state-of-the-art nonstationary and low-rank baselines whenever
-  $d-r\gtrsim T^{1/6}$, matching the analytical crossover prediction.
+  Concretely, we consider linear contextual bandits over $T$ rounds
+  where the reward parameter factorizes as $\theta_t = B_k^\star w_t$
+  inside a piecewise-constant orthonormal rank-$r$ subspace
+  $B_k^\star\in\R^{d\times r}$ with latent state $w_t\in\R^r$ that
+  changes across an unknown number $K$ of segments; the learner
+  observes a scalar reward $y_t = x_t^\top\theta_t + \varepsilon_t$
+  for action $x_t\in\cA_t\subset\R^d$ and noise $\varepsilon_t$, and
+  may purchase information by designating rounds as \emph{probes} at
+  per-probe cost $c>0$. Fixed-representation low-rank methods cannot track changing
+  subspaces; nonstationary methods ignore low-rank structure and pay
+  the ambient rate $\tilO(d\sqrt T)$. We first establish an
+  \emph{identification boundary}: three probe-side conditions (known
+  noise variance, bounded state-noise coupling, full-dimensional probe
+  support) are individually necessary and jointly sufficient for
+  recovering $\range(B_k^\star)$ from quadratic functionals of scalar
+  rewards. We then introduce \textbf{SPSC} (Single-Play
+  Subspace-Calibrated Optimism), which interleaves isotropic probes
+  with ridge-UCB exploitation \emph{inside} the learned $r$-dimensional
+  subspace via a quadratic-measurement identity. The costed dynamic
+  regret is $\tilO(r\sqrt T)+\tilO(T^{2/3})+O(WV_{\rm in})$, with $W$
+  the exploitation window and $V_{\rm in}$ the within-segment path
+  variation---replacing the ambient $d\sqrt T$ rate with intrinsic
+  rank $r$. A CUSUM-style adaptive variant removes the
+  oracle-boundary assumption at the same leading rate. On eleven
+  benchmarks spanning synthetic, UCI/MovieLens, clinical, and
+  production-log data, SPSC beats state-of-the-art nonstationary and
+  low-rank baselines whenever $d-r\gtrsim T^{1/6}$, matching the
+  analytical crossover.
 
 
 \end{abstract}
@@ -493,14 +485,13 @@ threshold $q^\star=O(\log(KdT/\delta)/\lambda_{\min}^2)$ are charged
 trivially). Then with probability at least $1-\delta$ and for
 fixed $K$,
 \begin{equation}
-\boxed{\;
-\DynReg_T^{(c)} \;\le\; \tilO\!\bigl(r\sqrt{T}\bigr) \;+\; \tilO\!\bigl(T^{2/3}\bigr) \;+\; O\!\bigl(W V_{\rm in}\bigr).\;}
+\DynReg_T^{(c)} \;\le\; \tilO\!\bigl(r\sqrt{T}\bigr) \;+\; \tilO\!\bigl(T^{2/3}\bigr) \;+\; O\!\bigl(W V_{\rm in}\bigr).
 \label{eq:main_bound}
 \end{equation}
 The full constants are
 $\DynReg_T^{(c)} \le \tilO(r\sqrt{KT}) + \tilO(A^{1/3}B^{2/3}K^{1/3}T^{2/3}) + O(R_\cA W V_{\rm in}) + \tilO(K^{2/3}T^{1/3}/\lambda_{\min}^2)$,
 with $A:=(R_\cA+R_Q)S_w+c$,
-$B:=C R_\cA S_w(1+R_\cA\sqrt{r/\lambda})\sqrt{\log(KdT/\delta)}$,
+$B:=C R_\cA S_w(1+R_\cA\sqrt{W/\lambda})\sqrt{\log(KdT/\delta)}$,
 $R_Q:=\sup_{u\in\mathrm{supp}(Q)}\|u\|_2$ ($R_Q=\sqrt d$ for
 scaled-sphere; $R_Q\le R_\cA$ if probes lie inside the action set);
 the $\tilO(K^{2/3}T^{1/3}/\lambda_{\min}^2)$ summand is the burn-in
@@ -523,7 +514,7 @@ Lem.~\ref{lem:G_unbiased_conf} is a scaled identity, hence preserves
 the eigenvectors of $\bar M_k^{\mathrm{probe}}$. Davis--Kahan applied
 with the biased mean as reference removes the
 $\Delta_\sigma$ floor at population level, so
-Theorem~\ref{thm:spsc_regret} holds with the boxed bound,
+Theorem~\ref{thm:spsc_regret} holds with the displayed bound,
 $\lambda_{\min}$ replaced by $\lambda_{\min}-\delta_\sigma/d$ in the
 constants. Choosing $N\gtrsim T^{2/3}/d^2$ yields
 $\delta_\sigma/d\ll\lambda_{\min}$ with high probability, so the
@@ -563,7 +554,13 @@ uniformly in $t$ via a prefix concentration argument
 
 The leading $\tilO(r\sqrt{T})$ term beats the ambient baseline
 $\tilO(d\sqrt{T})$ whenever $r \ll d$; the $\tilO(T^{2/3})$ term is
-the price of acquiring the subspace information online. Solving
+the price of acquiring the subspace information online. The constant
+$B$ depends on the exploitation window $W$ as $\sqrt W$; for $W$
+treated as a problem parameter (the setting throughout this paper,
+consistent with $W\le\min_k\ell_k$ on $\ell_k$-bounded segments), this
+is absorbed into the constants and the $\tilO(T^{2/3})$ rate is
+preserved. If $W$ is allowed to scale with $T$, the second term
+becomes $\tilO(W^{1/3}T^{2/3})$. Solving
 $r\sqrt{T}\lesssim T^{2/3}$ gives a simple rule of thumb: SPSC tends
 to outperform ambient LinUCB whenever $d-r\gtrsim T^{1/6}$. The
 experiments in \S\ref{sec:experiments} show a crossover
@@ -593,30 +590,30 @@ unchanged. Proof in \S\ref{app:proof_adaptive_rank}.
 \section{Experiments}
 \label{sec:experiments}
 
-We evaluate SPSC and SPSC-Adaptive on eleven benchmarks (synthetic
-phase-transition grid; UCI/MovieLens: Covertype, Pendigits, Satimage,
-MNIST, Fashion-MNIST, MovieLens; clinical: Warfarin, Vancomycin;
-Russac small-$d$ stress test, \S\ref{sec:exp_russac}; Open Bandit
-production logs, \S\ref{sec:exp_openbandit}). We compare against
-eleven baselines: LinUCB~\citep{abbasi2011improved},
-D-LinUCB~\citep{russac2019weighted},
+We evaluate SPSC and SPSC-Adaptive on eleven benchmarks: a synthetic
+phase-transition grid; UCI/MovieLens (Covertype, Pendigits, Satimage,
+MNIST, Fashion-MNIST, MovieLens); clinical (Warfarin, Vancomycin);
+the Russac small-$d$ stress test (\S\ref{sec:exp_russac}); and Open
+Bandit production logs (\S\ref{sec:exp_openbandit}). Baselines:
+LinUCB~\citep{abbasi2011improved}, D-LinUCB~\citep{russac2019weighted},
 SW-LinUCB~\citep{cheung2019learning}, Restart-LinUCB, LowRank-Reward,
 LowOFUL~\citep{jun2019bilinear}, VOFUL~\citep{kim2022improved}, LinTS,
-SW-LinTS, and adapted BOSS~\citep{duong2024beyond} and
-Jedra~\citep{jedra2024low}; Oracle-LinUCB (given the true
-subspace) is an optimistic reference. All curves report means over
-at least 10 seeds with $\pm 1$\,SE bands.
+SW-LinTS, and adapted BOSS~\citep{duong2024beyond}/Jedra~\citep{jedra2024low};
+Oracle-LinUCB (true subspace) is an optimistic reference. Curves are
+means over $\ge 10$ seeds with $\pm 1$\,SE bands.
 
 \subsection{Phase-transition boundary}
 \label{sec:exp_phase}
 
-The theory predicts a crossover at $d - r \asymp T^{1/6}$: SPSC should
-win above this boundary and ambient LinUCB below it. We verify this on a piecewise low-rank LDS benchmark at $T{=}5{,}000$, sweeping
-$(d,r)\in\{5,10,20,30,45,60,80,100\}\times\{1,3,5,10,15,20\}$ restricted to $r<d$ (40 valid cells), with $K{=}10$ segments, $\sigma_\varepsilon{=}0.3$, spectral radius $0.99$, $40$ actions, probe cost $c{=}0.1$.
+Theory predicts a crossover at $d - r \asymp T^{1/6}$: SPSC wins above
+it, ambient LinUCB below. We verify on a piecewise low-rank LDS at
+$T{=}5{,}000$, sweeping $(d,r)\in\{5,10,20,30,45,60,80,100\}\times\{1,3,5,10,15,20\}$
+with $r{<}d$ (40 cells), $K{=}10$, $\sigma_\varepsilon{=}0.3$,
+spectral radius $0.99$, $40$ actions, probe cost $c{=}0.1$.
 
 \begin{figure}[!htbp]
   \centering
-  \includegraphics[width=0.86\textwidth]{experiment1_synthetic_phase.png}
+  \includegraphics[width=0.98\textwidth]{experiment1_synthetic_phase.png}
   \caption{\textbf{Phase-transition boundary.} SPSC/LinUCB costed-regret
   ratio across the $(d,r)$ grid. The crossover $d-r=T^{1/6}$ (dashed)
   separates SPSC-wins (ratio $<1$) from ambient-wins; per-rank curves
@@ -631,19 +628,17 @@ $d-r\gtrsim T^{1/6}$, ambient LinUCB otherwise.
 \subsection{Real-data multi-baseline comparison}
 \label{sec:exp_real}
 
- Six real-data benchmarks recast as piecewise low-rank bandits, on a
-  $(d,r)$-grid: UCI \textbf{Covertype} ($K{=}4$, $T{=}10{,}000$),
-  \textbf{Pendigits} and \textbf{Satimage} ($K{=}10$, $T{=}5{,}000$),
-  pixelized \textbf{MNIST} and \textbf{Fashion-MNIST} ($K{=}10$,
-  $T{=}5{,}000$, random-projection features), and
-  \textbf{MovieLens-100K} with genuine user ratings ($K{=}10$,
-  $T{=}5{,}000$). Segments are class or user-subset shifts; all runs
-  use 10 seeds. The first five have cluster-induced low-rank
-  structure; MovieLens is only approximately low-rank under the
-  rank-$d$ SVD features of \S\ref{app:setup} and serves as a
-  robustness stress test. Table~\ref{tab:realdata} reports SPSC vs.\
-  LinUCB and vs.\ best non-oracle competitor on representative cells;
-  per-cell tables (mean\,$\pm$\,SE, all baselines) in
+Six real-data benchmarks recast as piecewise low-rank bandits on a
+  $(d,r)$-grid: UCI \textbf{Covertype} ($K{=}4$, $T{=}10{,}000$);
+  \textbf{Pendigits}, \textbf{Satimage}, pixelized \textbf{MNIST} and
+  \textbf{Fashion-MNIST} (random-projection features), and
+  \textbf{MovieLens-100K} with genuine user ratings (all $K{=}10$,
+  $T{=}5{,}000$, 10 seeds). Segments are class or user-subset shifts.
+  The first five have cluster-induced low-rank structure; MovieLens
+  is only approximately low-rank (rank-$d$ SVD features,
+  \S\ref{app:setup}) and serves as a robustness stress test.
+  Table~\ref{tab:realdata} reports SPSC vs.\ LinUCB and vs.\ best
+  non-oracle competitor on representative cells; per-cell tables in
   Appendix~\ref{app:percell}.
 
 \begin{table}[!htbp]
@@ -683,20 +678,10 @@ $d{\ge}55$ and $r{\ge}10$.}
 \label{fig:pendigits-regime}
 \end{figure}
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.90\textwidth]{experiment_real_satimage_double_rings.png}
-\caption{\textbf{Satimage operating-regime sunburst.} Regret ratios
-across the $(d,r)$ grid.
-Blue cells (ratio ${<}1$) indicate SPSC wins; red cells indicate
-losses. (a) SPSC vs.\ LinUCB; (b) SPSC vs.\ best non-oracle
-competitor.}
-\label{fig:satimage-sunburst}
-\end{figure}
-
-At the best cell $(d{=}105, r{=}10)$, SPSC-Adaptive beats LinUCB by
-$-47\%$ on Pendigits and $-68\%$ on Satimage (where the closest
-competitor, VOFUL, is still $+53\%$ above SPSC-Adaptive); at
+At $(d{=}105, r{=}10)$, SPSC-Adaptive beats LinUCB by $-47\%$ on
+Pendigits and $-68\%$ on Satimage (closest competitor VOFUL is $+53\%$
+above SPSC-Adaptive; operating-regime sunburst in
+Fig.~\ref{fig:satimage-sunburst}, App.~\ref{app:percell}); at
 $(d{=}105, r{=}20)$ on Covertype it beats Restart-LinUCB by $-15\%$.
 Non-low-rank baselines are by construction $r$-insensitive.
 
@@ -704,26 +689,23 @@ Non-low-rank baselines are by construction $r$-insensitive.
 \label{sec:exp_warfarin}
 
 
-\paragraph{Warfarin.} Warfarin dosing depends on patient demographics,
+\paragraph{Warfarin.} Warfarin dosing depends on demographics,
 genotype (VKORC1, CYP2C9), and clinical
-indicators~\citep{international2009estimation}. The bandit
-environment is calibrated to the IWPC cohort
-($\sim$5,700 patients, $d{=}93$, $K{=}8$ subpopulation segments,
-$T{=}5{,}000$, $10$ seeds; reward $=$ negative deviation from
-therapeutic dose). Table~\ref{tab:warfarin_body} (representative
-cell $r{=}3$) shows SPSC-Adaptive cuts regret by $-67.3\%$ vs.\
-LinUCB (more detail in Appendix~\ref{app:warfarin_ablation}).
+indicators~\citep{international2009estimation}. We calibrate to the
+IWPC cohort (${\sim}5{,}700$ patients, $d{=}93$, $K{=}8$ segments,
+$T{=}5{,}000$, 10 seeds; reward $=$ negative deviation from
+therapeutic dose). Table~\ref{tab:warfarin_body} ($r{=}3$):
+SPSC-Adaptive cuts regret by $-67.3\%$ vs.\ LinUCB
+(Appendix~\ref{app:warfarin_ablation}).
 
-
-\paragraph{Vancomycin.} Using the AUC-targeted
-\citet{rybak2020therapeutic} dosing protocol
-($d{=}93$, $K{=}8$, $T{=}5{,}000$, 10 seeds; Cockcroft-Gault
+\paragraph{Vancomycin.} With the AUC-targeted
+\citet{rybak2020therapeutic} protocol (Cockcroft-Gault
 $\mathrm{CrCl}\to\mathrm{CL}_{\mathrm{vanco}}=0.04\,\mathrm{CrCl}$,
-daily dose at $\mathrm{AUC}_{24}=500$),
-Table~\ref{tab:vancomycin_body} sweeps $r\in\{1,2,3,5,10\}$:
-SPSC-Adaptive cuts regret by $36.4\%$ at $r{=}1$ and $14.5$--$25.7\%$
-at $r\in\{2,3,5,10\}$ vs.\ LinUCB, beating every non-oracle baseline
-at every rank. Per-rank detailed tables (all 10 baselines) are in
+daily dose at $\mathrm{AUC}_{24}{=}500$; $d{=}93$, $K{=}8$,
+$T{=}5{,}000$, 10 seeds), Table~\ref{tab:vancomycin_body} sweeps
+$r\in\{1,2,3,5,10\}$: SPSC-Adaptive cuts regret by $36.4\%$ at $r{=}1$
+and $14.5$--$25.7\%$ for $r\in\{2,3,5,10\}$ vs.\ LinUCB, beating every
+non-oracle baseline at every rank. Per-rank tables in
 Appendix~\ref{app:vancomycin_full}.
 
 \begin{table}[t]
@@ -774,41 +756,36 @@ $r$ & SPSC-Adaptive  & vs.\ LinUCB & vs.\ best comp.\\
 \subsection{Standard nonstationary benchmark}
 \label{sec:exp_russac}
 
-On the standard small-$d$ stress test ($d{=}2$, $r{=}1$, $K{=}4$,
-$T{=}6{,}000$, 50 arms, 30 seeds) following the setting of \citep{russac2019weighted}, SPSC reduces regret by
-$\mathbf{-46.5\%}$ vs.\ D-LinUCB, $-34.8\%$ vs.\ SW-LinUCB, and
-$\mathbf{-51.6\%}$ vs.\ stationary OFUL (which itself trails D-LinUCB
-by $+11.5\%$ on this nonstationary benchmark). Full table in
+On the small-$d$ stress test of \citet{russac2019weighted}
+($d{=}2$, $r{=}1$, $K{=}4$, $T{=}6{,}000$, 50 arms, 30 seeds), SPSC
+reduces regret by $\mathbf{-46.5\%}$ vs.\ D-LinUCB, $-34.8\%$ vs.\
+SW-LinUCB, and $\mathbf{-51.6\%}$ vs.\ stationary OFUL (itself
+$+11.5\%$ above D-LinUCB here). Full table in
 Appendix~\ref{app:sota_compare}.
 
 \subsection{Real exploration logs: Open Bandit Pipeline (ZOZO)}
 \label{sec:exp_openbandit}
 
-The Open Bandit Dataset \citep{saito2020open} ships production
-exploration logs (logged action, propensity, 0/1 click from
-ZOZOTOWN; random-policy slice replayed as a bandit, $T{=}5{,}000$,
-$K{=}10$, 10 seeds). The data is real and only approximately
-low-rank, so this is a stress test of \emph{robustness}, not a
-setting where the rank-$r$ assumption holds exactly. SPSC retains
-an edge in the regime predicted by the crossover and does not
-degrade outside it: at $d{=}55$, $r{=}5$, SPSC reaches
-$\mathbf{83\pm 2}$ vs.\ LinUCB's $102\pm 1$ ($-18.8\%$) with
-SPSC-Adaptive at $-10.9\%$. The main finding is that SPSC neither
-breaks nor over-claims on weakly-low-rank production data. Tables in
-Appendix~\ref{app:percell}.
+The Open Bandit Dataset~\citep{saito2020open} ships production
+exploration logs (random-policy ZOZOTOWN slice, $T{=}5{,}000$,
+$K{=}10$, 10 seeds); only approximately low-rank, so this is a
+\emph{robustness} stress test rather than a setting where the rank-$r$
+assumption holds exactly. At $d{=}55$, $r{=}5$, SPSC reaches
+$\mathbf{83\pm 2}$ vs.\ LinUCB's $102\pm 1$ ($-18.8\%$); SPSC-Adaptive
+$-10.9\%$. SPSC neither breaks nor over-claims on weakly-low-rank
+production data. Tables in Appendix~\ref{app:percell}.
 
 \subsection{Comparison with adapted stationary low-rank methods}
 \label{sec:exp_boss_jedra}
 
-Stationary low-rank methods are not directly comparable with SPSC.
-To provide a best-effort comparison, we adapt
-BOSS~\citep{duong2024beyond} and Jedra~\citep{jedra2024low} by
-restarting them at every true segment boundary (an oracle advantage
-we do not give SPSC); setup detail in Appendix~\ref{app:boss_jedra_detail}.
-Table~\ref{tab:boss_jedra_grid} shows SPSC wins all eight cells by
-$6$--$20\%$; the lead is largest at small $d$ ($-16$ to $-20\%$ at
-$d{=}55$) and narrows to $6$--$8\%$ at $d{=}200$. SPSC-Adaptive
-without oracle restarts also beats both methods on every cell.
+For a best-effort comparison with stationary low-rank methods, we
+adapt BOSS~\citep{duong2024beyond} and Jedra~\citep{jedra2024low} by
+restarting at every true segment boundary---an oracle advantage we do
+not give SPSC (setup in Appendix~\ref{app:boss_jedra_detail}).
+Table~\ref{tab:boss_jedra_grid}: SPSC wins all eight cells by
+$6$--$20\%$, with the lead largest at small $d$ ($-16$ to $-20\%$ at
+$d{=}55$) and narrowing to $6$--$8\%$ at $d{=}200$. SPSC-Adaptive (no
+oracle) also beats both on every cell.
 
 \begin{table}[!htbp]
 \centering
@@ -834,12 +811,11 @@ $d$ & $r$ & SPSC Alg.\,1 & SPSC-Adaptive & BOSS (oracle) & Jedra (oracle) & SPSC
 \end{tabular}
 \end{table}
 
-\paragraph{Robustness of SPSC-Adaptive.} A detailed comparison of the
-two SPSC variants under correct vs.\ misspecified oracle boundaries
-is deferred to Appendix~\ref{app:adaptive_winner}; the key finding is
-that SPSC-Adaptive is robust to false-alarm boundaries, while
-Alg.~\ref{alg:spsc} (which trusts whatever oracle it is given)
-degrades monotonically as the oracle is corrupted.
+\paragraph{Robustness of SPSC-Adaptive.} Detailed comparison under
+correct vs.\ misspecified oracle boundaries is in
+Appendix~\ref{app:adaptive_winner}: SPSC-Adaptive is robust to
+false-alarm boundaries, while Alg.~\ref{alg:spsc} degrades
+monotonically as the oracle is corrupted.
 
 \subsection{Rank misspecification, probe-rate sensitivity, and take-away}
 \label{sec:exp_sensitivity}
@@ -1567,7 +1543,7 @@ event of Lem.~\ref{lem:self_norm} holds uniformly over $E_k$;
 (iii) $\|\theta_t\|\le S_w$, $\|x\|\le R_\cA$ for $x\in\cA_t$.
 Suppose Alg.~\ref{alg:spsc} uses an optimism correction satisfying
 \begin{equation}
-\gamma_t \;\ge\; C_\gamma S_w\Bigl(1+R_\cA\sqrt{rL_W/\lambda}\Bigr)\varepsilon_{k,t-1}
+\gamma_t \;\ge\; C_\gamma S_w\Bigl(1+R_\cA\sqrt{WL_W/\lambda}\Bigr)\varepsilon_{k,t-1}
 \;+\; C_\gamma R_\cA V_{k,t}(W),
 \label{eq:gamma_choice}
 \end{equation}
@@ -1577,7 +1553,7 @@ Then on the same event,
 \begin{equation}
 \sum_{t\in E_k}\bigl(\max_{x\in\cA_t}x^\top\theta_t-x_t^\top\theta_t\bigr)
 \;\le\; \tilO(r\sqrt{n_k})
-+ C_{\rm tv}R_\cA S_w\Bigl(1+R_\cA\sqrt{r/\lambda}\Bigr)\sum_{t\in E_k}\varepsilon_{k,t-1}
++ C_{\rm tv}R_\cA S_w\Bigl(1+R_\cA\sqrt{W/\lambda}\Bigr)\sum_{t\in E_k}\varepsilon_{k,t-1}
 + C R_\cA W V_k^{\rm in}.
 \label{eq:F2pp}
 \end{equation}
@@ -1606,19 +1582,23 @@ On the self-normalized event of Lem.~\ref{lem:self_norm} the noise+ridge contrib
 $\le \beta_t^{(r,W)}=\tilO(\sqrt r)$.
 
 For the deterministic subspace-bias part, let $b_t^{\rm sub}\in\R^{|\cW_t|}$
-have entries $x_s^\top(I-P_t)\theta_s$. Since
-$\sum_{s\in\cW_t}z_t(x_s)z_t(x_s)^\top\preceq\widetilde V_t$,
+have entries $x_s^\top(I-P_t)\theta_s$, with
+$\|b_t^{\rm sub}\|_\infty\le R_\cA S_w\varepsilon_{k,t-1}$. Let $Z_t$ be
+the matrix with rows $z_t(x_s)^\top$, $s\in\cW_t$. Since
+$\sum_{s\in\cW_t}z_t(x_s)z_t(x_s)^\top = Z_t^\top Z_t\preceq\widetilde V_t$,
+$\|\widetilde V_t^{-1/2}Z_t^\top\|_\op\le 1$, hence
 \[
 \Bigl\|\sum_{s\in\cW_t}z_t(x_s)b_{s,t}^{\rm sub}\Bigr\|_{\widetilde V_t^{-1}}^2
-\le \|b_t^{\rm sub}\|_\infty^2\,\tr\bigl(Z_t\widetilde V_t^{-1}Z_t^\top\bigr)
-\le R_\cA^2 S_w^2\varepsilon_{k,t-1}^2\cdot r,
+= \|\widetilde V_t^{-1/2}Z_t^\top b_t^{\rm sub}\|_2^2
+\le \|b_t^{\rm sub}\|_2^2 \le |\cW_t|\,\|b_t^{\rm sub}\|_\infty^2
+\le W R_\cA^2 S_w^2\varepsilon_{k,t-1}^2,
 \]
 so the corresponding $\widetilde V_t^{-1}$-norm is at most
-$R_\cA S_w\sqrt r\,\varepsilon_{k,t-1}$. Therefore for any $x$,
+$R_\cA S_w\sqrt W\,\varepsilon_{k,t-1}$. Therefore for any $x$,
 $|z_t(x)^\top\widetilde V_t^{-1}\sum_s z_t(x_s)b_{s,t}^{\rm sub}|
-\le R_\cA S_w\sqrt r\,\varepsilon_{k,t-1}\,w_t(x)$, and since
+\le R_\cA S_w\sqrt W\,\varepsilon_{k,t-1}\,w_t(x)$, and since
 $w_t(x)\le\|x\|/\sqrt\lambda$, this is bounded by
-$R_\cA S_w\sqrt{r/\lambda}\,\varepsilon_{k,t-1}\|x\|$---a quantity
+$R_\cA S_w\sqrt{W/\lambda}\,\varepsilon_{k,t-1}\|x\|$---a quantity
 dominated by the $\gamma_t\|x\|$ correction in
 \eqref{eq:gamma_choice}.
 The drift-bias part contributes $\le C R_\cA W V_k^{\rm in}$ in total
@@ -1629,7 +1609,7 @@ By the optimism index in Alg.~\ref{alg:spsc}, with
 $x_t^\star=\arg\max x^\top\theta_t$, the instantaneous regret obeys
 \[
 \Delta_t \le 2\beta_t^{(r,W)}w_t(x_t)
-+ C_{\rm tv}R_\cA S_w\Bigl(1+R_\cA\sqrt{r/\lambda}\Bigr)\varepsilon_{k,t-1}
++ C_{\rm tv}R_\cA S_w\Bigl(1+R_\cA\sqrt{W/\lambda}\Bigr)\varepsilon_{k,t-1}
 + d_t,
 \]
 where $\sum_t d_t\le C R_\cA W V_k^{\rm in}$.
@@ -1714,11 +1694,11 @@ By Lemmas~\ref{lem:F2pp} and~\ref{lem:cumulative_interleaved_error},
 \mathrm{Reg}_{\rm exploit}(\cI_k)
 \le \tilO(r\sqrt{n_k})
 + B\,\frac{\ell_k}{\sqrt{m_k}}
-+ C R_\cA S_w\Bigl(1+R_\cA\sqrt{r/\lambda}\Bigr)\frac{q^\star\ell_k}{m_k}
++ C R_\cA S_w\Bigl(1+R_\cA\sqrt{W/\lambda}\Bigr)\frac{q^\star\ell_k}{m_k}
 + C R_\cA W V_k^{\rm in},
 \]
 absorbing constants and logs into
-$B=C R_\cA S_w(1+R_\cA\sqrt{r/\lambda})\sqrt{\log(2KdT/\delta)}$.
+$B=C R_\cA S_w(1+R_\cA\sqrt{W/\lambda})\sqrt{\log(2KdT/\delta)}$.
 
 \paragraph{Per-segment bound.} Combining,
 \begin{equation}
@@ -2117,6 +2097,16 @@ variant beats every non-oracle baseline are highlighted
 
 \input{appendix_tables.tex}
 
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=0.98\textwidth]{experiment_real_satimage_double_rings.png}
+\caption{\textbf{Satimage operating-regime sunburst.} Regret ratios
+across the $(d,r)$ grid. Blue cells (ratio ${<}1$) indicate SPSC wins;
+red cells indicate losses. (a) SPSC vs.\ LinUCB; (b) SPSC vs.\ best
+non-oracle competitor.}
+\label{fig:satimage-sunburst}
+\end{figure}
+
 \paragraph{Reading the tables.}
 Three qualitative patterns are consistent across datasets.
 (i) \emph{Rank-insensitive competitors.} LinUCB, SW-LinUCB, D-LinUCB
@@ -2271,7 +2261,7 @@ mild overestimation is a safe default.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.62\textwidth]{experiment_rank_misspec.png}
+\includegraphics[width=0.85\textwidth]{experiment_rank_misspec.png}
 \caption{Rank misspecification robustness (Covertype, $d{=}155$,
 $r^\star{=}10$). SPSC beats LinUCB for $r\in[15,50]$; sweet spot at
 $r{=}30$ ($10\%$ improvement).}
@@ -2518,7 +2508,7 @@ identification.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.82\textwidth]{ablation_warfarin_random_subspace.png}
+\includegraphics[width=0.95\textwidth]{ablation_warfarin_random_subspace.png}
 \caption{\textbf{Warfarin random-subspace ablation.} SPSC's learned
 subspace vs.\ a fresh random rank-$r$ projection at every segment.
 Half of the gap to LinUCB is dimensionality reduction; the other half
@@ -2604,7 +2594,7 @@ boundaries, the picture reverses sharply.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.76\textwidth]{experiment_synthetic_extended.png}
+\includegraphics[width=0.95\textwidth]{experiment_synthetic_extended.png}
 \caption{\textbf{SPSC-Alg.\,1 vs.\ SPSC-Adaptive.} Top: $d$-sweep
 with correct oracle boundaries. Bottom: oracle quality. With
 $K_{\mathrm{real}}{=}5$ true boundaries, Alg.~\ref{alg:spsc} is fed
