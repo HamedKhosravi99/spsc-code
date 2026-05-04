@@ -18,8 +18,6 @@ and an extended experimental library, lives in a sibling repository.
 ├── checklist.tex            # NeurIPS responsibility checklist
 ├── neurips_2026.sty         # NeurIPS 2026 style file
 ├── references.bib           # bibliography
-├── cells.json               # synthetic / real-data cell statistics
-├── build_appendix_tables.py # generates appendix_tables.tex from cells.json
 ├── code/                    # experiment scripts (Python)
 │   ├── algorithm.py         #   SPSC and SPSC-Adaptive implementations
 │   ├── environments/        #   benchmark environments
@@ -57,8 +55,7 @@ python code/experiment_rank_misspec.py
 # (and so on for the remaining experiment_*.py scripts)
 ```
 
-Each script writes per-seed JSON results into `code/results/`, which
-`build_appendix_tables.py` consumes to regenerate `appendix_tables.tex`.
+Each script writes per-seed JSON results into `code/results/`.
 
 ## Highlights
 
