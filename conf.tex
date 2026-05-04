@@ -144,15 +144,19 @@ $x_t\in\cA_t\subset\R^d$ with noise $\varepsilon_t\in\R$, so the
 low-rank structure can neither be read off nor refreshed from direct
 observations of $\theta_t$.
 
-Both ingredients of this problem are individually documented in
-real deployments. Production-scale recommendation and ad-ranking
-systems use latent low-rank representations whose stability across
-natural item lifecycles is a known operational
-concern~\citep{zheng2025enhancing}. On the clinical side, a recent
-re-analysis of the IWPC warfarin cohort our experiments use
-identifies three latent patient subgroups whose dose--response
-coefficients flip sign across cohort boundaries~\citep{liu2025change},
-direct evidence that the rank-$r$ effective subspace is not constant
+Both ingredients of this problem appear in real bandit deployments.
+Spotify's homepage contextual bandit, deployed at scale, explicitly
+targets daily shifts in user intent across user
+cohorts~\citep{feijer2025calibrated}, production evidence that bandit
+decisions in deployment face moving structure rather than stationary
+parameters. The Open Bandit Dataset~\citep{saito2020open}, a public
+benchmark we evaluate on, ships scalar bandit feedback collected
+across multiple ad campaigns at ZOZOTOWN. In our clinical benchmarks,
+the IWPC warfarin cohort itself exhibits cohort-segmented predictive
+structure: a recent re-analysis identifies three latent patient
+subgroups whose dose--response coefficients flip sign across
+boundaries~\citep{liu2025change}, demonstrating in the very dataset
+we benchmark on that the rank-$r$ effective subspace is not constant
 across the population. What is absent is a combined treatment in
 linear contextual bandits: rewards living on a low-rank subspace
 whose identity shifts at unknown change points.
