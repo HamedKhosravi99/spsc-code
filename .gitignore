@@ -21,3 +21,8 @@ build/
 # OS
 .DS_Store
 Thumbs.db
+
+# Tooling / local-only
+.claude/
+**/.jester_cache/
+figures/_originals_backup/
