@@ -248,14 +248,14 @@ fixed $K$, and suppressing polylog factors,
 $\DynReg_T^{(c)}\le\tilO(r\sqrt{T})+\tilO(T^{2/3})+O(WV_{\rm in})$,
 replacing the ambient $d\sqrt{T}$ rate with the intrinsic rank.
 \item \textbf{Experiments.} We evaluate SPSC on eleven benchmarks (a
-synthetic phase-transition grid, six UCI/MovieLens environments,
+synthetic phase-transition grid, five UCI environments plus MovieLens,
 two semi-synthetic clinical datasets, the Russac small-$d$ benchmark,
-and Open Bandit production logs) against 11 baselines (LinUCB,
+and Open Bandit production logs) against eleven baselines (LinUCB,
 D-LinUCB, SW-LinUCB, Restart-LinUCB, LowOFUL, VOFUL, LowRank-Reward,
 LinTS, SW-LinTS, and two adapted stationary low-rank methods BOSS
 and Jedra). SPSC delivers regret reductions whenever
 $d-r\gtrsim T^{1/6}$, qualitatively consistent with the bound. A
-direct \emph{necessity} stress test (App.~\ref{app:robustness_abc}C)
+direct \emph{necessity} stress test (App.~\ref{app:robustness_abc}, part C)
 restricts probe coverage to a proper subspace and observes the
 $\Omega(T)$ regret blow-up predicted by
 Proposition~\ref{prop:nonid_c}, confirming that the third
@@ -327,11 +327,11 @@ truncation at $L=\sqrt{2d\log(2T/\delta)}$
 \end{remark}
 
 \paragraph{Quadratic measurement identity.}
-Let $\hat\sigma^2$ be the algorithm's estimate of the noise variance
-and define the centered probe statistic $s_t := y_t^2 - \hat\sigma^2$
+Let $\widehat\sigma^2$ be the algorithm's estimate of the noise variance
+and define the centered probe statistic $s_t := y_t^2 - \widehat\sigma^2$
 on every probe round $t\in\cTprobe$. Under the probe-noise
 assumptions of \S\ref{sec:setting}, for
-$\delta_\sigma := \hat\sigma^2-\sigma_\varepsilon^2$,
+$\delta_\sigma := \widehat\sigma^2-\sigma_\varepsilon^2$,
 \begin{equation}
 \E[s_t \mid \cH_{t-1},u_t]
   = u_t^\top \widetilde{M}_t u_t + 2 u_t^\top
@@ -370,7 +370,8 @@ with bias $\widetilde B_t = -(\delta_\sigma/d)\,I_d$ exactly on
 scaled-sphere probes, hence $\|\widetilde B_t\|_\op = |\delta_\sigma|/d$
 (Lemma~\ref{lem:G_unbiased_conf}). Averaging lifted samples across
 the probe rounds of segment $k$ yields
-$\widehat M_k := m_k^{-1}\sum_{t\in\cT_k} G_t$, whose top-$r$
+$\widehat M_k := m_k^{-1}\sum_{t\in\cT_k} G_t$ (with $\cT_k:=\cTprobe\cap\cI_k$
+the probe rounds in segment $k$, $m_k:=|\cT_k|$), whose top-$r$
 eigenvectors form $\widehat U_k\in\R^{d\times r}$ with
 $\|\widehat P_k - P_k^\star\|_\op \le C_{\mathrm{sub}}\sqrt{\log(d/\delta)/m_k}$
 (Corollary~\ref{cor:projector_conf} below). The variance
@@ -464,9 +465,9 @@ $S_t := \|\widehat M_t^{\mathrm{recent}} - \widehat M_t^{\mathrm{past}}\|_\op$
 exceeds a calibrated threshold $b$. The threshold is chosen so that,
 with probability $1-\delta_{\mathrm{FA}}$, no false alarm occurs across
 the horizon, while every true change of size $\Delta_k \ge 2b$ is
-detected within delay $D_{\max} = 2n/\mu + \tau_{\mathrm{burn}}$. Full
-pseudocode, tuning, and the CUSUM analysis are in
-Appendix~\ref{app:adaptive_algo}.
+detected within a bounded delay $D_{\max}$ (specified in
+Appendix~\ref{app:adaptive_algo} together with the full pseudocode,
+tuning, and CUSUM analysis).
 
 %% ============================================================
 \section{Regret guarantees}
@@ -499,7 +500,7 @@ fixed $K$,
 The full constants are
 $\DynReg_T^{(c)} \le \tilO(r\sqrt{KT}) + \tilO(A^{1/3}B^{2/3}K^{1/3}T^{2/3}) + O(R_\cA W V_{\rm in}) + \tilO(K^{2/3}T^{1/3}/\lambda_{\min}^2)$,
 with $A:=(R_\cA+R_Q)S_w+c$,
-$B:=C R_\cA S_w(1+R_\cA\sqrt{W/\lambda})\sqrt{\log(KdT/\delta)}$,
+$B:=C R_\cA S_w(1+R_\cA\sqrt{W/\lambda})\sqrt{\log(2KdT/\delta)}$,
 $R_Q:=\sup_{u\in\mathrm{supp}(Q)}\|u\|_2$ ($R_Q=\sqrt d$ for
 scaled-sphere; $R_Q\le R_\cA$ if probes lie inside the action set);
 the $\tilO(K^{2/3}T^{1/3}/\lambda_{\min}^2)$ summand is the burn-in
@@ -631,7 +632,7 @@ spectral radius $0.99$, $40$ actions, probe cost $c{=}0.1$.
 
 SPSC achieves $13$--$34\%$ reductions whenever $d\ge 45$ with every
 $r$-curve tracking $\sqrt{r/d}$: use SPSC when
-$d-r\gtrsim T^{1/6}$, ambient LinUCB otherwise.
+$d-r\gtrsim T^{1/6}$, and ambient LinUCB otherwise.
 
 \subsection{Real-data multi-baseline comparison}
 \label{sec:exp_real}
@@ -695,7 +696,7 @@ indicators~\citep{international2009estimation}. We calibrate to the
 IWPC cohort (${\sim}5{,}700$ patients, $d{=}93$, $K{=}8$ segments,
 $T{=}5{,}000$, 10 seeds; reward $=$ negative deviation from
 therapeutic dose). Table~\ref{tab:warfarin_body} ($r{=}3$):
-SPSC-Adaptive cuts regret by $-67.3\%$ vs.\ LinUCB
+SPSC-Adaptive cuts regret by $67.3\%$ vs.\ LinUCB
 (Appendix~\ref{app:warfarin_ablation}).
 
 \paragraph{Vancomycin.} With the AUC-targeted
@@ -711,7 +712,7 @@ Appendix~\ref{app:vancomycin_full}.
 \begin{table}[t]
 \centering
 \caption{\textbf{Warfarin} (representative cell $r{=}3$, mean$\pm$SE,
-10 seeds). SPSC-Adaptive cuts regret by $-67.3\%$ vs.\ LinUCB. Full
+10 seeds). SPSC-Adaptive cuts regret by $67.3\%$ vs.\ LinUCB. Full
 per-rank tables in Appendix~\ref{app:percell}.}
 \label{tab:warfarin_body}
 \small
@@ -759,7 +760,7 @@ $r$ & SPSC-Adaptive  & vs.\ LinUCB & vs.\ best comp.\\
 On the small-$d$ stress test of \citet{russac2019weighted}
 ($d{=}2$, $r{=}1$, $K{=}4$, $T{=}6{,}000$, 50 arms, 30 seeds), SPSC
 reduces regret by $\mathbf{-46.5\%}$ vs.\ D-LinUCB, $-34.8\%$ vs.\
-SW-LinUCB, and $\mathbf{-51.6\%}$ vs.\ stationary OFUL (itself
+SW-LinUCB, and $\mathbf{-52.0\%}$ vs.\ stationary OFUL (itself
 $+11.5\%$ above D-LinUCB here). Full table in
 Appendix~\ref{app:sota_compare}.
 
@@ -773,7 +774,8 @@ $K{=}10$, 10 seeds); only approximately low-rank, so this is a
 assumption holds exactly. At $d{=}55$, $r{=}5$, SPSC reaches
 $\mathbf{83\pm 2}$ vs.\ LinUCB's $102\pm 1$ ($-18.8\%$); SPSC-Adaptive
 $-10.9\%$. SPSC neither breaks nor over-claims on weakly-low-rank
-production data. Tables in Appendix~\ref{app:percell}.
+production data. Per-cell results in Table~\ref{tab:app-openbandit}
+(App.~\ref{app:percell}).
 
 \subsection{Comparison with adapted stationary low-rank methods}
 \label{sec:exp_boss_jedra}
@@ -782,34 +784,11 @@ For a best-effort comparison with stationary low-rank methods, we
 adapt BOSS~\citep{duong2024beyond} and Jedra~\citep{jedra2024low} by
 restarting at every true segment boundary, an oracle advantage we do
 not give SPSC (setup in Appendix~\ref{app:boss_jedra_detail}).
-Table~\ref{tab:boss_jedra_grid}: SPSC wins all eight cells by
-$6$--$20\%$, with the lead largest at small $d$ ($-16$ to $-20\%$ at
-$d{=}55$) and narrowing to $6$--$8\%$ at $d{=}200$. SPSC-Adaptive (no
-oracle) also beats both on every cell.
-
-\begin{table}[!htbp]
-\centering
-\caption{\textbf{Adapted stationary low-rank methods on an $(d,r)$-grid}.
-Costed regret (mean$\pm$SEM, 10 seeds, $T{=}5{,}000$, $K{=}10$). BOSS/Jedra restart at \emph{oracle} segment boundaries;
-SPSC-Adaptive detects them online. SPSC variants win every cell.}
-\label{tab:boss_jedra_grid}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{ll cccc r}
-\toprule
-$d$ & $r$ & SPSC Alg.\,1 & SPSC-Adaptive & BOSS (oracle) & Jedra (oracle) & SPSC vs.\ best comp.\\
-\midrule
-55  & 5   & $\mathbf{323\pm10}$ & $342\pm15$         & $399\pm17$         & $386\pm18$         & $-16.3\%$ \\
-55  & 10  & $\mathbf{471\pm10}$ & $507\pm13$         & $588\pm27$         & $602\pm24$         & $-19.9\%$ \\
-105 & 5   & $\mathbf{264\pm 9}$ & $274\pm10$         & $300\pm14$         & $299\pm13$         & $-11.7\%$ \\
-105 & 10  & $\mathbf{377\pm15}$ & $401\pm14$         & $423\pm18$         & $429\pm14$         & $-10.9\%$ \\
-105 & 20  & $\mathbf{578\pm12}$ & $608\pm14$         & $654\pm17$         & $654\pm14$         & $-11.6\%$ \\
-200 & 5   & $\mathbf{208\pm 5}$ & $218\pm 6$         & $236\pm 9$         & $226\pm 9$         & $\phantom{-}-8.0\%$ \\
-200 & 10  & $\mathbf{277\pm10}$ & $292\pm12$         & $294\pm11$         & $305\pm15$         & $\phantom{-}-5.8\%$ \\
-200 & 20  & $\mathbf{442\pm13}$ & $452\pm11$         & $473\pm16$         & $489\pm18$         & $\phantom{-}-6.6\%$ \\
-\bottomrule
-\end{tabular}
-\end{table}
+Table~\ref{tab:boss_jedra_grid} (in App.~\ref{app:percell}): SPSC
+wins all eight cells by $5.8$--$19.9\%$, with the lead largest at
+small $d$ ($-16.3$ to $-19.9\%$ at $d{=}55$) and narrowing to
+$5.8$--$8.0\%$ at $d{=}200$. SPSC-Adaptive (no oracle) also beats
+both on every cell.
 
 \paragraph{Robustness of SPSC-Adaptive.} Detailed comparison under
 correct vs.\ misspecified oracle boundaries is in
@@ -833,11 +812,13 @@ Appendix~\ref{app:percell}): SPSC wins every cell at $d\ge 105$,
 peaking at $(d,r){=}(105,20)$.
 \textbf{Sensitivity \& dynamics.} Large-scale assumption sweeps
 (App.~\ref{app:assumption_violation}) confirm SPSC tracks Oracle
-through variance misspecification, approximate-rank perturbation
-($\epsilon_k^\perp$ up to $0.4$), and spectral radius up to
-$\rho{=}0.99$; subspace error tracks the predicted $1/\sqrt m$ rate
-(App.~\ref{app:subspace}); noise/changepoint-frequency/drift-speed
-sweeps (App.~\ref{app:noise_cp_drift}) confirm the same trends.
+within constant factor through variance misspecification,
+approximate-rank perturbation ($\epsilon_k^\perp$ up to $0.4$), and
+spectral radius up to $\rho{=}0.95$; SPSC remains the best non-Oracle
+method at $\rho{=}0.99$. Subspace error tracks the predicted
+$1/\sqrt m$ rate (App.~\ref{app:subspace});
+noise/changepoint-frequency/drift-speed sweeps
+(App.~\ref{app:noise_cp_drift}) confirm the same trends.
 \textbf{Take-away.} Across the eleven benchmarks, SPSC delivers
 $\sqrt{r/d}$ intrinsic-rank savings whenever $d-r\gtrsim T^{1/6}$
 and does not catastrophically fail outside that regime.
@@ -903,7 +884,7 @@ and does not catastrophically fail outside that regime.
 \tocentry{C}{app:truncation}{Probe distributions: scaled sphere and Gaussian truncation}
 \tocentry{D}{app:algorithms}{Algorithms: pseudocode and adaptive variant}
 \tocentry{E}{app:setup}{Experimental setup}
-\tocentry{F}{app:percell}{Per-cell tables: every dataset, every cell}
+\tocentry{F}{app:percell}{Per-cell tables (every dataset, every cell) and BOSS/Jedra grid}
 \tocentry{G}{app:sensitivity}{Sensitivity and robustness studies}
 \tocentry{H}{app:sota_compare}{Russac benchmark}
 \tocentry{I}{app:warfarin_ablation}{Warfarin: random-subspace ablation}
@@ -1250,7 +1231,7 @@ symmetric matrices for $d\ge 2$.
 \begin{lemma}[Quadratic measurement identity]
 \label{lem:quad_conf}
 On every probe round $t\in\cTprobe$, with
-$\delta_\sigma := \hat\sigma^2 - \sigma_\varepsilon^2$ and
+$\delta_\sigma := \widehat\sigma^2 - \sigma_\varepsilon^2$ and
 $m_t := \E[\varepsilon_t\theta_t\mid\cH_{t-1},u_t]$,
 \[
 \E[s_t\mid\sigma(\cH_{t-1},u_t)]
@@ -1266,7 +1247,7 @@ Expand $y_t^2 = (u_t^\top\theta_t)^2 + 2\varepsilon_t u_t^\top\theta_t
 term contributes $2u_t^\top m_t$ with $m_t$ as defined in the lemma,
 bounded by $\epsilon_\times$ via the bounded state-noise coupling
 assumption (\S\ref{sec:setting}); the last term contributes
-$\sigma_\varepsilon^2$, and subtracting $\hat\sigma^2$ leaves
+$\sigma_\varepsilon^2$, and subtracting $\widehat\sigma^2$ leaves
 $-\delta_\sigma$. Independence of $u_t$ from $(\theta_t,\cH_{t-1})$
 gives $\E[(u_t^\top\theta_t)^2\mid\cH_{t-1},u_t] = u_t^\top\widetilde M_t u_t$.
 \end{proof}
@@ -1315,15 +1296,15 @@ For scaled-sphere probes $\|u_t\| = \sqrt d$ deterministically; on
 the noise-truncation event $|\varepsilon_t|\le L_\varepsilon :=
 \sigma_\varepsilon\sqrt{2\log(2T/\delta)}$ (which holds with
 probability $\ge 1-\delta$ via union over $T$ rounds), $|s_t|\le R_s
-:= (\sqrt d\,S_w + L_\varepsilon)^2 + \hat\sigma^2$, and the centered
+:= (\sqrt d\,S_w + L_\varepsilon)^2 + \widehat\sigma^2$, and the centered
 lifted sample satisfies $\|\tilde X_t\|_\op \le 2R_X$ with
 $R_X := d\cdot R_s + S_w^2$. So both the envelope and predictable
 variance are at most $2R_X$ and $R_X^2$ respectively.
 \end{lemma}
 \begin{proof}
 For scaled-sphere $u_t$, $\|u_t\| = \sqrt d$ exactly.
-$|s_t| = |(u_t^\top\theta_t + \varepsilon_t)^2 - \hat\sigma^2|
-\le (\sqrt d\,S_w + L_\varepsilon)^2 + \hat\sigma^2 = R_s$ using
+$|s_t| = |(u_t^\top\theta_t + \varepsilon_t)^2 - \widehat\sigma^2|
+\le (\sqrt d\,S_w + L_\varepsilon)^2 + \widehat\sigma^2 = R_s$ using
 $|u_t^\top\theta_t|\le \|u_t\|\|\theta_t\|\le \sqrt d\,S_w$ on
 $\|\theta_t\|\le S_w$ (orthonormal $B_k^\star$, $\|w_t\|\le S_w$).
 Then $\|G_t\|_\op = \|\mathcal K^{-1}(s_t u_tu_t^\top)\|_\op
@@ -1553,7 +1534,7 @@ event of Lem.~\ref{lem:self_norm} holds uniformly over $E_k$;
 (iii) $\|\theta_t\|\le S_w$, $\|x\|\le R_\cA$ for $x\in\cA_t$.
 Suppose Alg.~\ref{alg:spsc} uses an optimism correction satisfying
 \begin{equation}
-\gamma_t \;\ge\; C_\gamma S_w\Bigl(1+R_\cA\sqrt{WL_W/\lambda}\Bigr)\varepsilon_{k,t-1}
+\gamma_t \;\ge\; C_\gamma S_w\Bigl(1+R_\cA\sqrt{W/\lambda}\Bigr)\varepsilon_{k,t-1}
 \;+\; C_\gamma R_\cA V_{k,t}(W),
 \label{eq:gamma_choice}
 \end{equation}
@@ -1626,7 +1607,8 @@ where $\sum_t d_t\le C R_\cA W V_k^{\rm in}$.
 Cauchy--Schwarz together with
 Assumption~\ref{ass:projected_potential} gives
 $\sum_{t\in E_k}\beta_t^{(r,W)}w_t(x_t)
-\le \beta_k\sqrt{n_k\cdot 2C_{\rm pot}r L_W}=\tilO(r\sqrt{n_k})$.
+\le \bigl(\sup_{t\in E_k}\beta_t^{(r,W)}\bigr)\sqrt{n_k\cdot 2C_{\rm pot}r L_W}=\tilO(r\sqrt{n_k})$
+(using $\beta_t^{(r,W)}=\tilO(\sqrt r)$).
 Summing yields \eqref{eq:F2pp}.
 \end{proof}
 
@@ -1914,7 +1896,7 @@ Proposition~\ref{thm:spsc_adaptive}.
       \For{$t\in\cI_k$}
           \If{$t\in\cTprobe$}\Comment{probe round}
               \State draw $u_t\sim Q$; play $x_t=u_t$; observe $y_t$.
-              \State $s_t \leftarrow y_t^2 - \hat\sigma^2$;\quad
+              \State $s_t \leftarrow y_t^2 - \widehat\sigma^2$;\quad
                      $G_t \leftarrow \mathcal K^{-1}(s_t\,u_tu_t^\top)$.
               \State $M_{\mathrm{acc}}\leftarrow M_{\mathrm{acc}}+ G_t$;\
                      $N_k\leftarrow N_k+1$;\
@@ -2271,12 +2253,13 @@ error.}
 \label{app:rank_misspec}
 
 On Covertype ($d{=}155$, true effective rank $r^\star{=}10$, $K{=}4$,
-$T{=}10{,}000$, 5 seeds), sweeping specified $r\in\{1,3,5,10,15,20,30,50,80\}$
-gives the U-shaped curve in Figure~\ref{fig:rank_misspec} /
-Table~\ref{tab:rank_misspec}. Underestimation loses signal ($+33\%$
-at $r{=}1$); mild overestimation captures residual structure (sweet
-spot at $r{=}30$, $-10\%$). SPSC beats LinUCB across $r\in[15,50]$ so
-mild overestimation is a safe default.
+$T{=}10{,}000$, 5 seeds), sweeping specified $r$ at the grid
+points $\{1,3,5,10,15,20,30,50,80\}$ (min $r{=}1$, max $r{=}80$)
+gives the U-shaped curve in Figure~\ref{fig:rank_misspec}.
+Underestimation loses signal ($+33\%$ at $r{=}1$); mild overestimation
+captures residual structure (sweet spot at $r{=}30$, $-10\%$). SPSC
+beats LinUCB across $r\in[15,50]$, so mild overestimation is a safe
+default.
 
 \begin{figure}[!htbp]
 \centering
@@ -2286,21 +2269,6 @@ $r^\star{=}10$). SPSC beats LinUCB for $r\in[15,50]$; sweet spot at
 $r{=}30$ ($10\%$ improvement).}
 \label{fig:rank_misspec}
 \end{figure}
-
-\begin{table}[!htbp]
-\centering
-\caption{Covertype, rank misspecification. LinUCB $10{,}787\pm 23$.}
-\label{tab:rank_misspec}
-\small
-\begin{tabular}{lccccccc}
-\toprule
-Specified $r$ & 1 & 3 & 5 & \textbf{10} & 15 & 20 & 30 \\
-\midrule
-SPSC regret & $14{,}294$ & $12{,}622$ & $12{,}142$ & $11{,}203$ & $10{,}648$ & $10{,}128$ & $\mathbf{9{,}724}$ \\
-vs.\ LinUCB & $1.33$ & $1.17$ & $1.13$ & $1.04$ & $0.99$ & $0.94$ & $\mathbf{0.90}$ \\
-\bottomrule
-\end{tabular}
-\end{table}
 
 \subsection{Robustness and necessity experiments (A/B/C)}
 \label{app:robustness_abc}
@@ -2352,13 +2320,13 @@ restricted probe directions.}
 We complement the small-scale A/B/C ablations above with a
 large-scale ($d{=}60$, $r{=}5$, $K{=}10$, $T{=}5{,}000$) assumption
 sweep over (a) variance misspecification
-$\hat\sigma^2/\sigma_\varepsilon^2\in\{0.5,1,2,4\}$,
+$\widehat\sigma^2/\sigma_\varepsilon^2\in\{0.5,1,2,4\}$,
 (b) approximate-rank perturbation
 $\epsilon_k^\perp\in\{0,0.05,0.1,0.2,0.4\}$, and (c) spectral radius
 $\rho(A_k)\in\{0.8,0.95,0.99,1.0\}$ (the last violates the stable-LDS
 hypothesis). Variance misspec is absorbed into the
 scaled-identity bias (Lemma~\ref{lem:G_unbiased_conf}) and the
-relative gap stays flat ($\hat\sigma^2/\sigma_\varepsilon^2$ ratio
+relative gap stays flat ($\widehat\sigma^2/\sigma_\varepsilon^2$ ratio
 $1.27\to 1.16$ as the sweep goes $0.5\to 4$); approximate-rank
 degrades regret near-linearly in $\epsilon_k^\perp$; SPSC remains
 well-behaved through $\rho=0.99$ and degrades gracefully at
@@ -2377,7 +2345,7 @@ best non-Oracle in row.}
 \toprule
 Sweep & Level & Oracle & SPSC-Alg1 & SPSC-Adap & LinUCB & SW-LinUCB & D-LinUCB & LowOFUL \\
 \midrule
-\multirow{4}{*}{$\hat\sigma^2/\sigma_\varepsilon^2$}
+\multirow{4}{*}{$\widehat\sigma^2/\sigma_\varepsilon^2$}
  & $0.5$ & $221\pm5$  & $\mathbf{281\pm10}$ & $304\pm11$ & $397\pm17$ & $395\pm16$ & $401\pm18$ & $370\pm19$ \\
  & $1.0$ & $257\pm6$  & $\mathbf{315\pm10}$ & $319\pm10$ & $413\pm18$ & $412\pm18$ & $415\pm19$ & $358\pm17$ \\
  & $2.0$ & $299\pm10$ & $357\pm13$ & $\mathbf{355\pm13}$ & $421\pm19$ & $421\pm18$ & $423\pm20$ & $377\pm14$ \\

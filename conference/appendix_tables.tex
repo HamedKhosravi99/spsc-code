@@ -170,3 +170,47 @@ $d$ & $r$ & Oracle & \textbf{SPSC} & \textbf{SPSC-Adp} & LowOFUL & VOFUL & LR-Re
 \end{tabular}%
 }
 \end{table}
+
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{Open Bandit (ZOZOTOWN)} per-cell results. $T{=}5{,}000$, $K{=}10$, 10 seeds. Mean $\pm$ SE costed regret. Green = SPSC variant beats every non-oracle baseline; underline = best non-oracle. LinTS / SW-LinTS not run on this benchmark.}
+\label{tab:app-openbandit}
+\scriptsize
+\setlength{\tabcolsep}{3pt}
+\resizebox{\textwidth}{!}{%
+\begin{tabular}{llrrrrrrrrrr}
+\toprule
+$d$ & $r$ & Oracle & \textbf{SPSC} & \textbf{SPSC-Adp} & LowOFUL & VOFUL & LR-Rew & SW-Lin & D-Lin & Rst-Lin & LinUCB \\
+\midrule
+55  & 5  & $34.2{\pm}0.5$ & \cellcolor{green!12}$83.0{\pm}2.3$ & \cellcolor{green!12}$91.1{\pm}4.0$ & $126.2{\pm}1.8$ & $126.7{\pm}1.5$ & $126.8{\pm}1.2$ & $103.0{\pm}0.5$ & $106.6{\pm}0.5$ & \underline{$101.9{\pm}0.6$} & $102.2{\pm}0.5$ \\
+    & 10 & $65.2{\pm}0.8$ & \cellcolor{green!12}$93.9{\pm}1.5$ & \cellcolor{green!12}$94.1{\pm}1.7$ & $129.3{\pm}2.6$ & $130.2{\pm}1.9$ & $130.9{\pm}1.3$ & $103.0{\pm}0.5$ & $106.6{\pm}0.5$ & \underline{$101.9{\pm}0.6$} & $102.2{\pm}0.5$ \\
+105 & 5  & $29.7{\pm}0.5$ & $106.6{\pm}4.8$ & \cellcolor{green!12}$103.3{\pm}2.9$ & $152.6{\pm}2.3$ & $150.1{\pm}1.9$ & $150.9{\pm}1.6$ & $107.4{\pm}1.1$ & $108.4{\pm}0.4$ & \underline{$106.4{\pm}0.5$} & $107.7{\pm}1.0$ \\
+    & 10 & $59.0{\pm}0.7$ & $106.9{\pm}3.0$ & \cellcolor{green!12}$106.3{\pm}3.2$ & $153.3{\pm}1.0$ & $155.4{\pm}1.8$ & $156.1{\pm}1.5$ & $107.4{\pm}1.1$ & $108.4{\pm}0.4$ & \underline{$106.4{\pm}0.5$} & $107.7{\pm}1.0$ \\
+\bottomrule
+\end{tabular}%
+}
+\end{table}
+
+\begin{table}[!htbp]
+\centering
+\caption{\textbf{Adapted stationary low-rank methods on a $(d,r)$-grid}.
+Costed regret (mean$\pm$SEM, 10 seeds, $T{=}5{,}000$, $K{=}10$). BOSS/Jedra restart at \emph{oracle} segment boundaries;
+SPSC-Adaptive detects them online. SPSC variants win every cell.}
+\label{tab:boss_jedra_grid}
+\small
+\setlength{\tabcolsep}{4pt}
+\begin{tabular}{ll cccc r}
+\toprule
+$d$ & $r$ & SPSC Alg.\,1 & SPSC-Adaptive & BOSS (oracle) & Jedra (oracle) & SPSC vs.\ best comp.\\
+\midrule
+55  & 5   & $\mathbf{323\pm10}$ & $342\pm15$         & $399\pm17$         & $386\pm18$         & $-16.3\%$ \\
+55  & 10  & $\mathbf{471\pm10}$ & $507\pm13$         & $588\pm27$         & $602\pm24$         & $-19.9\%$ \\
+105 & 5   & $\mathbf{264\pm 9}$ & $274\pm10$         & $300\pm14$         & $299\pm13$         & $-11.7\%$ \\
+105 & 10  & $\mathbf{377\pm15}$ & $401\pm14$         & $423\pm18$         & $429\pm14$         & $-10.9\%$ \\
+105 & 20  & $\mathbf{578\pm12}$ & $608\pm14$         & $654\pm17$         & $654\pm14$         & $-11.6\%$ \\
+200 & 5   & $\mathbf{208\pm 5}$ & $218\pm 6$         & $236\pm 9$         & $226\pm 9$         & $\phantom{-}-8.0\%$ \\
+200 & 10  & $\mathbf{277\pm10}$ & $292\pm12$         & $294\pm11$         & $305\pm15$         & $\phantom{-}-5.8\%$ \\
+200 & 20  & $\mathbf{442\pm13}$ & $452\pm11$         & $473\pm16$         & $489\pm18$         & $\phantom{-}-6.6\%$ \\
+\bottomrule
+\end{tabular}
+\end{table}

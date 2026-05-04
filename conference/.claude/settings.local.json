@@ -16,7 +16,11 @@
       "WebFetch(domain:www.nature.com)",
       "WebFetch(domain:www.medrxiv.org)",
       "WebFetch(domain:onlinelibrary.wiley.com)",
-      "Bash(grep -n \"no.*\\\\$\\\\\\\\\\\\\\\\chi\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)"
+      "Bash(grep -n \"no.*\\\\$\\\\\\\\\\\\\\\\chi\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
+      "Bash(awk -F: '$1 <= 870')",
+      "Bash(grep -n \"5,\\\\?000\\\\|10,\\\\?000\\\\|6,\\\\?000\\\\|T{=}\\\\|T=5\\\\|T=10\\\\|T=6\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
+      "Bash(grep -n \"^\\\\$.*&\\\\|tab:rank_misspec\\\\|14,294\\\\|9,724\\\\|10,128\\\\|10,648\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
+      "Bash(grep -n \"$-67.3\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)"
     ]
   }
 }
