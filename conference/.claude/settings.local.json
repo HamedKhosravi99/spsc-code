@@ -20,7 +20,13 @@
       "Bash(awk -F: '$1 <= 870')",
       "Bash(grep -n \"5,\\\\?000\\\\|10,\\\\?000\\\\|6,\\\\?000\\\\|T{=}\\\\|T=5\\\\|T=10\\\\|T=6\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
       "Bash(grep -n \"^\\\\$.*&\\\\|tab:rank_misspec\\\\|14,294\\\\|9,724\\\\|10,128\\\\|10,648\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
-      "Bash(grep -n \"$-67.3\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)"
+      "Bash(grep -n \"$-67.3\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
+      "Bash(grep -n \"K{=}\\\\|K $=$\\\\|K =\\\\|K\\\\\\\\\\\\\\\\ge\\\\|fixed K\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
+      "Bash(grep -n \"\\\\\\\\\\\\\\\\\\(\\\\\\\\\\\\\\\\\\\\\\\\$\\\\\\\\|\\\\\\\\\\\\\\\\b\\\\\\\\$\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
+      "Bash(grep -n \"T{=}5{,}000\\\\|T{=}10{,}000\\\\|T{=}6{,}000\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/appendix_tables.tex)",
+      "Bash(grep -nE \"^.{120,}\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
+      "Bash(grep -n \"Gamma_k\\\\|V_{k,t}\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
+      "Bash(grep -n \"scale\\\\|$\\\\\\\\\\\\\\\\sigma_\\\\\\\\\\\\\\\\varepsilon\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)"
     ]
   }
 }

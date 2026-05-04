@@ -80,9 +80,10 @@
   takes to \emph{catch a moving subspace} from scalar rewards.
   Concretely, we consider linear contextual bandits over $T$ rounds
   where the reward parameter factorizes as $\theta_t = B_k^\star w_t$
-  inside a piecewise-constant orthonormal rank-$r$ subspace
-  $B_k^\star\in\R^{d\times r}$ with latent state $w_t\in\R^r$ that
-  changes across an unknown number $K$ of segments; the learner
+  for a piecewise-constant orthonormal rank-$r$ factor
+  $B_k^\star\in\R^{d\times r}$ with latent state $w_t\in\R^r$, whose
+  range $\range(B_k^\star)$ changes across an unknown number $K$ of
+  segments; the learner
   observes a scalar reward $y_t = x_t^\top\theta_t + \varepsilon_t$
   for action $x_t\in\cA_t\subset\R^d$ with noise $\varepsilon_t$,
   and may purchase information by designating rounds as \emph{probes}
@@ -131,8 +132,8 @@ is the horizon and $d$ is the ambient dimension) typically admits a
 rank $r\ll d$, where $B_k^\star\in\R^{d\times r}$ has orthonormal
 columns, $w_t\in\R^r$ is a latent state, and the segment index
 $k\in\{1,\dots,K\}$ ranges over $K\ge 1$ piecewise pieces of the
-horizon: user tastes, drug-response pathways, and policy-sensitive
-feature directions live on a thin slice of the ambient space.
+horizon: user preferences and clinical response patterns
+typically live on a thin slice of the ambient space.
 Second, that thin slice is \emph{not static}: tastes drift, cohorts
 change, treatment regimes get revised, and the subspace
 $\range(B_k^\star)$ itself moves across unknown changepoints
@@ -150,7 +151,7 @@ natural item life cycles (the birth of new IDs and retirement of
 old ones), motivating representation-stabilization methods in
 production Ads Ranking~\citep{zheng2025semantic}. Spotify's deployed
 homepage contextual bandit similarly targets changing user intent:
-podcast-vs.-music consumption fluctuates across time and user
+podcast versus music consumption fluctuates across time and user
 context, and contextual calibration delivers measurable gains over
 historical calibration baselines~\citep{feijer2025calibrated}. The
 public ZOZOTOWN/Open Bandit logs provide a real-world instance of
@@ -172,7 +173,7 @@ Existing work treats exactly one of the two properties.
 Stationary low-rank
 bandits~\citep{jun2019bilinear,jedra2024low,lu2021low}
 deliver the $\tilO(r\sqrt T)$ rate but assume a fixed $B^\star$,
-which the first subspace change in real data invalidates
+which any nontrivial subspace change invalidates
 ($\tilO$ suppresses polylog factors in $T,d,r,1/\delta$).
 Nonstationary bandits~\citep{russac2019weighted,cheung2019learning}
 adapt to drifting parameters but pay the full ambient rate
@@ -379,8 +380,9 @@ misspecification bias $\widetilde B$ is a scaled identity (population
 level), shifting all eigenvalues uniformly and \emph{not rotating
 eigenvectors}: subspace recovery is robust to the plug-in estimate
 of $\sigma_\varepsilon^2$ at the population level. Finite-sample
-projector concentration still has a $\Delta_\sigma$ floor due to the
-random fluctuation around the biased mean
+projector concentration still has a floor
+$\Delta_\sigma\propto |\widehat\sigma^2-\sigma_\varepsilon^2|/(d\,\lambda_{\min})$
+due to the random fluctuation around the biased mean
 (Cor.~\ref{cor:projector_conf}).
 
 Positive identification through the lifted moment $G_t$ above,
@@ -447,8 +449,11 @@ $\beta_t^{(r,W)}=\sigma_\varepsilon\sqrt{r\log(1+WR_\cA^2/(\lambda r))
 scales with $\sqrt{r}$, not $\sqrt{d}$: this is where the intrinsic-rank
 improvement enters. The correction term
 $\gamma_t = \Gamma_k + V_{k,t}(W)$
-absorbs subspace-mismatch error $\Gamma_k\propto\varepsilon_k$ and
-local within-window drift. Per-round cost is $O(dr|\cA_t|+r^2)$ vs.\
+absorbs subspace-mismatch error
+$\Gamma_k\propto\varepsilon_k:=\|\widehat P_k - P_k^\star\|_{\op}$
+and local within-window drift
+$V_{k,t}(W):=\sum_{s,s+1\in\cI_k,\,t-W\le s<t}\|\theta_{s+1}-\theta_s\|_2$
+(formal definitions in App.~\ref{app:proof_main_lemmas}). Per-round cost is $O(dr|\cA_t|+r^2)$ vs.\
 $O(d^2|\cA_t|)$ for ambient LinUCB, an $O(d/r)$ speed-up in addition
 to the statistical gain.
 
@@ -491,8 +496,9 @@ budget to $m_k=\min\{\ell_k,\lceil c_0\ell_k^{2/3}\rceil\}$ for an
 absolute constant $c_0>0$ (chosen as the closed-form optimum
 \eqref{eq:per_segment_opt}; segments shorter than the burn-in
 threshold $q^\star=O(\log(KdT/\delta)/\lambda_{\min}^2)$ are charged
-trivially). Then with probability at least $1-\delta$ and for
-fixed $K$,
+trivially), where $\lambda_{\min}>0$ is the predictable probe-time
+$r$th-eigenvalue lower bound (Lem.~\ref{lem:probe_excitation_conf}).
+Then with probability at least $1-\delta$ and for fixed $K$,
 \begin{equation}
 \DynReg_T^{(c)} \;\le\; \tilO\!\bigl(r\sqrt{T}\bigr) \;+\; \tilO\!\bigl(T^{2/3}\bigr) \;+\; O\!\bigl(W V_{\rm in}\bigr).
 \label{eq:main_bound}
@@ -578,9 +584,11 @@ qualitatively consistent with this rule of thumb.
 \begin{corollary}[Rank-adaptive guarantee]
 \label{cor:rank_adaptive}
 If the true rank $r$ is unknown, thresholding $\widehat M_k$
-at $\tau_k = 2R_X\sqrt{\log(2d/\delta)/m_k}$ recovers the true rank
-with probability $\ge 1-\delta$ whenever the population eigengap
-exceeds $4\tau_k$, and the bound \eqref{eq:main_bound} applies
+at $\tau_k^{\rm rank} := 2R_X\sqrt{\log(2d/\delta)/m_k}$
+($R_X$ the lifted-sample envelope from
+App.~\ref{app:concentration_proof}) recovers the true rank with
+probability $\ge 1-\delta$ whenever the population eigengap exceeds
+$4\tau_k^{\rm rank}$, and the bound \eqref{eq:main_bound} applies
 unchanged. Proof in \S\ref{app:proof_adaptive_rank}.
 \end{corollary}
 
@@ -759,8 +767,9 @@ $r$ & SPSC-Adaptive  & vs.\ LinUCB & vs.\ best comp.\\
 
 On the small-$d$ stress test of \citet{russac2019weighted}
 ($d{=}2$, $r{=}1$, $K{=}4$, $T{=}6{,}000$, 50 arms, 30 seeds), SPSC
-reduces regret by $\mathbf{-46.5\%}$ vs.\ D-LinUCB, $-34.8\%$ vs.\
-SW-LinUCB, and $\mathbf{-52.0\%}$ vs.\ stationary OFUL (itself
+reduces regret by $\mathbf{-46.5\%}$ vs.\ D-LinUCB,
+$\mathbf{-34.8\%}$ vs.\ SW-LinUCB, and $\mathbf{-52.0\%}$ vs.\
+stationary OFUL (itself
 $+11.5\%$ above D-LinUCB here). Full table in
 Appendix~\ref{app:sota_compare}.
 
@@ -777,7 +786,7 @@ $-10.9\%$. SPSC neither breaks nor over-claims on weakly-low-rank
 production data. Per-cell results in Table~\ref{tab:app-openbandit}
 (App.~\ref{app:percell}).
 
-\subsection{Comparison with adapted stationary low-rank methods}
+\subsection{Comparison with stationary low-rank methods (oracle restarts)}
 \label{sec:exp_boss_jedra}
 
 For a best-effort comparison with stationary low-rank methods, we
@@ -823,19 +832,20 @@ monotonically as the oracle is corrupted.
 \label{sec:exp_sensitivity}
 
 \textbf{Rank misspecification (Covertype, $d{=}155$, $r^\star{=}10$;
-App.~\ref{app:rank_misspec}):} sweeping $r\in\{1,\dots,80\}$ gives a
-U-shaped curve (under: $+33\%$ at $r{=}1$; sweet spot $r{=}30$,
-$-10\%$); SPSC beats LinUCB across $r\in[15,50]$, so mild
-overestimation is safe.
-\textbf{Probe rate} (App.~\ref{app:probe_ablation})\textbf{:}
-probe-period sweep $\{5,\dots,300\}$ has its optimum near $20$--$30$,
+App.~\ref{app:rank_misspec}):} sweeping over nine grid points
+$r\in\{1,3,5,10,15,20,30,50,80\}$ gives a U-shaped curve (under:
+$+33\%$ at $r{=}1$; sweet spot $r{=}30$, $-10\%$); SPSC beats LinUCB
+across $r\in[15,50]$, so mild overestimation is safe.
+\textbf{Probe rate} (App.~\ref{app:probe_ablation})\textbf{:} on the
+synthetic reference setting ($d{=}4$, $r{=}1$), the probe-period
+sweep $\{5,10,20,30,50,100,300\}$ has its optimum near $20$--$30$,
 matching $m_k^\star\propto \ell_k^{2/3}$.
 \textbf{Additional datasets} (see
 Appendix~\ref{app:percell}): SPSC wins every cell at $d\ge 105$,
 peaking at $(d,r){=}(105,20)$.
 \textbf{Sensitivity \& dynamics.} Large-scale assumption sweeps
 (App.~\ref{app:assumption_violation}) confirm SPSC tracks Oracle
-within constant factor through variance misspecification,
+within a constant factor through variance misspecification,
 approximate-rank perturbation ($\epsilon_k^\perp$ up to $0.4$), and
 spectral radius up to $\rho{=}0.95$; SPSC remains the best non-Oracle
 method at $\rho{=}0.99$. Subspace error tracks the predicted
@@ -1769,14 +1779,15 @@ Corollary~\ref{cor:stationary_within}.\qed
 
 By Theorem~\ref{thm:matrix_bernstein_conf}, with probability
 $\ge 1-\delta$ every eigenvalue of $\widehat M_k$ is within
-$\tau_k := 2R_X\sqrt{\log(2d/\delta)/m_k}$ of the corresponding
-eigenvalue of $\bar M_k^{\mathrm{probe}} + \widetilde B$ (Weyl's
-inequality applied to the matrix in
+$\tau_k^{\rm rank} := 2R_X\sqrt{\log(2d/\delta)/m_k}$ of the
+corresponding eigenvalue of $\bar M_k^{\mathrm{probe}} + \widetilde B$
+(Weyl's inequality applied to the matrix in
 \eqref{eq:matrix_bernstein}). The population spectrum has exactly $r$
 eigenvalues $\ge\lambda_{\min}$ and the remaining $d-r$ are zero
 (Prop.~\ref{prop:segment_factorization_conf}). Under the eigengap
-hypothesis $\lambda_{\min}\ge 4\tau_k$, thresholding at $2\tau_k$
-returns exactly $r$ indices with probability $\ge 1-\delta$. Condition
+hypothesis $\lambda_{\min}\ge 4\tau_k^{\rm rank}$, thresholding at
+$2\tau_k^{\rm rank}$ returns exactly $r$ indices with probability
+$\ge 1-\delta$. Condition
 on this event; the regret analysis of Theorem~\ref{thm:spsc_regret}
 applies verbatim with the estimated rank equal to the true $r$, so
 \eqref{eq:main_bound} holds with an extra $\delta$ in the union bound.\qed
@@ -2096,15 +2107,16 @@ baseline numbers and larger SPSC margins.
 
 \paragraph{Implementation and compute.}
 All experiments use NumPy/SciPy only. A full $(d,r)$ grid (9 cells,
-10 seeds, eleven baselines plus Oracle-LinUCB and the two SPSC variants)
+10 seeds, nine per-cell baselines plus Oracle-LinUCB and the two
+SPSC variants; BOSS and Jedra appear only in the §5.6 grid)
 takes 6--20\,h on a single 16-core CPU. Covertype is the longest
 ($T=10{,}000$).
 
 \section{Per-cell tables: every dataset, every cell}
 \label{app:percell}
 
-Tables~\ref{tab:app-covertype}--\ref{tab:app-warfarin} give the full
-per-cell results (mean\,$\pm$\,SE costed regret over 10 seeds) for
+Tables~\ref{tab:app-covertype}--\ref{tab:app-openbandit} give the
+full per-cell results (mean\,$\pm$\,SE costed regret over 10 seeds) for
 every method on every $(d,r)$ cell. Cells where at least one SPSC
 variant beats every non-oracle baseline are highlighted
 \colorbox{green!12}{green}; the best non-oracle baseline per cell is
