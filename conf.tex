@@ -72,45 +72,38 @@
 \maketitle
 
 \begin{abstract}
-Many real bandit deployments --- recommendation, clinical dosing, ad
-targeting --- share two structural facts the linear-bandit literature
-has so far handled only in isolation: rewards live on a
-low-dimensional latent subspace, and that subspace drifts. Stationary
-low-rank bandits exploit the rank but break under any subspace change;
-non-stationary linear bandits adapt to drift but pay the ambient rate
-$\tilO(d\sqrt T)$ throughout. We study \emph{piecewise-stationary
-low-rank} linear contextual bandits, in which the reward parameter
-factorizes as $\theta_t = B_k^\star w_t$ with a rank-$r$ factor
+Many real bandit deployments (recommendation, clinical dosing, ad
+targeting) share two structural facts handled only in isolation by
+prior work: rewards live on a low-dimensional latent subspace, and
+that subspace drifts. Stationary low-rank bandits exploit the rank
+but break under any subspace change; non-stationary linear bandits
+adapt to drift but pay the ambient rate $\tilO(d\sqrt T)$. We study
+\emph{piecewise-stationary low-rank} linear contextual bandits with
+scalar feedback: $\theta_t = B_k^\star w_t$ for a rank-$r$ factor
 $B_k^\star\in\R^{d\times r}$ that is constant within each of $K$
-unknown segments and may shift at the boundaries, with only scalar
-reward feedback.
-
-Our results are tight along three axes. \textbf{(i) Identification
-boundary.} With single-play scalar rewards, the moving subspace is
-recoverable through quadratic functionals of rewards if and only if
-three probe-side conditions hold (known noise variance, bounded
-state--noise coupling, full-dimensional probe support). Each is
-individually necessary in the unrestricted-second-moment problem, and
-the three are jointly sufficient --- a characterization of the boundary
-of the solvable region, not just a sufficient interior point.
-\textbf{(ii) Algorithm and dynamic regret.} \textbf{SPSC} (Single-Play
-Subspace-Calibrated Optimism) interleaves isotropic probes with
-windowed projected ridge-UCB exploitation inside the learned
-$r$-dimensional subspace; a CUSUM-style adaptive variant discovers
-segment boundaries online. The costed dynamic regret is
+unknown segments and may shift at the boundaries. Our results are
+tight along three axes. \textbf{(i) Identification boundary.} With
+single-play scalar rewards, the moving subspace is recoverable
+through quadratic functionals of rewards if and only if three
+probe-side conditions hold (known noise variance, bounded
+state-noise coupling, full-dimensional probe support). Each is
+individually necessary in the unrestricted-second-moment problem,
+and the three are jointly sufficient: a characterization of the
+boundary of the solvable region, not just a sufficient interior
+point. \textbf{(ii) Algorithm and dynamic regret.} \textbf{SPSC}
+(Single-Play Subspace-Calibrated Optimism) interleaves isotropic
+probes with windowed projected ridge-UCB exploitation inside the
+learned $r$-dimensional subspace; a CUSUM-style adaptive variant
+discovers segment boundaries online. The costed dynamic regret is
 $\tilO(r\sqrt T)+\tilO(T^{2/3})+O(W\,V_{\rm in})$, replacing the
 ambient $d\sqrt T$ rate with the intrinsic rank.
 \textbf{(iii) Empirics.} On eleven benchmarks spanning synthetic,
 UCI/MovieLens, semi-synthetic clinical, and ZOZOTOWN production-log
-data, SPSC outperforms eleven non-stationary and low-rank baselines
-whenever $d-r\gtrsim T^{1/6}$, matching the analytical crossover; a
-direct necessity stress test confirms the identification boundary is
-not a proof artifact.
-
+data, SPSC outperforms non-stationary and low-rank baselines
+whenever $d-r\gtrsim T^{1/6}$, matching the analytical crossover.
 To our knowledge, this is the first work to characterize the
-identification boundary and to attain the intrinsic-rank
-dynamic-regret rate in the piecewise-stationary low-rank setting under
-scalar feedback.
+identification boundary and attain the intrinsic-rank
+dynamic-regret rate in this setting.
 \end{abstract}
 
 %% ============================================================
