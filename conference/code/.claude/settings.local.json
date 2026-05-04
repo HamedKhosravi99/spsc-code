@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(python -c \"from pypdf import PdfReader; r = PdfReader\\('conf.pdf'\\); print\\(len\\(r.pages\\)\\)\")",
-      "Bash(pdfinfo conf.pdf)"
-    ]
-  }
-}
