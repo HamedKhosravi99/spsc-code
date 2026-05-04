@@ -145,21 +145,26 @@ observations of $\theta_t$.
 
 These features are documented in recently deployed systems. In
 Meta's Ads Ranking pipeline, learned ID-embedding representations are
-empirically unstable across the natural item lifecycle, requiring
-repeated re-stabilization~\citep{zheng2025semantic}; Spotify's
-homepage contextual bandit (live since 2025) records day-to-day
-shifts in podcast vs.\ music consumption that translate to a
-$36.6\%$ lift over $7$-day stationary
-calibration~\citep{feijer2025calibrated}; and the ZOZOTOWN production
-logs released by~\citet{saito2020open} show campaign-level reshuffling
-of effective features. In clinical dosing, a recent re-analysis of
-the same IWPC warfarin cohort our experiments use identifies three
-latent patient subgroups in which the dose--response coefficient
-\emph{flips sign} along nonlinear cohort
-boundaries~\citep{liu2025change}---exactly the setting where a single
-fixed low-rank model fails. Practitioners themselves call out
-stationarity as the binding gap between theory and deployed
-bandits~\citep{vandenakker2024practical}.
+empirically unstable across the natural item lifecycle (birth of new
+IDs, retirement of old ones), motivating dedicated re-stabilization
+techniques~\citep{zheng2025semantic}; Spotify's homepage contextual
+bandit (deployed March~2025) targets day-to-day shifts in podcast
+vs.\ music consumption across user cohorts, yielding a $36.6\%$
+podcast impression-to-stream lift over a $90$-day stationary
+calibration baseline~\citep{feijer2025calibrated}; and the
+multi-campaign ZOZOTOWN logs of~\citet{saito2020open} are now a
+standard public benchmark for the same regime. In clinical dosing, a
+re-analysis of the IWPC warfarin cohort our experiments use
+partitions patients into three latent subgroups in which the
+dose--response coefficient \emph{flips sign} across cohort boundaries
+($+0.166$, $\approx\!0$, $-0.071$ on the leading
+covariate)~\citep{liu2025change}---low-rank within each cohort,
+discontinuous across them. Practitioners themselves flag
+nonstationarity as a leading limitation of deployed
+bandits~\citep{vandenakker2024practical}. The combined regime---a
+thin reward subspace whose identity shifts at unknown points---is
+precisely where stationary low-rank methods freeze the wrong basis
+and ambient nonstationary methods pay the full $d$-rate.
 
 Existing work treats exactly one of the two properties.
 Stationary low-rank
