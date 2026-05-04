@@ -1,13 +1,14 @@
 # Catching a Moving Subspace: Low-Rank Bandits Beyond Stationarity
 
-Conference submission of the SPSC paper. Studies linear contextual
-bandits in which the reward parameter lies in a piecewise-constant
-rank-$r$ subspace that shifts at unknown change points, and introduces
-**SPSC** (Single-Play Subspace-Calibrated Optimism) and its
-detector-based variant **SPSC-Adaptive**.
+This repository contains the **conference version** of the SPSC paper.
+It studies linear contextual bandits in which the reward parameter
+lies in a piecewise-constant rank-$r$ subspace that shifts at unknown
+change points, and introduces **SPSC** (Single-Play Subspace-Calibrated
+Optimism) and its detector-based variant **SPSC-Adaptive**.
 
-A separate journal-length version of the paper, with the full theory
-and an extended experimental library, lives in a sibling repository.
+A journal-length version of the paper, with the full theory and an
+extended experimental library, will be developed in a separate
+repository.
 
 ## Repository layout
 
