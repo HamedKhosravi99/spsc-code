@@ -143,18 +143,30 @@ $x_t\in\cA_t\subset\R^d$ and noise $\varepsilon_t\in\R$, so the
 low-rank structure can neither be read off nor refreshed from direct
 observations of $\theta_t$.
 
+These features are documented in recently deployed systems. In
+Meta's Ads Ranking pipeline, learned ID-embedding representations are
+empirically unstable across the natural item lifecycle, requiring
+repeated re-stabilization~\citep{zheng2025semantic}; Spotify's
+homepage contextual bandit (live since 2025) records day-to-day
+shifts in podcast vs.\ music consumption that translate to a
+$36.6\%$ lift over $7$-day stationary
+calibration~\citep{feijer2025calibrated}; and the ZOZOTOWN production
+logs released by~\citet{saito2020open} show campaign-level reshuffling
+of effective features. In clinical dosing, a recent re-analysis of
+the same IWPC warfarin cohort our experiments use identifies three
+latent patient subgroups in which the dose--response coefficient
+\emph{flips sign} along nonlinear cohort
+boundaries~\citep{liu2025change}---exactly the setting where a single
+fixed low-rank model fails. Practitioners themselves call out
+stationarity as the binding gap between theory and deployed
+bandits~\citep{vandenakker2024practical}.
+
 Existing work treats exactly one of the two properties.
 Stationary low-rank
 bandits~\citep{jun2019bilinear,jedra2024low,lu2021low}
 deliver the desired $\tilO(r\sqrt T)$ rate but assume a fixed $B^\star$,
-which the first subspace change in real data invalidates.%
-\footnote{Throughout, we write $g(T)=\tilO(f(T))$ to mean that
-there exist constants $c>0$ and $p\ge 0$ such that
-$g(T)\le c\,f(T)\,\bigl(\log(T+d+r+1/\delta)\bigr)^{p}$ for all
-$T$ large enough; equivalently, $\tilO(\cdot)$ is the standard $O(\cdot)$
-notation that suppresses factors polylogarithmic in the horizon $T$,
-the ambient dimension $d$, the rank $r$, and the confidence parameter
-$1/\delta$.}
+which the first subspace change in real data invalidates
+($\tilO$ suppresses polylog factors in $T,d,r,1/\delta$).
 Nonstationary bandits~\citep{russac2019weighted,cheung2019learning}
 adapt to drifting parameters but pay the full ambient rate
 $\tilO(d\sqrt T)$ and do not exploit intrinsic rank. Closing this gap is
@@ -166,31 +178,21 @@ algorithm recovers a changing subspace under scalar feedback, and no
 prior analysis prices that recovery against the exploitation regret it
 enables.
 
-More precisely: at each round $t\in\{1,\dots,T\}$ the learner picks
-$x_t\in\cA_t$ and observes $y_t$ as above, with
-$\theta_t=B_k^\star w_t$ for the segment $k$ containing $t$, and the
-latent state $w_t\in\R^r$ follows a stable linear dynamical system
-$w_t=A_k w_{t-1}+\eta_{t-1}$ inside each segment $\cI_k$
-(with $A_k\in\R^{r\times r}$ and innovation $\eta_{t-1}\in\R^r$). The
-learner may designate a subset of rounds $\cTprobe\subseteq\{1,\dots,T\}$
-as \emph{probes}, on which it plays $x_t=u_t$ drawn from a fixed probe
-distribution $Q$ on $\R^d$ instead of an action in $\cA_t$. Performance
-is measured by the \emph{costed dynamic regret}
+Within each segment, the latent state $w_t\in\R^r$ follows a stable
+linear dynamical system $w_t=A_k w_{t-1}+\eta_{t-1}$ ($A_k\in\R^{r\times r}$,
+innovation $\eta_{t-1}\in\R^r$). The learner may designate a subset
+of rounds $\cTprobe$ as \emph{probes}, playing $x_t=u_t\sim Q$ for a
+fixed probe distribution $Q$ on $\R^d$ instead of an action in $\cA_t$.
+Performance is the \emph{costed dynamic regret}
 \begin{equation}
 \DynReg_T^{(c)} := \sum_{t=1}^T \Bigl(\max_{x\in\cA_t} x^\top \theta_t
   - x_t^\top \theta_t\Bigr) + c\,|\cTprobe|,
 \label{eq:intro_costed_regret}
 \end{equation}
-which jointly penalizes suboptimal actions and the number of probe
-rounds (each charged at per-probe cost $c>0$).
-
-Scalar feedback makes subspace recovery nontrivial: a single
-$y_t = x_t^\top B_k^\star w_t + \varepsilon_t$ is a scalar projection
-of a rank-$r$ signal, so only \emph{second-order} information reveals
-$\range(B_k^\star)$. And priced probing creates a
-tradeoff (with $m_k$ probes inside segment $k$, subspace error
-shrinks as $O(1/\sqrt{m_k})$ but probe cost grows as $O(cm_k)$),
-whose optimum determines the leading rate.
+penalizing both suboptimal actions and probe rounds (each charged
+$c>0$). With $m_k$ probes per segment, subspace error shrinks as
+$O(1/\sqrt{m_k})$ while probe cost grows as $O(cm_k)$; the optimum
+of this tradeoff sets the leading rate.
 
 \paragraph{Identifiability boundary.}
   Three probe-side conditions, namely known noise variance, bounded
@@ -820,15 +822,24 @@ monotonically as the oracle is corrupted.
 \subsection{Rank misspecification, probe-rate sensitivity, and take-away}
 \label{sec:exp_sensitivity}
 
-\textbf{Rank misspecification (Covertype, $d{=}155$, $r^\star{=}10$):}
-sweeping $r\in\{1,\dots,80\}$ gives a U-shaped curve (under: $+33\%$
-at $r{=}1$; sweet spot $r{=}30$, $-10\%$); SPSC beats LinUCB across
-$r\in[15,50]$, so mild overestimation is safe.
-\textbf{Probe rate:} probe-period sweep $\{5,\dots,300\}$ has its
-optimum near $20$--$30$, matching $m_k^\star\propto \ell_k^{2/3}$.
+\textbf{Rank misspecification (Covertype, $d{=}155$, $r^\star{=}10$;
+App.~\ref{app:rank_misspec}):} sweeping $r\in\{1,\dots,80\}$ gives a
+U-shaped curve (under: $+33\%$ at $r{=}1$; sweet spot $r{=}30$,
+$-10\%$); SPSC beats LinUCB across $r\in[15,50]$, so mild
+overestimation is safe.
+\textbf{Probe rate} (App.~\ref{app:probe_ablation})\textbf{:}
+probe-period sweep $\{5,\dots,300\}$ has its optimum near $20$--$30$,
+matching $m_k^\star\propto \ell_k^{2/3}$.
 \textbf{Additional datasets} (see
 Appendix~\ref{app:percell}): SPSC wins every cell at $d\ge 105$,
 peaking at $(d,r){=}(105,20)$.
+\textbf{Sensitivity \& dynamics.} Large-scale assumption sweeps
+(App.~\ref{app:assumption_violation}) confirm SPSC tracks Oracle
+through variance misspecification, approximate-rank perturbation
+($\epsilon_k^\perp$ up to $0.4$), and spectral radius up to
+$\rho{=}0.99$; subspace error tracks the predicted $1/\sqrt m$ rate
+(App.~\ref{app:subspace}); noise/changepoint-frequency/drift-speed
+sweeps (App.~\ref{app:noise_cp_drift}) confirm the same trends.
 \textbf{Take-away.} Across the eleven benchmarks, SPSC delivers
 $\sqrt{r/d}$ intrinsic-rank savings whenever $d-r\gtrsim T^{1/6}$
 and does not catastrophically fail outside that regime.
