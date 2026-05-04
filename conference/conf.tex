@@ -144,30 +144,18 @@ $x_t\in\cA_t\subset\R^d$ with noise $\varepsilon_t\in\R$, so the
 low-rank structure can neither be read off nor refreshed from direct
 observations of $\theta_t$.
 
-These ingredients are visible in recent deployed systems and public
-bandit logs. In large-scale recommendation, Meta reports that
-ID-based ranking models face prediction instability caused by
-natural item life cycles (the birth of new IDs and retirement of
-old ones), motivating representation-stabilization methods in
-production Ads Ranking~\citep{zheng2025enhancing}. Spotify's deployed
-homepage contextual bandit similarly targets changing user intent:
-podcast versus music consumption fluctuates across time and user
-context, and contextual calibration delivers measurable gains over
-historical calibration baselines~\citep{feijer2025calibrated}. The
-public ZOZOTOWN/Open Bandit logs provide a real-world instance of
-scalar bandit feedback collected across multiple campaigns and
-logging policies on the same recommendation platform~\citep{saito2020open}.
-In clinical dosing, a recent re-analysis of the IWPC warfarin
-cohort (which we use in our experiments) identifies latent patient
-subgroups with substantially different pharmacogenomic
-dose--response relationships, including sign changes for selected
-covariates~\citep{liu2025change}. Together, these examples motivate
-the abstraction studied here: high-dimensional decisions often
-depend locally on a small set of predictive directions, but the
-relevant directions can shift as products, cohorts, or treatment
-regimes change. This is precisely the regime where stationary
-low-rank methods freeze the wrong basis and ambient nonstationary
-methods pay the full $d$-rate.
+Both ingredients of this problem are individually documented in
+real deployments. Production-scale recommendation and ad-ranking
+systems use latent low-rank representations whose stability across
+natural item lifecycles is a known operational
+concern~\citep{zheng2025enhancing}. On the clinical side, a recent
+re-analysis of the IWPC warfarin cohort our experiments use
+identifies three latent patient subgroups whose dose--response
+coefficients flip sign across cohort boundaries~\citep{liu2025change},
+direct evidence that the rank-$r$ effective subspace is not constant
+across the population. What is absent is a combined treatment in
+linear contextual bandits: rewards living on a low-rank subspace
+whose identity shifts at unknown change points.
 
 Existing work treats exactly one of the two properties.
 Stationary low-rank
