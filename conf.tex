@@ -72,188 +72,139 @@
 \maketitle
 
 \begin{abstract}
+Many real bandit deployments --- recommendation, clinical dosing, ad
+targeting --- share two structural facts the linear-bandit literature
+has so far handled only in isolation: rewards live on a
+low-dimensional latent subspace, and that subspace drifts. Stationary
+low-rank bandits exploit the rank but break under any subspace change;
+non-stationary linear bandits adapt to drift but pay the ambient rate
+$\tilO(d\sqrt T)$ throughout. We study \emph{piecewise-stationary
+low-rank} linear contextual bandits, in which the reward parameter
+factorizes as $\theta_t = B_k^\star w_t$ with a rank-$r$ factor
+$B_k^\star\in\R^{d\times r}$ that is constant within each of $K$
+unknown segments and may shift at the boundaries, with only scalar
+reward feedback.
 
-  Low-rank linear bandits replace the ambient dimension $d$ with an
-  intrinsic rank $r \ll d$ in the regret rate, but only while the
-  reward subspace stays fixed; once it moves, the rank advantage
-  disappears and existing low-rank methods break. We study what it
-  takes to \emph{catch a moving subspace} from scalar rewards.
-  Concretely, we consider linear contextual bandits over $T$ rounds
-  where the reward parameter factorizes as $\theta_t = B_k^\star w_t$
-  for a piecewise-constant orthonormal rank-$r$ factor
-  $B_k^\star\in\R^{d\times r}$ whose range $\range(B_k^\star)$
-  changes across an unknown number $K$ of segments, with latent
-  state $w_t\in\R^r$; the learner
-  observes a scalar reward $y_t = x_t^\top\theta_t + \varepsilon_t$
-  for action $x_t\in\cA_t\subset\R^d$ with noise $\varepsilon_t$,
-  and may purchase information by designating rounds as \emph{probes}
-  at per-probe cost $c>0$. Stationary low-rank methods cannot track
-  changing subspaces; nonstationary methods ignore low-rank structure
-  and pay the ambient rate $\tilO(d\sqrt T)$. We first establish an
-  \emph{identification boundary}: three probe-side conditions (known
-  noise variance, bounded state-noise coupling, full-dimensional probe
-  support) are individually necessary and jointly sufficient for
-  recovering $\range(B_k^\star)$ from quadratic functionals of scalar
-  rewards. We then introduce \textbf{SPSC} (Single-Play
-  Subspace-Calibrated Optimism), which interleaves isotropic probes
-  with ridge-UCB exploitation \emph{inside} the learned $r$-dimensional
-  subspace via a quadratic-measurement identity. The costed dynamic
-  regret is $\tilO(r\sqrt T)+\tilO(T^{2/3})+O(WV_{\rm in})$, with $W$
-  the exploitation window and $V_{\rm in}$ the within-segment path
-  variation, replacing the ambient $d\sqrt T$ rate with intrinsic
-  rank $r$. A CUSUM-style adaptive variant removes the
-  oracle-boundary assumption at the same leading rate. On eleven
-  benchmarks spanning synthetic, UCI/MovieLens, clinical, and
-  production-log data, SPSC beats state-of-the-art nonstationary and
-  low-rank baselines whenever $d-r\gtrsim T^{1/6}$, matching the
-  analytical crossover.
+Our results are tight along three axes. \textbf{(i) Identification
+boundary.} With single-play scalar rewards, the moving subspace is
+recoverable through quadratic functionals of rewards if and only if
+three probe-side conditions hold (known noise variance, bounded
+state--noise coupling, full-dimensional probe support). Each is
+individually necessary in the unrestricted-second-moment problem, and
+the three are jointly sufficient --- a characterization of the boundary
+of the solvable region, not just a sufficient interior point.
+\textbf{(ii) Algorithm and dynamic regret.} \textbf{SPSC} (Single-Play
+Subspace-Calibrated Optimism) interleaves isotropic probes with
+windowed projected ridge-UCB exploitation inside the learned
+$r$-dimensional subspace; a CUSUM-style adaptive variant discovers
+segment boundaries online. The costed dynamic regret is
+$\tilO(r\sqrt T)+\tilO(T^{2/3})+O(W\,V_{\rm in})$, replacing the
+ambient $d\sqrt T$ rate with the intrinsic rank.
+\textbf{(iii) Empirics.} On eleven benchmarks spanning synthetic,
+UCI/MovieLens, semi-synthetic clinical, and ZOZOTOWN production-log
+data, SPSC outperforms eleven non-stationary and low-rank baselines
+whenever $d-r\gtrsim T^{1/6}$, matching the analytical crossover; a
+direct necessity stress test confirms the identification boundary is
+not a proof artifact.
 
-
+To our knowledge, this is the first work to characterize the
+identification boundary and to attain the intrinsic-rank
+dynamic-regret rate in the piecewise-stationary low-rank setting under
+scalar feedback.
 \end{abstract}
 
 %% ============================================================
 \section{Introduction}
 \label{sec:intro}
 
-The promise of low-rank bandits is to replace the ambient dimension
-$d$ with an intrinsic rank $r \ll d$ in the regret rate, but only
-while the underlying subspace stays fixed. Once it moves, neither
-stationary low-rank nor ambient nonstationary methods are equipped
-to track it. This paper asks how to \emph{catch a moving subspace}
-efficiently, given only scalar rewards.
+High-dimensional sequential decisions --- personalized recommendation,
+clinical dosing, ad allocation --- share two structural facts that the
+linear-bandit literature has so far treated only in isolation. The
+reward parameter $\theta_t\in\R^d$ at round $t$ typically admits a
+\emph{low-rank} factorization $\theta_t = B_k^\star w_t$ with
+$r\ll d$: user preferences, clinical responses, and ad-creative
+effects live on a thin slice of the ambient space. That thin slice is
+\emph{not static}: tastes drift, cohorts change, treatment regimes
+get revised, and the subspace $\range(B_k^\star)$ itself moves across
+unknown change points $1=\tau_0<\tau_1<\dots<\tau_K=T{+}1$ that delimit
+the segments $\cI_k=[\tau_{k-1},\tau_k)$. Production deployments make
+both facts visible: Spotify's homepage contextual bandit explicitly
+targets daily shifts in user
+intent~\citep{feijer2025calibrated}; the IWPC warfarin
+cohort~\citep{international2009estimation} has been re-analyzed to
+expose three latent patient subgroups whose dose--response
+coefficients flip sign across boundaries~\citep{liu2025change}; the
+public Open Bandit logs~\citep{saito2020open} ship scalar feedback
+collected across multiple ad campaigns at ZOZOTOWN. What is missing is
+a combined treatment in linear contextual bandits: rewards living on
+a low-rank subspace whose identity shifts at unknown change points,
+observed only through scalar feedback
+$y_t=x_t^\top\theta_t+\varepsilon_t$.
 
-High-dimensional sequential decision problems, such as personalized
-recommendation, clinical dosing, and targeted scientific
-experimentation, share two properties that the linear-bandit
-literature has so far handled only in isolation. First, the reward
-parameter $\theta_t\in\R^d$ at round $t\in\{1,\dots,T\}$ (where $T$
-is the horizon and $d$ is the ambient dimension) typically admits a
-\emph{low-rank} factorization $\theta_t=B_k^\star w_t$ with intrinsic
-rank $r\ll d$, where $B_k^\star\in\R^{d\times r}$ has orthonormal
-columns, $w_t\in\R^r$ is a latent state, and the segment index
-$k\in\{1,\dots,K\}$ ranges over $K\ge 1$ piecewise pieces of the
-horizon: user preferences and clinical response patterns
-typically live on a thin slice of the ambient space.
-Second, that thin slice is \emph{not static}: tastes drift, cohorts
-change, treatment regimes get revised, and the subspace
-$\range(B_k^\star)$ itself moves across unknown change points
-$1=\tau_0<\tau_1<\dots<\tau_K=T{+}1$ that delimit the segments
-$\cI_k=[\tau_{k-1},\tau_k)$. Crucially, the learner sees only a
-scalar reward $y_t=x_t^\top\theta_t+\varepsilon_t$ for an action
-$x_t\in\cA_t\subset\R^d$ with noise $\varepsilon_t\in\R$, so the
-low-rank structure can neither be read off nor refreshed from direct
-observations of $\theta_t$.
-
-Both ingredients of this problem appear in real bandit deployments.
-Spotify's homepage contextual bandit, deployed at scale, explicitly
-targets daily shifts in user intent across user
-cohorts~\citep{feijer2025calibrated}, production evidence that bandit
-decisions in deployment face moving structure rather than stationary
-parameters. The Open Bandit Dataset~\citep{saito2020open}, a public
-benchmark we evaluate on, ships scalar bandit feedback collected
-across multiple ad campaigns at ZOZOTOWN. In our clinical benchmarks,
-the IWPC warfarin cohort itself exhibits cohort-segmented predictive
-structure: a recent re-analysis identifies three latent patient
-subgroups whose dose--response coefficients flip sign across
-boundaries~\citep{liu2025change}, demonstrating in the very dataset
-we benchmark on that the rank-$r$ effective subspace is not constant
-across the population. What is absent is a combined treatment in
-linear contextual bandits: rewards living on a low-rank subspace
-whose identity shifts at unknown change points.
-
-Existing work treats exactly one of the two properties.
+\paragraph{The gap, and why it is non-trivial.}
 Stationary low-rank
-bandits~\citep{jun2019bilinear,jedra2024low,lu2021low}
-deliver the $\tilO(r\sqrt T)$ rate but assume a fixed $B^\star$,
-which any nontrivial subspace change invalidates
-($\tilO$ suppresses polylog factors in $T,d,r,1/\delta$).
-Nonstationary bandits~\citep{russac2019weighted,cheung2019learning}
-adapt to drifting parameters but pay the full ambient rate
-$\tilO(d\sqrt T)$ and do not exploit intrinsic rank. Closing this gap is
-delicate: with scalar feedback, a single response $y_t$ is a rank-one
-measurement of $\theta_t\theta_t^\top$, so the subspace can only be
-recovered through \emph{second-order} probing, and every probe diverts
-a round away from exploitation, which must itself be priced. No prior
-algorithm recovers a changing subspace under scalar feedback, and no
-prior analysis prices that recovery against the exploitation regret it
-enables.
-
-Within each segment, the latent state $w_t\in\R^r$ follows a stable
-linear dynamical system $w_t=A_k w_{t-1}+\eta_{t-1}$ ($A_k\in\R^{r\times r}$,
-innovation $\eta_{t-1}\in\R^r$). The learner may designate a subset
-of rounds $\cTprobe$ as \emph{probes}, playing $x_t=u_t\sim Q$ for a
-fixed probe distribution $Q$ on $\R^d$ instead of an action in $\cA_t$.
-Performance is the \emph{costed dynamic regret}
-\begin{equation}
-\DynReg_T^{(c)} := \sum_{t=1}^T \Bigl(\max_{x\in\cA_t} x^\top \theta_t
-  - x_t^\top \theta_t\Bigr) + c\,|\cTprobe|,
-\label{eq:intro_costed_regret}
-\end{equation}
-penalizing both suboptimal actions and probe rounds (each at cost
-$c>0$). With $m_k$ probes per segment, subspace error shrinks as
-$O(1/\sqrt{m_k})$ while probe cost grows as $O(cm_k)$; the optimum
-of this tradeoff sets the leading rate.
-
-\paragraph{Identifiability boundary.}
-  Three probe-side conditions, namely known noise variance, bounded
-  state-noise coupling, and full-dimensional probe support, are each
-  individually necessary (in the unrestricted-second-moment problem)
-  and jointly sufficient for recovering $\range(B_k^\star)$ from
-  single-play scalar rewards, via a lifted operator $\mathcal K^{-1}$
-  (the inverse of the probe moment operator $\mathcal K$, defined
-  below) acting on the centered statistic $y_t^2-\widehat\sigma^2$
-  (with $\widehat\sigma^2$ a noise-variance estimate)
-  (Theorem~\ref{thm:identification};
-  Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}). Dropping any
-  one makes the predictable second moment
-  $\widetilde M_t := \E[\theta_t\theta_t^\top\mid\cH_{t-1}]$
-  unidentifiable from quadratic measurements alone, irrespective of
-  algorithm.
+bandits~\citep{jun2019bilinear,jedra2024low,lu2021low,jang2024efficient}
+deliver the $\tilO(r\sqrt T)$ rate but assume a fixed $B^\star$; any
+non-trivial subspace change voids the analysis ($\tilO$ suppresses
+polylog factors in $T,d,r,1/\delta$). Non-stationary linear
+bandits~\citep{russac2019weighted,cheung2019learning} absorb drift
+through sliding windows or discounting but operate in $\R^d$ and pay
+$\tilO(d\sqrt T)$ within each segment, ignoring intrinsic rank
+entirely. Naive combinations fail in instructive ways: sliding-window
+ridge in $\R^d$ never recovers the subspace; a one-shot subspace
+estimate breaks the moment a change point fires; per-segment re-runs
+of stationary low-rank algorithms require oracle access to the
+boundaries. The genuine difficulty is twofold. (a) With scalar
+rewards, a single response $y_t$ is a rank-one quadratic measurement
+of $\theta_t\theta_t^\top$, so the subspace is recoverable only
+through \emph{second-order} probing. (b) Every probe diverts a round
+away from exploitation, so probe acquisition must itself be priced
+against the regret it enables. No prior algorithm recovers a changing
+subspace under scalar feedback, and no prior analysis prices that
+recovery against the exploitation regret it buys.
 
 \paragraph{Contributions.}
-\begin{enumerate}[leftmargin=1.5em,itemsep=2pt]
-\item \textbf{Identification boundary (Theorem~\ref{thm:identification}).}
-We route probe-round feedback through a \emph{lifted moment}
-$G_t := \mathcal K^{-1}(s_t u_t u_t^\top)$ with
-$s_t = y_t^2 - \widehat\sigma^2$, where $\mathcal K(M)=\E[(u^\top Mu)\,uu^\top]$
-is the probe moment operator and $\widehat\sigma^2$ is the
-noise-variance estimate. Theorem~\ref{thm:identification} establishes
-\emph{tight identifiability}: (a) under the three probe-side
-conditions, the segment-averaged $\widehat M_k$ recovers
-$\range(B_k^\star)$ at rate $1/\sqrt{m_k}$; (b) each of the three
-conditions is individually necessary in the unrestricted
-second-moment problem, so the probe-side assumption set is minimal
-at the level of quadratic functionals of scalar rewards. The
-necessity half is what distinguishes this from a generic
-identifiability result: it identifies the boundary of the solvable
-region, not merely a sufficient interior point. Within the rank-$r$
-LDS class, rank structure may relax (i); (ii) and (iii) remain
-needed.
-\item \textbf{Algorithm.} \textbf{SPSC} (Alg.~\ref{alg:spsc})
-interleaves probing with windowed projected ridge-UCB inside the
-learned $r$-dimensional subspace; a \textbf{SPSC-Adaptive} variant
-(Alg.~\ref{alg:spsc_adaptive}) uses a CUSUM-style detector to
-discover segment changes online with only a delay overhead relative
-to the oracle-boundary guarantee.
-\item \textbf{Regret (Theorem~\ref{thm:spsc_regret}).} For the
-interleaved Alg.~\ref{alg:spsc} with a balanced probe schedule,
-fixed $K$, and suppressing polylog factors,
-$\DynReg_T^{(c)}\le\tilO(r\sqrt{T})+\tilO(T^{2/3})+O(WV_{\rm in})$,
-replacing the ambient $d\sqrt{T}$ rate with the intrinsic rank.
-\item \textbf{Experiments.} We evaluate SPSC on eleven benchmarks (a
-synthetic phase-transition grid, five UCI environments plus MovieLens,
-two semi-synthetic clinical datasets, the Russac small-$d$ benchmark,
-and Open Bandit production logs) against eleven baselines (LinUCB,
-D-LinUCB, SW-LinUCB, Restart-LinUCB, LowOFUL, VOFUL, LowRank-Reward,
-LinTS, SW-LinTS, and two adapted stationary low-rank methods BOSS
-and Jedra). SPSC delivers regret reductions whenever
-$d-r\gtrsim T^{1/6}$, qualitatively consistent with the bound. A
-direct \emph{necessity} stress test (App.~\ref{app:robustness_abc}, part C)
-restricts probe coverage to a proper subspace and observes the
-$\Omega(T)$ regret blow-up predicted by
-Proposition~\ref{prop:nonid_c}, confirming that the third
-identifiability condition is not a proof artifact.
-\end{enumerate}
+We formulate the \emph{piecewise-stationary low-rank} linear bandit
+(\S\ref{sec:setting}) and resolve it on three axes.
+\textbf{(i) Identification boundary
+(Theorem~\ref{thm:identification}).} Three probe-side conditions
+(known noise variance, bounded state--noise coupling,
+full-dimensional probe support) are individually necessary in the
+unrestricted-second-moment problem and jointly sufficient for
+recovering $\range(B_k^\star)$ from quadratic functionals of scalar
+rewards. The necessity half --- three matching impossibility results
+(Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}) --- is what
+distinguishes this from a generic identifiability statement: it
+characterizes the boundary of the solvable region, not just a
+sufficient interior point.
+\textbf{(ii) Algorithm and costed dynamic regret
+(Theorem~\ref{thm:spsc_regret}).} \textbf{SPSC} (Alg.~\ref{alg:spsc})
+interleaves isotropic probes with windowed projected ridge-UCB
+exploitation inside the learned $r$-dimensional subspace via a
+quadratic-measurement identity; a \textbf{SPSC-Adaptive}
+variant (Alg.~\ref{alg:spsc_adaptive}) uses a CUSUM-style detector
+to discover segment changes online. The costed dynamic regret is
+$\DynReg_T^{(c)}\le \tilO(r\sqrt T)+\tilO(T^{2/3})+O(W\,V_{\rm in})$,
+replacing the ambient $d\sqrt T$ rate with the intrinsic rank $r$,
+where $W$ is the exploitation window and $V_{\rm in}$ the
+within-segment path variation.
+\textbf{(iii) Eleven benchmarks against eleven baselines.} A
+synthetic phase-transition grid, five UCI environments plus
+MovieLens, two semi-synthetic clinical datasets, the Russac small-$d$
+benchmark, and Open Bandit production logs, against LinUCB, D-LinUCB,
+SW-LinUCB, Restart-LinUCB, LowOFUL, VOFUL, LowRank-Reward, LinTS,
+SW-LinTS, and adapted stationary low-rank methods BOSS and Jedra.
+SPSC delivers regret reductions whenever $d-r\gtrsim T^{1/6}$,
+matching the analytical crossover. A direct necessity stress test
+(App.~\ref{app:robustness_abc}, part C) restricts probe coverage to a
+proper subspace and reproduces the $\Omega(T)$ blow-up predicted by
+Proposition~\ref{prop:nonid_c}, confirming the third identifiability
+condition is not a proof artifact.
+
+To our knowledge, this is the first work to characterize the
+identification boundary and to attain the intrinsic-rank
+dynamic-regret rate in the piecewise-stationary low-rank setting
+under scalar feedback.
 
 \paragraph{Related work.}
 Stationary low-rank
