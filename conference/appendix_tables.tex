@@ -191,26 +191,3 @@ $d$ & $r$ & Oracle & \textbf{SPSC} & \textbf{SPSC-Adp} & LowOFUL & VOFUL & LR-Re
 }
 \end{table}
 
-\begin{table}[!htbp]
-\centering
-\caption{\textbf{Adapted stationary low-rank methods on a $(d,r)$-grid}.
-Costed regret (mean$\pm$SEM, 10 seeds, $T{=}5{,}000$, $K{=}10$). BOSS/Jedra restart at \emph{oracle} segment boundaries;
-SPSC-Adaptive detects them online. SPSC variants win every cell.}
-\label{tab:boss_jedra_grid}
-\small
-\setlength{\tabcolsep}{4pt}
-\begin{tabular}{ll cccc r}
-\toprule
-$d$ & $r$ & SPSC Alg.\,1 & SPSC-Adaptive & BOSS (oracle) & Jedra (oracle) & SPSC vs.\ best comp.\\
-\midrule
-55  & 5   & $\mathbf{323\pm10}$ & $342\pm15$         & $399\pm17$         & $386\pm18$         & $-16.3\%$ \\
-55  & 10  & $\mathbf{471\pm10}$ & $507\pm13$         & $588\pm27$         & $602\pm24$         & $-19.9\%$ \\
-105 & 5   & $\mathbf{264\pm 9}$ & $274\pm10$         & $300\pm14$         & $299\pm13$         & $-11.7\%$ \\
-105 & 10  & $\mathbf{377\pm15}$ & $401\pm14$         & $423\pm18$         & $429\pm14$         & $-10.9\%$ \\
-105 & 20  & $\mathbf{578\pm12}$ & $608\pm14$         & $654\pm17$         & $654\pm14$         & $-11.6\%$ \\
-200 & 5   & $\mathbf{208\pm 5}$ & $218\pm 6$         & $236\pm 9$         & $226\pm 9$         & $\phantom{-}-8.0\%$ \\
-200 & 10  & $\mathbf{277\pm10}$ & $292\pm12$         & $294\pm11$         & $305\pm15$         & $\phantom{-}-5.8\%$ \\
-200 & 20  & $\mathbf{442\pm13}$ & $452\pm11$         & $473\pm16$         & $489\pm18$         & $\phantom{-}-6.6\%$ \\
-\bottomrule
-\end{tabular}
-\end{table}
