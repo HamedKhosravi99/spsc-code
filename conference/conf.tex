@@ -385,9 +385,9 @@ $\Delta_\sigma\propto |\widehat\sigma^2-\sigma_\varepsilon^2|/(d\,\lambda_{\min}
 due to the random fluctuation around the biased mean
 (Cor.~\ref{cor:projector_conf}).
 
-Positive identification through the lifted moment $G_t$ above,
-together with the necessity result that follows, combines into the
-following theorem, which is the foundational result of the paper.
+Positive identification through the lifted moment $G_t$ above and
+the necessity result that follows together yield the following
+theorem, the foundational result of the paper.
 
 \begin{theorem}[Identification under priced probing]
 \label{thm:identification}
@@ -663,7 +663,7 @@ Appendix~\ref{app:percell}.
 \caption{\textbf{SPSC/LinUCB} and \textbf{SPSC-Adaptive/Best
   Competitor} ratios across six real-data benchmarks (10 seeds per
   cell). Values ${<}1$ indicate SPSC wins; \textbf{bold} marks cells
-  where a SPSC variant beats every non-oracle baseline. SPSC trails
+  where an SPSC variant beats every non-oracle baseline. SPSC trails
   LinUCB at $d\approx r$ (top of each block) and gains as $d$ grows
   relative to $r$. Restart-LinUCB, the closest competitor, is
   subspace-oblivious, so its regret is constant along each row.}
@@ -689,8 +689,8 @@ MovieLens,      $r{=}10$ & 1.00           & 1.00           & \textbf{0.97} & \te
 At $(d{=}105, r{=}10)$, SPSC-Adaptive beats LinUCB by $-47\%$ on
 Pendigits (operating-regime grid in Fig.~\ref{fig:pendigits-regime},
 App.~\ref{app:percell}) and $-68\%$ on Satimage (closest competitor
-VOFUL is $+53\%$ above SPSC-Adaptive; operating-regime sunburst in
-Fig.~\ref{fig:satimage-sunburst}, App.~\ref{app:percell}); at
+VOFUL is $+112\%$ above SPSC-Adaptive; per-cell results in
+Table~\ref{tab:app-satimage}, App.~\ref{app:percell}); at
 $(d{=}105, r{=}20)$ on Covertype it beats Restart-LinUCB by $-15\%$.
 Non-low-rank baselines are by construction $r$-insensitive.
 
@@ -880,7 +880,7 @@ ambient $d\sqrt T$ rate with the intrinsic $r$
 the same rate without oracle change points
 (Proposition~\ref{thm:spsc_adaptive}). On eleven benchmarks across
 synthetic, UCI, clinical, and production data, SPSC reduces regret
-whenever $d-r\gtrsim T^{1/6}$, the crossover consistent with theory.
+whenever $d-r\gtrsim T^{1/6}$, a crossover consistent with theory.
 
 
 %% ============================================================
@@ -1145,8 +1145,8 @@ $\lambda_r(\E[w_tw_t^\top\mid\cH_{t-1}]) \ge \lambda_r(\Sigma_{\eta,k}) =: \lamb
 uniformly across rounds. Averaging over any probe subset
 $\cT_k\subseteq\cI_k$ preserves this PSD lower bound:
 $\lambda_r(m_k^{-1}\sum_{t\in\cT_k}\E[w_tw_t^\top\mid\cH_{t-1}])\ge\lambda_{\min}$
-a.s.\ Stability of $A_k$ is therefore not needed for the lemma; the
-innovation covariance alone suffices.
+almost surely. Stability of $A_k$ is therefore not needed for the
+lemma; the innovation covariance alone suffices.
 \end{proof}
 
 \paragraph{Notation for the interleaved analysis.}
@@ -1286,7 +1286,7 @@ $-\delta_\sigma$. Independence of $u_t$ from $(\theta_t,\cH_{t-1})$
 gives $\E[(u_t^\top\theta_t)^2\mid\cH_{t-1},u_t] = u_t^\top\widetilde M_t u_t$.
 \end{proof}
 
-\begin{lemma}[Lifted probe sample is near-unbiased] 
+\begin{lemma}[Lifted probe sample is near-unbiased]
 \label{lem:G_unbiased_conf}
 Let $G_t := \mathcal K^{-1}(s_t u_tu_t^\top)$ for scaled-sphere
 $u_t = \sqrt d\,v_t$, $v_t\sim\mathrm{Unif}(\mathbb S^{d-1})$. Then
@@ -1313,7 +1313,7 @@ $-\delta_\sigma\mathcal K^{-1}(I_d) = -\delta_\sigma\bigl[\tfrac{d+2}{2d}I_d - \
 This is a scaled identity, hence does not rotate eigenvectors of
 $\widetilde M_t$.
 
- \emph{State-noise coupling term.} The remaining contribution is
+\emph{State-noise coupling term.} The remaining contribution is
   $2\,\mathcal K^{-1}\bigl(\E[(u_t^\top m_t)\,u_tu_t^\top\mid\cH_{t-1}]\bigr)$.
   The $(a,b)$-entry of the inner expectation is
   $\sum_c (m_t)_c\,\E[(u_t)_a(u_t)_b(u_t)_c]$, a degree-three polynomial
@@ -1924,7 +1924,7 @@ Proposition~\ref{thm:spsc_adaptive}.
   \begin{algorithmic}[1]
   \State \textbf{Input:} segments $\{\cI_k\}_{k=1}^K$, probe schedule $\cTprobe$,
          $\lambda>0$, probe distribution $Q$, rank $r$, window $W$.
-  \State Initialise $\widehat U_0\in\R^{d\times r}$ arbitrarily with orthonormal columns.
+  \State Initialize $\widehat U_0\in\R^{d\times r}$ arbitrarily with orthonormal columns.
   \For{$k=1,\dots,K$}\Comment{outer loop over segments}
       \State $M_{\mathrm{acc}}\leftarrow 0$;\ $N_k\leftarrow 0$;\
              $\widehat U_t\leftarrow \widehat U_{t-1}$.

@@ -27,7 +27,10 @@
       "Bash(grep -nE \"^.{120,}\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
       "Bash(grep -n \"Gamma_k\\\\|V_{k,t}\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
       "Bash(grep -n \"scale\\\\|$\\\\\\\\\\\\\\\\sigma_\\\\\\\\\\\\\\\\varepsilon\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
-      "Bash(grep *)"
+      "Bash(grep *)",
+      "Bash(awk 'NR==698 || NR==699 || NR==700 || NR==701' /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)",
+      "Bash(grep -n 'experiment_pendigits_extended\\\\|experiment_real_satimage\\\\|experiment_robustness_abc\\\\|experiment3_probe\\\\|ablation_warfarin\\\\|experiment_synthetic_extended' figures/*.png)",
+      "Bash(ls figures/)"
     ]
   }
 }
