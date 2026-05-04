@@ -81,9 +81,9 @@
   Concretely, we consider linear contextual bandits over $T$ rounds
   where the reward parameter factorizes as $\theta_t = B_k^\star w_t$
   for a piecewise-constant orthonormal rank-$r$ factor
-  $B_k^\star\in\R^{d\times r}$ with latent state $w_t\in\R^r$, whose
-  range $\range(B_k^\star)$ changes across an unknown number $K$ of
-  segments; the learner
+  $B_k^\star\in\R^{d\times r}$ whose range $\range(B_k^\star)$
+  changes across an unknown number $K$ of segments, with latent
+  state $w_t\in\R^r$; the learner
   observes a scalar reward $y_t = x_t^\top\theta_t + \varepsilon_t$
   for action $x_t\in\cA_t\subset\R^d$ with noise $\varepsilon_t$,
   and may purchase information by designating rounds as \emph{probes}
@@ -136,7 +136,7 @@ horizon: user preferences and clinical response patterns
 typically live on a thin slice of the ambient space.
 Second, that thin slice is \emph{not static}: tastes drift, cohorts
 change, treatment regimes get revised, and the subspace
-$\range(B_k^\star)$ itself moves across unknown changepoints
+$\range(B_k^\star)$ itself moves across unknown change points
 $1=\tau_0<\tau_1<\dots<\tau_K=T{+}1$ that delimit the segments
 $\cI_k=[\tau_{k-1},\tau_k)$. Crucially, the learner sees only a
 scalar reward $y_t=x_t^\top\theta_t+\varepsilon_t$ for an action
@@ -157,10 +157,10 @@ historical calibration baselines~\citep{feijer2025calibrated}. The
 public ZOZOTOWN/Open Bandit logs provide a real-world instance of
 scalar bandit feedback collected across multiple campaigns and
 logging policies on the same recommendation platform~\citep{saito2020open}.
-In clinical dosing, a recent re-analysis of the IWPC warfarin cohort
-used in our experiments identifies latent patient subgroups with
-substantially different pharmacogenomic dose--response
-relationships, including sign changes for selected
+In clinical dosing, a recent re-analysis of the IWPC warfarin
+cohort (which we use in our experiments) identifies latent patient
+subgroups with substantially different pharmacogenomic
+dose--response relationships, including sign changes for selected
 covariates~\citep{liu2025change}. Together, these examples motivate
 the abstraction studied here: high-dimensional decisions often
 depend locally on a small set of predictive directions, but the
@@ -386,7 +386,7 @@ due to the random fluctuation around the biased mean
 (Cor.~\ref{cor:projector_conf}).
 
 Positive identification through the lifted moment $G_t$ above,
-together with the necessity result that follows, combine into the
+together with the necessity result that follows, combines into the
 following theorem, which is the foundational result of the paper.
 
 \begin{theorem}[Identification under priced probing]
@@ -503,7 +503,7 @@ Then with probability at least $1-\delta$ and for fixed $K$,
 \DynReg_T^{(c)} \;\le\; \tilO\!\bigl(r\sqrt{T}\bigr) \;+\; \tilO\!\bigl(T^{2/3}\bigr) \;+\; O\!\bigl(W V_{\rm in}\bigr).
 \label{eq:main_bound}
 \end{equation}
-The full constants are
+Including all constants:
 $\DynReg_T^{(c)} \le \tilO(r\sqrt{KT}) + \tilO(A^{1/3}B^{2/3}K^{1/3}T^{2/3}) + O(R_\cA W V_{\rm in}) + \tilO(K^{2/3}T^{1/3}/\lambda_{\min}^2)$,
 with $A:=(R_\cA+R_Q)S_w+c$,
 $B:=C R_\cA S_w(1+R_\cA\sqrt{W/\lambda})\sqrt{\log(2KdT/\delta)}$,
@@ -704,11 +704,12 @@ indicators~\citep{international2009estimation}. We calibrate to the
 IWPC cohort (${\sim}5{,}700$ patients, $d{=}93$, $K{=}8$ segments,
 $T{=}5{,}000$, 10 seeds; reward $=$ negative deviation from
 therapeutic dose). Table~\ref{tab:warfarin_body} ($r{=}3$):
-SPSC-Adaptive cuts regret by $67.3\%$ vs.\ LinUCB
-(Appendix~\ref{app:warfarin_ablation}).
+SPSC-Adaptive cuts regret by $67.3\%$ vs.\ LinUCB; full per-rank
+tables in Table~\ref{tab:app-warfarin} (App.~\ref{app:percell});
+random-subspace ablation in App.~\ref{app:warfarin_ablation}.
 
 \paragraph{Vancomycin.} With the AUC-targeted
-\citet{rybak2020therapeutic} protocol (Cockcroft-Gault
+\citet{rybak2020therapeutic} protocol (Cockcroft--Gault
 $\mathrm{CrCl}\to\mathrm{CL}_{\mathrm{vanco}}=0.04\,\mathrm{CrCl}$,
 daily dose at $\mathrm{AUC}_{24}{=}500$; $d{=}93$, $K{=}8$,
 $T{=}5{,}000$, 10 seeds), Table~\ref{tab:vancomycin_body} sweeps
@@ -801,7 +802,7 @@ SPSC-Adaptive (no oracle) also beats both on every cell.
 \begin{table}[!htbp]
 \centering
 \caption{\textbf{Adapted stationary low-rank methods on a $(d,r)$-grid}.
-Costed regret (mean$\pm$SEM, 10 seeds, $T{=}5{,}000$, $K{=}10$). BOSS/Jedra restart at \emph{oracle} segment boundaries;
+Costed regret (mean$\pm$SE, 10 seeds, $T{=}5{,}000$, $K{=}10$). BOSS/Jedra restart at \emph{oracle} segment boundaries;
 SPSC-Adaptive detects them online. SPSC variants win every cell.}
 \label{tab:boss_jedra_grid}
 \small
@@ -850,7 +851,7 @@ approximate-rank perturbation ($\epsilon_k^\perp$ up to $0.4$), and
 spectral radius up to $\rho{=}0.95$; SPSC remains the best non-Oracle
 method at $\rho{=}0.99$. Subspace error tracks the predicted
 $1/\sqrt m$ rate (App.~\ref{app:subspace});
-noise/changepoint-frequency/drift-speed sweeps
+noise/change-point-frequency/drift-speed sweeps
 (App.~\ref{app:noise_cp_drift}) confirm the same trends.
 \textbf{Take-away.} Across the eleven benchmarks, SPSC delivers
 $\sqrt{r/d}$ intrinsic-rank savings whenever $d-r\gtrsim T^{1/6}$
@@ -868,9 +869,9 @@ cost-aware bandits each cover one piece; none recover a changing
 subspace under priced single-play scalar feedback. We close this
 gap: three probe-side conditions, known noise variance, bounded
 state-noise coupling, and full-dimensional probe support, are each
-individually necessary and jointly sufficient for subspace recovery
-from quadratic functionals of scalar rewards
-(Theorem~\ref{thm:identification}). Based on this, we propose SPSC,
+individually necessary (in the unrestricted-second-moment scope)
+and jointly sufficient for subspace recovery from quadratic
+functionals of scalar rewards (Theorem~\ref{thm:identification}). Based on this, we propose SPSC,
 which interleaves probing with windowed projected ridge-UCB in the
 learned $r$-dimensional subspace and achieves costed dynamic regret
 $\tilO(r\sqrt T)+\tilO(T^{2/3})+O(WV_{\rm in})$, replacing the
@@ -1049,7 +1050,7 @@ LinUCB       & \citet{abbasi2011improved}  & $O(d\sqrt{T})$                     
 LowOFUL      & \citet{jun2019bilinear}     & $\tilO(r\sqrt{T})$                   & Needs oracle subspace $B$. \\
 LowRank-Reward & \citet{lu2021low}     & $\tilO(r\sqrt{T})$                   & Stationary; learns $B$ from rewards. \\
 BOSS         & \citet{duong2024beyond}       & $\tilO(r\sqrt{dT})$                  & Stationary; no online change adaptation. \\
-Jedra et al. & \citet{jedra2024low}  & $\tilO(r^{5/4}(m{+}n)^{3/4}\sqrt{T})$ & Stationary; no probe cost. \\
+Jedra        & \citet{jedra2024low}  & $\tilO(r^{5/4}(m{+}n)^{3/4}\sqrt{T})$ & Stationary; no probe cost. \\
 \midrule
 \textbf{SPSC (ours)} & This work          & $\tilO(r\sqrt{T}+T^{2/3})$           & Learns a \emph{changing} $B$ via priced probes. \\
 \bottomrule
@@ -1249,7 +1250,7 @@ $N=\mathcal K(M)$ gives $\tr(N) = d\,\tr(M)$, so
 $\tr(M)=\tr(N)/d$ and
 $M = \tfrac{d+2}{2d}N - \tfrac{\tr(N)}{2d}I_d$.
 
-For the operator-norm bound: $\mathcal K^{-1}(N)$ is diagonalised in
+For the operator-norm bound: $\mathcal K^{-1}(N)$ is diagonalized in
 the eigenbasis of $N$; if $N$ has eigenvalues $\mu_1,\dots,\mu_d$,
 then $\mathcal K^{-1}(N)$ has eigenvalues
 $\nu_i = \tfrac{d+2}{2d}\mu_i - \tfrac{\tr(N)}{2d}$. Maximizing
@@ -1630,7 +1631,7 @@ by the standard windowed argument (each increment appears in $\le W$
 windows).
 
 By the optimism index in Alg.~\ref{alg:spsc}, with
-$x_t^\star=\arg\max x^\top\theta_t$, the instantaneous regret obeys
+$x_t^\star=\arg\max_{x\in\cA_t} x^\top\theta_t$, the instantaneous regret obeys
 \[
 \Delta_t \le 2\beta_t^{(r,W)}w_t(x_t)
 + C_{\rm tv}R_\cA S_w\Bigl(1+R_\cA\sqrt{W/\lambda}\Bigr)\varepsilon_{k,t-1}
@@ -1834,7 +1835,7 @@ A union bound over $t\in[T]$ gives total false-alarm probability at
 most $\delta_{\mathrm{FA}}$.
 
 \paragraph{(ii) Detection delay under $H_1$.}
-Let $\tau_k$ be a true change-point with eigengap
+Let $\tau_k$ be a true change point with eigengap
 $\Delta_k:=\|P_k^\star-P_{k-1}^\star\|_{\op}\ge 2b$ for the
 threshold $b>2\eta_{\mathrm{det}}$. Take $t=\tau_k+W_{\mathrm{det}}$:
 the recent window now lies entirely in segment $k$ while the past
@@ -2046,19 +2047,19 @@ $B_k^\star \in \R^{d\times r}$. Per segment, latent state evolves as
 $w_t = A_k w_{t-1} + \eta_{t-1}$ with spectral radius $\rho(A_k) = 0.99$
 and Gaussian innovation $\eta_{t-1}\sim\mathcal{N}(0, 0.04^2 I_r)$. Reward
 noise $\varepsilon_t\sim\mathcal{N}(0,0.09)$; $40$ actions per round drawn
-i.i.d.\ uniformly on the unit sphere. $K=10$ segments of equal length
-over $T=5{,}000$. Probe distribution $Q$ isotropic Gaussian,
-probe cost $c=0.1$, probe period $50$.
+i.i.d.\ uniformly on the unit sphere. $K{=}10$ segments of equal length
+over $T{=}5{,}000$. Probe distribution $Q$ isotropic Gaussian,
+probe cost $c{=}0.1$, probe period $50$.
 
 \paragraph{UCI datasets (Covertype, Pendigits, Satimage).}
 Features are the raw attribute vectors $\phi(x)\in\R^{d_0}$ reduced to
 ambient dimension $d$ via Gaussian random projection
 $R\in\R^{d\times d_0}$. For Covertype, segments correspond to disjoint
 size-$K$ cover-type subsets of the 7 classes; for Pendigits and
-Satimage, to disjoint digit/class subsets, $K=10$. Actions at round
+Satimage, to disjoint digit/class subsets, $K{=}10$. Actions at round
 $t$ are $|\cA_t|=40$ examples drawn from the active segment's class
-pool. Reward is centered target label. $\lambda=0.01$, probe
-period $10$, window $W=400$, $\delta=0.05$, $c=0.02$.
+pool. Reward is centered target label. $\lambda{=}0.01$, probe
+period $10$, window $W{=}400$, $\delta{=}0.05$, $c{=}0.02$.
 
 \paragraph{Pixelized MNIST / Fashion-MNIST.}
 Images flattened, pixel-normalized, then projected to $d$ via random
@@ -2070,17 +2071,17 @@ Standard MovieLens-100K user-item matrix centered by per-item mean.
 Features $\phi(\text{user},\text{item})$ are item-side latent
 factors from a rank-$d$ SVD of the observed-entry mask; reward is
 the raw user rating ($1$--$5$), centered. Segments correspond to
-disjoint time-bucketed user cohorts, $K=10$. This is a
+disjoint time-bucketed user cohorts, $K{=}10$. This is a
 \emph{fully real} benchmark (we do \emph{not} generate rewards from
 a low-rank surrogate), so the data is only approximately low-rank and
-provides a stringent stress test. $T=5{,}000$, same hyperparameters.
+provides a stringent stress test. $T{=}5{,}000$, same hyperparameters.
 
 \paragraph{Warfarin clinical dosing.}
-IWPC cohort statistics (${\sim}5{,}700$ patients); $d=93$ features
+IWPC cohort statistics (${\sim}5{,}700$ patients); $d{=}93$ features
 (demographics, VKORC1/CYP2C9 genotype, medications, interactions).
 Reward is negative absolute deviation from the therapeutic dose,
-$K=8$ patient-cohort segments, $T=5{,}000$, $\lambda=1.0$, probe
-period $10$, $W=200$, $c=0.1$, 10 seeds.
+$K{=}8$ patient-cohort segments, $T{=}5{,}000$, $\lambda{=}1.0$, probe
+period $10$, $W{=}200$, $c{=}0.1$, 10 seeds.
 
 \paragraph{Baseline hyperparameters.}
 All baselines inherit $\lambda$, $\delta$ from SPSC when applicable.
@@ -2109,8 +2110,8 @@ baseline numbers and larger SPSC margins.
 All experiments use NumPy/SciPy only. A full $(d,r)$ grid (9 cells,
 10 seeds, nine per-cell baselines plus Oracle-LinUCB and the two
 SPSC variants; BOSS and Jedra appear only in the §5.6 grid)
-takes 6--20\,h on a single 16-core CPU. Covertype is the longest
-($T=10{,}000$).
+takes 6--20 hours on a single 16-core CPU. Covertype is the longest
+($T{=}10{,}000$).
 
 \section{Per-cell tables: every dataset, every cell}
 \label{app:percell}
@@ -2154,12 +2155,12 @@ $r$-insensitivity of ambient-rate baselines.
 do improve with $d$ increasing but they assume a fixed subspace and
 therefore still trail SPSC on segments where the subspace changes.
 (iii) \emph{Within the synthetic and UCI grids, SPSC-Adaptive
-typically trails SPSC-Alg.\,1 by a small margin}, the gap reflecting
+typically trails SPSC-Alg.\,1 by a small margin}; this gap reflects
 the detector's false-alarm budget. The ordering reverses on the
 clinical benchmarks (most strikingly Vancomycin at $r{=}1$, where
 SPSC-Adaptive cuts regret by $37\%$ vs.\ SPSC-Alg.\,1; see
 Table~\ref{tab:vancomycin_full}), where the oracle schedule of
-Alg.~\ref{alg:spsc} is misaligned with the true cohort changepoints
+Alg.~\ref{alg:spsc} is misaligned with the true cohort change points
 and the detector's adaptivity wins.
 
 \paragraph{Synthetic $(d,r)$ grid.}
@@ -2430,7 +2431,7 @@ probes rebuild the subspace.}
 \label{fig:changepoint-adaptation}
 \end{figure}
 
-\subsection{Noise robustness, changepoint frequency, drift speed}
+\subsection{Noise robustness, change-point frequency, drift speed}
 \label{app:noise_cp_drift}
 
 Three single-parameter sweeps on the reference setting.
@@ -2441,7 +2442,7 @@ SPSC/LinUCB ratio grows mildly with noise (from $0.566$ to $0.595$);
 SPSC/Oracle stable at $\approx 1.55\times$. The low-rank benefit is
 not a low-noise artifact.
 
-\paragraph{Changepoint frequency.}
+\paragraph{Change-point frequency.}
 $K\in\{1,2,4,6,8,12\}$ at $T{=}6{,}000$. Ratio grows from
 $0.414$ (long segments) to $0.855$ (very short); SPSC retains an
 edge at all frequencies but the margin shrinks as the per-segment
@@ -2466,7 +2467,7 @@ dominated by noise leaves little to extract.
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{experiment7_changepoint_frequency.png}
-\caption{Changepoint frequency.}
+\caption{Change-point frequency.}
 \label{fig:exp7}
 \end{figure}
 
@@ -2489,7 +2490,7 @@ and $34.8\%$ vs.\ SW-LinUCB; probe overhead is a $0.9\%$ fraction.
 \begin{table}[!htbp]
 \centering
 \caption{Russac et al.\ benchmark. Final control regret and costed
-regret; 30 seeds, $\pm 1$\,SE.}
+regret (mean$\pm$SE, 30 seeds).}
 \label{tab:exp9}
 \small
 \begin{tabular}{lrrl}
@@ -2610,7 +2611,7 @@ Alg.~\ref{alg:spsc_adaptive} detects them online via the detector
 statistic~\eqref{eq:detector}. When the oracle boundaries are
 correct, Alg.~\ref{alg:spsc} is slightly better because the adaptive
 detector pays a small statistical price for unknown change-point
-localisation. When the oracle provides misspecified (false-alarm)
+localization. When the oracle provides misspecified (false-alarm)
 boundaries, the picture reverses sharply.
 
 \begin{figure}[!htbp]
