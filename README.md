@@ -14,7 +14,8 @@ repository.
 
 ```
 .
-├── conf.tex                 # main paper
+├── conf.tex                 # main paper (LaTeX source)
+├── conf.pdf                 # built paper (camera-ready PDF)
 ├── appendix_tables.tex      # per-cell tables included by conf.tex
 ├── checklist.tex            # NeurIPS responsibility checklist
 ├── neurips_2026.sty         # NeurIPS 2026 style file
@@ -29,7 +30,8 @@ repository.
 
 ## Building the paper
 
-From the repository root:
+A pre-built `conf.pdf` is checked in at the repository root. To rebuild
+from source:
 
 ```bash
 pdflatex conf.tex
