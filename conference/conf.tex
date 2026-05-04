@@ -84,11 +84,11 @@
   $B_k^\star\in\R^{d\times r}$ with latent state $w_t\in\R^r$ that
   changes across an unknown number $K$ of segments; the learner
   observes a scalar reward $y_t = x_t^\top\theta_t + \varepsilon_t$
-  for action $x_t\in\cA_t\subset\R^d$ and noise $\varepsilon_t$, and
-  may purchase information by designating rounds as \emph{probes} at
-  per-probe cost $c>0$. Fixed-representation low-rank methods cannot track changing
-  subspaces; nonstationary methods ignore low-rank structure and pay
-  the ambient rate $\tilO(d\sqrt T)$. We first establish an
+  for action $x_t\in\cA_t\subset\R^d$ with noise $\varepsilon_t$,
+  and may purchase information by designating rounds as \emph{probes}
+  at per-probe cost $c>0$. Stationary low-rank methods cannot track
+  changing subspaces; nonstationary methods ignore low-rank structure
+  and pay the ambient rate $\tilO(d\sqrt T)$. We first establish an
   \emph{identification boundary}: three probe-side conditions (known
   noise variance, bounded state-noise coupling, full-dimensional probe
   support) are individually necessary and jointly sufficient for
@@ -99,7 +99,7 @@
   subspace via a quadratic-measurement identity. The costed dynamic
   regret is $\tilO(r\sqrt T)+\tilO(T^{2/3})+O(WV_{\rm in})$, with $W$
   the exploitation window and $V_{\rm in}$ the within-segment path
-  variation---replacing the ambient $d\sqrt T$ rate with intrinsic
+  variation, replacing the ambient $d\sqrt T$ rate with intrinsic
   rank $r$. A CUSUM-style adaptive variant removes the
   oracle-boundary assumption at the same leading rate. On eleven
   benchmarks spanning synthetic, UCI/MovieLens, clinical, and
@@ -139,35 +139,39 @@ $\range(B_k^\star)$ itself moves across unknown changepoints
 $1=\tau_0<\tau_1<\dots<\tau_K=T{+}1$ that delimit the segments
 $\cI_k=[\tau_{k-1},\tau_k)$. Crucially, the learner sees only a
 scalar reward $y_t=x_t^\top\theta_t+\varepsilon_t$ for an action
-$x_t\in\cA_t\subset\R^d$ and noise $\varepsilon_t\in\R$, so the
+$x_t\in\cA_t\subset\R^d$ with noise $\varepsilon_t\in\R$, so the
 low-rank structure can neither be read off nor refreshed from direct
 observations of $\theta_t$.
 
-These features are documented in recently deployed systems. In
-Meta's Ads Ranking pipeline, learned ID-embedding representations are
-empirically unstable across the natural item lifecycle (birth of new
-IDs, retirement of old ones), motivating dedicated re-stabilization
-techniques~\citep{zheng2025semantic}; Spotify's homepage contextual
-bandit (deployed March~2025) targets day-to-day shifts in podcast
-vs.\ music consumption across user cohorts, yielding a $36.6\%$
-podcast impression-to-stream lift over a $90$-day stationary
-calibration baseline~\citep{feijer2025calibrated}; and the
-multi-campaign ZOZOTOWN logs of~\citet{saito2020open} are now a
-standard public benchmark for the same regime. In clinical dosing, a
-re-analysis of the IWPC warfarin cohort our experiments use
-partitions patients into three latent subgroups in which the
-dose--response coefficient \emph{flips sign} across cohort boundaries
-($+0.166$, $\approx\!0$, $-0.071$ on the leading
-covariate)~\citep{liu2025change}---low-rank within each cohort,
-discontinuous across them. The combined regime---a thin reward
-subspace whose identity shifts at unknown points---is precisely
-where stationary low-rank methods freeze the wrong basis and ambient
-nonstationary methods pay the full $d$-rate.
+These ingredients are visible in recent deployed systems and public
+bandit logs. In large-scale recommendation, Meta reports that
+ID-based ranking models face prediction instability caused by
+natural item life cycles (the birth of new IDs and retirement of
+old ones), motivating representation-stabilization methods in
+production Ads Ranking~\citep{zheng2025semantic}. Spotify's deployed
+homepage contextual bandit similarly targets changing user intent:
+podcast-vs.-music consumption fluctuates across time and user
+context, and contextual calibration delivers measurable gains over
+historical calibration baselines~\citep{feijer2025calibrated}. The
+public ZOZOTOWN/Open Bandit logs provide a real-world instance of
+scalar bandit feedback collected across multiple campaigns and
+logging policies on the same recommendation platform~\citep{saito2020open}.
+In clinical dosing, a recent re-analysis of the IWPC warfarin cohort
+used in our experiments identifies latent patient subgroups with
+substantially different pharmacogenomic dose--response
+relationships, including sign changes for selected
+covariates~\citep{liu2025change}. Together, these examples motivate
+the abstraction studied here: high-dimensional decisions often
+depend locally on a small set of predictive directions, but the
+relevant directions can shift as products, cohorts, or treatment
+regimes change. This is precisely the regime where stationary
+low-rank methods freeze the wrong basis and ambient nonstationary
+methods pay the full $d$-rate.
 
 Existing work treats exactly one of the two properties.
 Stationary low-rank
 bandits~\citep{jun2019bilinear,jedra2024low,lu2021low}
-deliver the desired $\tilO(r\sqrt T)$ rate but assume a fixed $B^\star$,
+deliver the $\tilO(r\sqrt T)$ rate but assume a fixed $B^\star$,
 which the first subspace change in real data invalidates
 ($\tilO$ suppresses polylog factors in $T,d,r,1/\delta$).
 Nonstationary bandits~\citep{russac2019weighted,cheung2019learning}
@@ -192,7 +196,7 @@ Performance is the \emph{costed dynamic regret}
   - x_t^\top \theta_t\Bigr) + c\,|\cTprobe|,
 \label{eq:intro_costed_regret}
 \end{equation}
-penalizing both suboptimal actions and probe rounds (each charged
+penalizing both suboptimal actions and probe rounds (each at cost
 $c>0$). With $m_k$ probes per segment, subspace error shrinks as
 $O(1/\sqrt{m_k})$ while probe cost grows as $O(cm_k)$; the optimum
 of this tradeoff sets the leading rate.
@@ -255,7 +259,7 @@ direct \emph{necessity} stress test (App.~\ref{app:robustness_abc}C)
 restricts probe coverage to a proper subspace and observes the
 $\Omega(T)$ regret blow-up predicted by
 Proposition~\ref{prop:nonid_c}, confirming that the third
-identifiability condition is not a proof artefact.
+identifiability condition is not a proof artifact.
 \end{enumerate}
 
 \paragraph{Related work.}
@@ -378,10 +382,9 @@ projector concentration still has a $\Delta_\sigma$ floor due to the
 random fluctuation around the biased mean
 (Cor.~\ref{cor:projector_conf}).
 
-The two ingredients above (positive identification through the
-lifted moment $G_t$, and the necessity of the three probe-side
-conditions) combine into the following theorem, which is the
-foundational result of the paper.
+Positive identification through the lifted moment $G_t$ above,
+together with the necessity result that follows, combine into the
+following theorem, which is the foundational result of the paper.
 
 \begin{theorem}[Identification under priced probing]
 \label{thm:identification}
@@ -674,18 +677,10 @@ MovieLens,      $r{=}10$ & 1.00           & 1.00           & \textbf{0.97} & \te
 \end{tabular}
 \end{table}
 
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=\textwidth]{experiment_pendigits_extended.png}
-\caption{\textbf{Pendigits operating-regime grid.}
-SPSC and SPSC-Adaptive dominate every non-oracle baseline once
-$d{\ge}55$ and $r{\ge}10$.}
-\label{fig:pendigits-regime}
-\end{figure}
-
 At $(d{=}105, r{=}10)$, SPSC-Adaptive beats LinUCB by $-47\%$ on
-Pendigits and $-68\%$ on Satimage (closest competitor VOFUL is $+53\%$
-above SPSC-Adaptive; operating-regime sunburst in
+Pendigits (operating-regime grid in Fig.~\ref{fig:pendigits-regime},
+App.~\ref{app:percell}) and $-68\%$ on Satimage (closest competitor
+VOFUL is $+53\%$ above SPSC-Adaptive; operating-regime sunburst in
 Fig.~\ref{fig:satimage-sunburst}, App.~\ref{app:percell}); at
 $(d{=}105, r{=}20)$ on Covertype it beats Restart-LinUCB by $-15\%$.
 Non-low-rank baselines are by construction $r$-insensitive.
@@ -785,7 +780,7 @@ production data. Tables in Appendix~\ref{app:percell}.
 
 For a best-effort comparison with stationary low-rank methods, we
 adapt BOSS~\citep{duong2024beyond} and Jedra~\citep{jedra2024low} by
-restarting at every true segment boundary---an oracle advantage we do
+restarting at every true segment boundary, an oracle advantage we do
 not give SPSC (setup in Appendix~\ref{app:boss_jedra_detail}).
 Table~\ref{tab:boss_jedra_grid}: SPSC wins all eight cells by
 $6$--$20\%$, with the lead largest at small $d$ ($-16$ to $-20\%$ at
@@ -856,9 +851,10 @@ and does not catastrophically fail outside that regime.
   low-rank subspace of rank $r\ll d$, and that subspace shifts at
   unknown change points. Stationary low-rank, nonstationary, and
   cost-aware bandits each cover one piece; none recover a changing
-  subspace under priced single-play scalar feedback. We close this gap. Three probe-side conditions, known noise
-  variance, bounded state-noise coupling, and full-dimensional probe
-  support, are each individually necessary and jointly sufficient for
+  subspace under priced single-play scalar feedback. We close this
+  gap: three probe-side conditions, known noise variance, bounded
+  state-noise coupling, and full-dimensional probe support, are each
+  individually necessary and jointly sufficient for
   subspace recovery from quadratic functionals of scalar rewards
   (Theorem~\ref{thm:identification}). Based on this, we propose SPSC,
   which interleaves probing with windowed projected ridge-UCB in the
@@ -1325,8 +1321,8 @@ $R_X := d\cdot R_s + S_w^2$. So both the envelope and predictable
 variance are at most $2R_X$ and $R_X^2$ respectively.
 \end{lemma}
 \begin{proof}
-For scaled-sphere $u_t$, $\|u_t\| = \sqrt d$ exactly (no $\chi^2$
-tail). $|s_t| = |(u_t^\top\theta_t + \varepsilon_t)^2 - \hat\sigma^2|
+For scaled-sphere $u_t$, $\|u_t\| = \sqrt d$ exactly.
+$|s_t| = |(u_t^\top\theta_t + \varepsilon_t)^2 - \hat\sigma^2|
 \le (\sqrt d\,S_w + L_\varepsilon)^2 + \hat\sigma^2 = R_s$ using
 $|u_t^\top\theta_t|\le \|u_t\|\|\theta_t\|\le \sqrt d\,S_w$ on
 $\|\theta_t\|\le S_w$ (orthonormal $B_k^\star$, $\|w_t\|\le S_w$).
@@ -1371,6 +1367,20 @@ $\R^{d\times d}_{\mathrm{sym}}$ with these two bounds yields
 rate dominates the $\log(2d/\delta)/m_k$ term for $m_k\gtrsim\log(d/\delta)$.
 \end{proof}
 
+\begin{proposition}[Segment factorization]
+\label{prop:segment_factorization_conf}
+$\bar M_k^{\mathrm{probe}} = B_k^\star \bar S_k^{\mathrm{probe}} (B_k^\star)^\top$ where
+$\bar S_k^{\mathrm{probe}} := m_k^{-1}\sum_{t\in\cT_k}\E[w_tw_t^\top\mid\cH_{t-1}]$.
+In particular, $\range(\bar M_k^{\mathrm{probe}}) = \range(B_k^\star)$.
+\end{proposition}
+\begin{proof}
+$\widetilde M_t = B_k^\star \E[w_tw_t^\top\mid\cH_{t-1}](B_k^\star)^\top$
+for $t\in\cI_k$; average over $\cT_k$ and pull $B_k^\star$ out.
+Range equality uses
+$\lambda_r(\bar S_k^{\mathrm{probe}})\ge\lambda_{\min}>0$
+(Lem.~\ref{lem:probe_excitation_conf}).
+\end{proof}
+
 \begin{corollary}[Projector concentration]
 \label{cor:projector_conf}
 If $m_k$ is large enough that
@@ -1402,24 +1412,10 @@ $\|\widehat M_k - \bar M_k^{\mathrm{probe}}\|_\op
 \le 2R_X\sqrt{\log(2d/\delta)/m_k} + b_\sigma$.
 $\bar M_k^{\mathrm{probe}}$ has rank exactly $r$ with $r$-th
 eigenvalue $\ge\lambda_{\min}$ (Lem.~\ref{lem:probe_excitation_conf}
-via Prop.~\ref{prop:segment_factorization_conf} below); Davis--Kahan
+via Prop.~\ref{prop:segment_factorization_conf}); Davis--Kahan
 \citep[Thm.~VII.3.1]{bhatia2013matrix} gives
 $\|\widehat P_k - P_k^\star\|_\op\le 4\|\widehat M_k - \bar M_k^{\mathrm{probe}}\|_\op / \lambda_{\min}$,
 yielding \eqref{eq:proj_bound_conf}.
-\end{proof}
-
-\begin{proposition}[Segment factorization]
-\label{prop:segment_factorization_conf}
-$\bar M_k^{\mathrm{probe}} = B_k^\star \bar S_k^{\mathrm{probe}} (B_k^\star)^\top$ where
-$\bar S_k^{\mathrm{probe}} := m_k^{-1}\sum_{t\in\cT_k}\E[w_tw_t^\top\mid\cH_{t-1}]$.
-In particular, $\range(\bar M_k^{\mathrm{probe}}) = \range(B_k^\star)$.
-\end{proposition}
-\begin{proof}
-$\widetilde M_t = B_k^\star \E[w_tw_t^\top\mid\cH_{t-1}](B_k^\star)^\top$
-for $t\in\cI_k$; average over $\cT_k$ and pull $B_k^\star$ out.
-Range equality uses
-$\lambda_r(\bar S_k^{\mathrm{probe}})\ge\lambda_{\min}>0$
-(Lem.~\ref{lem:probe_excitation_conf}).
 \end{proof}
 
 \begin{lemma}[Variance estimator from probe residuals]
@@ -1612,7 +1608,7 @@ $R_\cA S_w\sqrt W\,\varepsilon_{k,t-1}$. Therefore for any $x$,
 $|z_t(x)^\top\widetilde V_t^{-1}\sum_s z_t(x_s)b_{s,t}^{\rm sub}|
 \le R_\cA S_w\sqrt W\,\varepsilon_{k,t-1}\,w_t(x)$, and since
 $w_t(x)\le\|x\|/\sqrt\lambda$, this is bounded by
-$R_\cA S_w\sqrt{W/\lambda}\,\varepsilon_{k,t-1}\|x\|$---a quantity
+$R_\cA S_w\sqrt{W/\lambda}\,\varepsilon_{k,t-1}\|x\|$, a quantity
 dominated by the $\gamma_t\|x\|$ correction in
 \eqref{eq:gamma_choice}.
 The drift-bias part contributes $\le C R_\cA W V_k^{\rm in}$ in total
@@ -1979,7 +1975,7 @@ $\eta_{\mathrm{det}} = C_{\mathrm{sub}}\sqrt{\log(dT/\delta_{\mathrm{FA}})/n}$;
 choosing $b = 2\eta_{\mathrm{det}}$ and union-bounding gives at most
 $\delta_{\mathrm{FA}}$ false alarms across the horizon. Under $H_1$ at
 time $\tau_k$, a separation $\Delta_k \ge 2b$ forces a fire within
-delay $D_{\max} = 2n/\mu + \tau_{\mathrm{burn}}$ --- the $2n/\mu$ term is
+delay $D_{\max} = 2n/\mu + \tau_{\mathrm{burn}}$, where the $2n/\mu$ term is
 the time for the recent window to refill with post-change probes, and
 $\tau_{\mathrm{burn}}$ is a short burn-in period after recovery that
 prevents the detector from firing on its own freshly-reset state.
@@ -2113,6 +2109,15 @@ variant beats every non-oracle baseline are highlighted
 
 \begin{figure}[!htbp]
 \centering
+\includegraphics[width=\textwidth]{experiment_pendigits_extended.png}
+\caption{\textbf{Pendigits operating-regime grid.}
+SPSC and SPSC-Adaptive dominate every non-oracle baseline once
+$d{\ge}55$ and $r{\ge}10$.}
+\label{fig:pendigits-regime}
+\end{figure}
+
+\begin{figure}[!htbp]
+\centering
 \includegraphics[width=0.98\textwidth]{experiment_real_satimage_double_rings.png}
 \caption{\textbf{Satimage operating-regime sunburst.} Regret ratios
 across the $(d,r)$ grid. Blue cells (ratio ${<}1$) indicate SPSC wins;
@@ -2160,7 +2165,7 @@ are confined to $d\le 10$ or $r\le 1$ (probe-cost dominant).
   $\mathrm{S/Best}=\mathrm{SPSC}/\min\{\text{non-oracle, non-Adpt
   baselines}\}$. \textbf{Verdict.} ``SPSC'' if $\mathrm{S/L}<1$ (SPSC
   has lower regret than LinUCB); ``LinUCB'' otherwise. Bold = SPSC
-  verdict. Counts: \textbf{37 SPSC}, \textbf{3 LinUCB} --- the 3
+  verdict. Counts: \textbf{37 SPSC}, \textbf{3 LinUCB}; the 3
   LinUCB cells are all in the small-$d$ corner $d\le 10$ with $r$
   close to $d$, where the probe cost dominates the dimensionality
   savings.}
@@ -2431,7 +2436,7 @@ Three single-parameter sweeps on the reference setting.
 Sweeping $\sigma_\varepsilon\in\{0.05,0.10,0.20,0.30,0.50,0.80\}$:
 SPSC/LinUCB ratio grows mildly with noise (from $0.566$ to $0.595$);
 SPSC/Oracle stable at $\approx 1.55\times$. The low-rank benefit is
-not a low-noise artefact.
+not a low-noise artifact.
 
 \paragraph{Changepoint frequency.}
 $K\in\{1,2,4,6,8,12\}$ at $T{=}6{,}000$. Ratio grows from

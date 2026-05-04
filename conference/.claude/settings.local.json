@@ -15,7 +15,8 @@
       "WebFetch(domain:research.atspotify.com)",
       "WebFetch(domain:www.nature.com)",
       "WebFetch(domain:www.medrxiv.org)",
-      "WebFetch(domain:onlinelibrary.wiley.com)"
+      "WebFetch(domain:onlinelibrary.wiley.com)",
+      "Bash(grep -n \"no.*\\\\$\\\\\\\\\\\\\\\\chi\" /Users/hkhosravi7/Documents/GitHub/lowrank-bandits/conference/conf.tex)"
     ]
   }
 }
