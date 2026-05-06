@@ -2615,20 +2615,31 @@ boundaries, the picture reverses sharply.
 
 \begin{figure}[!htbp]
 \centering
-\includegraphics[width=0.95\textwidth]{experiment_synthetic_extended.png}
-\caption{\textbf{SPSC-Alg.\,1 vs.\ SPSC-Adaptive.} Top: $d$-sweep
-with correct oracle boundaries. Bottom: oracle quality. With
-$K_{\mathrm{real}}{=}5$ true boundaries, Alg.~\ref{alg:spsc} is fed
-$K_{\mathrm{oracle}}\in\{5,\dots,50\}$ (extras are false alarms) and
-degrades; Alg.~\ref{alg:spsc_adaptive} ignores the oracle and is
-flat.}
+\includegraphics[width=0.95\textwidth]{experiment_oracle_quality.png}
+\caption{\textbf{SPSC Alg.\,1 vs.\ SPSC-Adaptive under oracle
+misspecification.} Final cumulative costed regret as the
+oracle-supplied number of segments $K_{\mathrm{oracle}}$ varies, with
+$K_{\mathrm{real}}{=}5$ true subspace shifts ($d{=}60$, $r{=}5$,
+$T{=}5{,}000$, $20$ seeds; mean $\pm$ SE). Alg.~\ref{alg:spsc} is fed
+$K_{\mathrm{oracle}}\in\{5,10,20,40,80,150,200\}$ evenly-spaced
+boundaries (extras beyond $K_{\mathrm{real}}$ are false alarms) and
+degrades monotonically; Alg.~\ref{alg:spsc_adaptive} runs CUSUM on
+the clean stream and ignores the oracle, so its regret is flat;
+LinUCB is an oracle-free reference. The two SPSC variants cross over
+at $K_{\mathrm{oracle}}{\approx}10$: at the correct oracle
+($K_{\mathrm{oracle}}{=}K_{\mathrm{real}}{=}5$) Alg.~\ref{alg:spsc}
+is ${\sim}8\%$ better, while at $K_{\mathrm{oracle}}{=}200$ it is
+${\sim}37\%$ worse.}
 \label{fig:adaptive}
 \end{figure}
 
-SPSC-Adaptive's regret is flat as $K_{\mathrm{oracle}}$ grows, while
-Alg.~\ref{alg:spsc} degrades monotonically and is $3\times$ worse at
-$K_{\mathrm{oracle}}{=}50$: a detector-based reset is strictly safer
-than a fixed schedule when boundaries are unknown or noisy.
+SPSC-Adaptive's regret is flat as $K_{\mathrm{oracle}}$ grows from
+the truth ($K_{\mathrm{real}}{=}5$) to $40\times$ over-specified
+($K_{\mathrm{oracle}}{=}200$), while Alg.~\ref{alg:spsc} degrades
+monotonically and is ${\sim}37\%$ worse than Adaptive at
+$K_{\mathrm{oracle}}{=}200$ (a $1.37\times$ ratio): a detector-based
+reset is strictly safer than a fixed schedule when boundaries are
+unknown or noisy.
 
 \newpage
 \input{checklist.tex}
