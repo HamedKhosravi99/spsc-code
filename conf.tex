@@ -112,32 +112,26 @@ dynamic-regret rate in this setting.
 
 High-dimensional sequential decisions --- personalized recommendation,
 clinical dosing, ad allocation --- share two structural facts that the
-linear-bandit literature has so far treated only in isolation. The
-reward parameter $\theta_t\in\R^d$ at round $t$ typically admits a
-\emph{low-rank} factorization $\theta_t = B_k^\star w_t$ with
-$r\ll d$: user preferences, clinical responses, and ad-creative
-effects live on a thin slice of the ambient space. That thin slice is
-\emph{not static}: tastes drift, cohorts change, treatment regimes
-get revised, and the subspace $\range(B_k^\star)$ itself moves across
-unknown change points $1=\tau_0<\tau_1<\dots<\tau_K=T{+}1$ that delimit
-the segments $\cI_k=[\tau_{k-1},\tau_k)$. Production deployments make
-both facts visible: Spotify's homepage contextual bandit explicitly
+linear-bandit literature has so far treated only in isolation: rewards
+live on a low-dimensional latent subspace, and that subspace drifts.
+User preferences, clinical responses, and ad-creative effects occupy
+a thin slice of the ambient $\R^d$ with intrinsic rank $r\ll d$; but
+the slice is \emph{not static} --- tastes drift, cohorts change,
+treatment regimes get revised, and the latent factor itself moves
+across unknown change points. Production deployments make both
+facts visible: Spotify's homepage contextual bandit explicitly
 targets daily shifts in user
 intent~\citep{feijer2025calibrated}; the IWPC warfarin
 cohort~\citep{international2009estimation} has been re-analyzed to
 expose three latent patient subgroups whose dose--response
 coefficients flip sign across boundaries~\citep{liu2025change}; the
 public Open Bandit logs~\citep{saito2020open} ship scalar feedback
-collected across multiple ad campaigns at ZOZOTOWN. What is missing is
-a combined treatment in linear contextual bandits: rewards living on
-a low-rank subspace whose identity shifts at unknown change points,
-observed only through scalar feedback
-$y_t=x_t^\top\theta_t+\varepsilon_t$.
+collected across multiple ad campaigns at ZOZOTOWN.
 
-\paragraph{The gap, and why it is non-trivial.}
+\paragraph{Where the literature stops.}
 Stationary low-rank
 bandits~\citep{jun2019bilinear,jedra2024low,lu2021low,jang2024efficient}
-deliver the $\tilO(r\sqrt T)$ rate but assume a fixed $B^\star$; any
+deliver the $\tilO(r\sqrt T)$ rate but assume a fixed factor; any
 non-trivial subspace change voids the analysis ($\tilO$ suppresses
 polylog factors in $T,d,r,1/\delta$). Non-stationary linear
 bandits~\citep{russac2019weighted,cheung2019learning} absorb drift
@@ -147,18 +141,27 @@ entirely. Naive combinations fail in instructive ways: sliding-window
 ridge in $\R^d$ never recovers the subspace; a one-shot subspace
 estimate breaks the moment a change point fires; per-segment re-runs
 of stationary low-rank algorithms require oracle access to the
-boundaries. The genuine difficulty is twofold. (a) With scalar
-rewards, a single response $y_t$ is a rank-one quadratic measurement
-of $\theta_t\theta_t^\top$, so the subspace is recoverable only
-through \emph{second-order} probing. (b) Every probe diverts a round
-away from exploitation, so probe acquisition must itself be priced
-against the regret it enables. No prior algorithm recovers a changing
-subspace under scalar feedback, and no prior analysis prices that
-recovery against the exploitation regret it buys.
+boundaries. No prior algorithm recovers a changing subspace under
+scalar feedback, and no prior analysis prices that recovery against
+the exploitation regret it buys.
+
+\paragraph{This work.}
+We study \emph{piecewise-stationary low-rank} linear contextual
+bandits with scalar feedback: $\theta_t = B_k^\star w_t$ for a
+rank-$r$ factor $B_k^\star\in\R^{d\times r}$ that is constant within
+each of $K$ unknown segments
+$\cI_k=[\tau_{k-1},\tau_k)$ delimited by change points
+$1=\tau_0<\tau_1<\dots<\tau_K=T{+}1$ and may shift at the boundaries,
+with the learner only observing scalar responses
+$y_t=x_t^\top\theta_t+\varepsilon_t$ (\S\ref{sec:setting}). The
+genuine difficulty is twofold. (a) A single scalar response $y_t$ is
+a rank-one quadratic measurement of $\theta_t\theta_t^\top$, so the
+moving subspace is recoverable only through \emph{second-order}
+probing. (b) Every probe diverts a round away from exploitation, so
+probe acquisition must itself be priced against the regret it
+enables. Our results are tight along three axes.
 
 \paragraph{Contributions.}
-We formulate the \emph{piecewise-stationary low-rank} linear bandit
-(\S\ref{sec:setting}) and resolve it on three axes.
 \textbf{(i) Identification boundary
 (Theorem~\ref{thm:identification}).} Three probe-side conditions
 (known noise variance, bounded state--noise coupling,
@@ -203,16 +206,16 @@ under scalar feedback.
 Stationary low-rank
 bandits~\citep{jun2019bilinear,kang2022efficient,jedra2024low,jang2024efficient,stojanovic2023spectral,duong2024beyond,lu2021low}
 achieve intrinsic-rank rates but assume a fixed $B^\star$;
-nonstationary
+non-stationary linear
 bandits~\citep{russac2019weighted,cheung2019learning,abbasi2023new,hou2024almost,kim2022improved}
 bound dynamic regret in the ambient dimension and ignore low-rank
 structure; cost-aware
 observation~\citep{seldin2014prediction,tucker2023bandits,elumar2024multi}
 prices information acquisition for fixed parameters, not for
-identifying a changing subspace. SPSC is the first algorithm we
-are aware of that (i) attains regret scaling with intrinsic rank
-$r$, (ii) adapts to changing subspaces without oracle boundaries,
-and (iii) prices probe acquisition explicitly.
+identifying a changing subspace. SPSC sits at the intersection of
+all three: it (i) attains regret scaling with intrinsic rank $r$,
+(ii) adapts to changing subspaces without oracle boundaries, and
+(iii) prices probe acquisition explicitly.
 Appendix~\ref{app:related_table} gives the full positioning
 (Tables~\ref{tab:related_work_summary}--\ref{tab:published_comparison}).
 
@@ -393,6 +396,23 @@ $V_{k,t}(W):=\sum_{s,s+1\in\cI_k,\,t-W\le s<t}\|\theta_{s+1}-\theta_s\|_2$
 $O(d^2|\cA_t|)$ for ambient LinUCB, an $O(d/r)$ speed-up in addition
 to the statistical gain.
 
+\paragraph{Why interleaved probing recovers the subspace.}
+A single scalar response is one-dimensional, but the lifted statistic
+$G_t=\mathcal K^{-1}(s_t u_tu_t^\top)$ in
+\eqref{eq:lifted_sample} targets the conditional second moment
+$\E[\theta_t\theta_t^\top\mid\cH_{t-1}]
+= B_k^\star\,\E[w_tw_t^\top\mid\cH_{t-1}]\,(B_k^\star)^\top$ up to a
+controlled bias. Averaging $G_t$ across probe rounds inside segment
+$k$ isolates this rank-$r$ matrix, whose top-$r$ eigenspace is
+exactly $\range(B_k^\star)$ once the innovation $w_t$ excites all
+$r$ factor directions ($\Sigma_{\eta,k}\succ 0$). The three
+identifiability conditions of Theorem~\ref{thm:identification} are
+precisely what makes the isolation valid in the
+unrestricted-second-moment scope; SPSC inherits subspace recovery at
+rate $1/\sqrt{m_k}$ from Cor.~\ref{cor:projector_conf}, after which
+the exploitation phase pays $\sqrt r$ rather than $\sqrt d$ because
+the projection collapses the geometry to dimension $r$.
+
 Full pseudocode for Alg.~\ref{alg:spsc} (oracle boundaries) is in
 Appendix~\ref{app:algorithms}, alongside the adaptive variant
 described next.
@@ -453,6 +473,28 @@ window (cumulative on $E_k$ when $W\ge\ell_k$); the bound is most
 informative when $V_{\rm in}$ is small. Proof in
 \S\ref{app:proof_main}.
 \end{theorem}
+
+\paragraph{Proof sketch.}
+Three near-decoupled error sources drive the bound. (i) Inside the
+learned $r$-dimensional subspace, exploitation is a windowed
+projected ridge-UCB problem whose self-normalized analysis yields
+$\tilO(r\sqrt T)$ regret, with $\sqrt r$ entering through
+$\beta_t^{(r,W)}$ rather than $\sqrt d$. (ii) Probe rounds incur
+$O(m_k)$ regret per segment while delivering subspace error
+$\varepsilon_k=\tilO(1/\sqrt{m_k})$ via Davis--Kahan applied to
+$\widehat M_k$ (Cor.~\ref{cor:projector_conf}); the
+exploitation-side mismatch cost $\propto \ell_k\,\varepsilon_k$
+balances probe cost at $m_k\propto \ell_k^{2/3}$, summing to
+$\tilO(T^{2/3})$ across segments. (iii) Within-segment drift
+propagates through the windowed estimator at rate proportional to
+$W V_{\rm in}$. Two ingredients make this decomposition rigorous:
+uniform-in-$t$ control of the time-varying-basis subspace error
+$\varepsilon_{k,t}=\|\widehat P_t-P_k^\star\|_\op$ via prefix
+concentration (Lem.~\ref{lem:prefix_subspace}), and the
+balanced-schedule condition that prevents any single segment from
+being starved of probes. Detailed accounting, including the burn-in
+$\tilO(K^{2/3}T^{1/3}/\lambda_{\min}^2)$ summand, is in
+\S\ref{app:proof_main}.
 
 \begin{corollary}[Plug-in variance]
 \label{cor:plugin_variance}
@@ -817,6 +859,25 @@ the same rate without oracle change points
 (Proposition~\ref{thm:spsc_adaptive}). On eleven benchmarks across
 synthetic, UCI, clinical, and production data, SPSC reduces regret
 whenever $d-r\gtrsim T^{1/6}$, a crossover consistent with theory.
+
+\paragraph{Limitations and extensions.}
+Three boundaries of the present results are worth flagging. The
+identification theorem is tight in the unrestricted-second-moment
+scope; restricting to specific noise families could relax one or
+more of the three conditions but would also forfeit the converse
+half. The $O(W V_{\rm in})$ term in the regret bound is informative
+only when within-segment path variation is small, and the CUSUM-style
+detector in SPSC-Adaptive trades detection delay for false-alarm
+control, so very frequent change points require the sliding-window
+estimator to be re-tuned. Two natural extensions stand out.
+Bilinear or tensorized factor models with side information on $w_t$
+should inherit the probe--exploit decomposition with the
+segment-wise $\tilO(T^{2/3})$ identification cost replaced by the
+corresponding higher-order moment-estimation rate.
+Heterogeneous-rank segments, where $r$ itself shifts at change
+points, strictly generalize Cor.~\ref{cor:rank_adaptive}, which
+covers a single rank-thresholding pass and assumes a common rank
+across segments.
 
 
 %% ============================================================
