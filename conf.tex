@@ -602,17 +602,24 @@ means over $\ge 10$ seeds with $\pm 1$\,SE bands.
 
 Theory predicts a crossover at $d - r \asymp T^{1/6}$: SPSC wins above
 it, ambient LinUCB below. We verify on a piecewise low-rank LDS at
-$T{=}5{,}000$, sweeping $(d,r)\in\{5,10,20,30,45,60,80,100\}\times\{1,3,5,10,15,20\}$
-with $r{<}d$ (40 cells), $K{=}10$, $\sigma_\varepsilon{=}0.3$,
-spectral radius $0.99$, $40$ actions, probe cost $c{=}0.1$.
+$T{=}5{,}000$, sweeping $(d,r)\in\{10,20,30,45,60,80\}\times\{1,3,5,10,15,20\}$
+with $r{<}d$ (32 cells), $K{=}10$, $\sigma_\varepsilon{=}0.3$,
+spectral radius $0.99$, $40$ actions, probe cost $c{=}0.1$. The
+extended 40-cell sweep (adding $d\in\{5,100\}$) is reported in
+App.~\ref{app:percell} (Table~\ref{tab:app-synthetic}).
 
 \begin{figure}[!htbp]
   \centering
   \includegraphics[width=0.98\textwidth]{experiment1_synthetic_phase.png}
   \caption{\textbf{Phase-transition boundary.} SPSC/LinUCB costed-regret
-  ratio across the $(d,r)$ grid. The crossover $d-r=T^{1/6}$ (dashed)
-  separates SPSC-wins (ratio $<1$) from ambient-wins; per-rank curves
-  track $\sqrt{r/d}$ (dotted), matching Theorem~\ref{thm:spsc_regret}.}
+  ratio across the $(d,r)$ grid (32 cells, $T{=}5{,}000$, $K{=}10$).
+  \textbf{(a)} Phase-transition contour map: the empirical ratio${=}1$
+  contour (solid) closely tracks the theoretical crossover
+  $d-r=T^{1/6}$ (dashed). Markers indicate SPSC wins (blue circles),
+  ties (orange squares), and LinUCB wins (red triangles).
+  \textbf{(b)} Ratio versus $d$ for each $r$ (log scale): empirical
+  ratios (solid) match the $\sqrt{r/d}$ rate predicted by
+  Theorem~\ref{thm:spsc_regret} (dotted).}
   \label{fig:synthetic-phase}
 \end{figure}
 
@@ -2134,16 +2141,6 @@ variant beats every non-oracle baseline are highlighted
 SPSC and SPSC-Adaptive dominate every non-oracle baseline once
 $d{\ge}55$ and $r{\ge}10$.}
 \label{fig:pendigits-regime}
-\end{figure}
-
-\begin{figure}[!htbp]
-\centering
-\includegraphics[width=0.98\textwidth]{experiment_real_satimage_double_rings.png}
-\caption{\textbf{Satimage operating-regime sunburst.} Regret ratios
-across the $(d,r)$ grid. Blue cells (ratio ${<}1$) indicate SPSC wins;
-red cells indicate losses. (a) SPSC vs.\ LinUCB; (b) SPSC vs.\ best
-non-oracle competitor.}
-\label{fig:satimage-sunburst}
 \end{figure}
 
 \paragraph{Reading the tables.}
