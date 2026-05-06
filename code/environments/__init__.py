@@ -5,14 +5,10 @@ from .real_pendigits_environment import RealPendigitsEnvironment
 from .real_satimage_environment import RealSatimageEnvironment
 from .warfarin_environment import WarfarinEnvironment
 from .vancomycin_environment import VancomycinEnvironment
-from .criteo_environment import CriteoEnvironment
 from .movielens_environment import MovieLensEnvironment
 from .real_movielens_environment import RealMovieLensEnvironment
-from .jester_environment import RealJesterEnvironment
-from .lastfm_environment import RealLastfmEnvironment
 from .fashion_mnist_environment import FashionMNISTEnvironment
 from .mnist_environment import MNISTEnvironment
-from .newsgroups_environment import NewsgroupsEnvironment
 
 # OpenBandit Pipeline (real exploration logs).  Soft-imported because
 # the `obp` package is an optional dependency.
