@@ -818,8 +818,8 @@ monotonically as the oracle is corrupted.
 \subsection{Rank misspecification, probe-rate sensitivity, and take-away}
 \label{sec:exp_sensitivity}
 
-\textbf{Rank misspecification.} The true rank $r^\star$ is typically
-unknown a priori, so we evaluate SPSC's robustness to rank
+\textbf{Rank misspecification.} The true rank $r^\star$ is rarely
+known in advance, so we evaluate SPSC's robustness to rank
 mis-specification on Covertype ($d{=}155$, $r^\star{=}10$;
 App.~\ref{app:rank_misspec}): sweeping over nine grid points
 $r\in\{1,3,5,10,15,20,30,50,80\}$ gives a U-shaped curve (under:
@@ -2497,11 +2497,10 @@ $\tau_\rho=1/(1-\rho)$.}
 \label{app:sota_compare}
 
 We adopt the small-$d$ piecewise-stationary stress test of
-\citet{russac2019weighted}, originally used to validate D-LinUCB,
-both to verify that SPSC's gains do not depend on large-$d$
-low-rank regimes and to compare SPSC against the standard
-sliding-window and discounted baselines on the setup on which they
-were originally evaluated. Setup: $d{=}2$, $r{=}1$, $K{=}4$,
+\citet{russac2019weighted} both to verify that SPSC's gains do not
+depend on large-$d$ low-rank regimes and to compare SPSC against the
+standard sliding-window and discounted baselines on the setup used
+to validate D-LinUCB. Setup: $d{=}2$, $r{=}1$, $K{=}4$,
 $T{=}6{,}000$, $\sigma_\varepsilon{=}1$, 50 arms, 30 seeds. SPSC
 reduces control regret by $46.5\%$ vs.\ D-LinUCB and $34.8\%$ vs.\
 SW-LinUCB; probe overhead is a $0.9\%$ fraction.
@@ -2561,12 +2560,11 @@ is learned signal.}
 \section{BOSS/Jedra adaptation to the piecewise setting}
 \label{app:boss_jedra_detail}
 
-Low-rank-exploitation methods are the closest baseline class to
-SPSC: they exploit the same rank structure but assume stationarity.
-The question is whether identifying a \emph{changing} subspace online
-(SPSC) outperforms exploiting a \emph{fixed} low-rank reward offline,
-even when the latter is given oracle segment-boundary restarts (the
-strongest version of the baseline).
+Stationary low-rank methods exploit the same rank structure as SPSC
+but assume stationarity. The question is whether identifying a
+\emph{changing} subspace online (SPSC) outperforms exploiting a
+\emph{fixed} low-rank reward offline, even when the latter is given
+oracle segment-boundary restarts.
 
 BOSS~\citep{duong2024beyond} and Jedra~\citep{jedra2024low} are
 stationary low-rank methods. To give them a fair comparison to SPSC
