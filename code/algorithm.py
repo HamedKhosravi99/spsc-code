@@ -3,7 +3,7 @@ Single-Play Subspace-Aware Control and baselines.
 
 Algorithms
 ----------
-SPSC_Algorithm1  -- faithful implementation of Algorithm 1 from the paper:
+SPSC_Algorithm1  -- Algorithm 1 from the paper:
     - Single-play: on probe rounds x_t^dep = u_t (no separate UCB action)
     - Windowed design matrix: only exploitation rounds in [t-W, t) per segment
     - Control regret on probe rounds = r_opt - u_t^T theta_t  (actual, not a proxy)
@@ -93,7 +93,7 @@ class RunMetrics:
 
 class SPSC_Algorithm1:
     """
-    Faithful implementation of Algorithm 1 from the paper:
+    Implementation of Algorithm 1 from the paper:
     "Single-Play Subspace-Aware Control with Windowed r-Dimensional Exploitation"
 
     Single-play invariant
@@ -765,7 +765,7 @@ class ETCLowRank:
     """
     Explore-then-commit low-rank bandit with oracle segment-boundary restarts.
 
-    Captures the paradigm of Jedra et al. (ICML 2024) adapted to the
+    Adaptation of Jedra et al. (ICML 2024) to the
     piecewise-stationary vector bandit setting: at each segment boundary,
     run a pure exploration phase to recover the subspace, then exploit with
     projected LinUCB for the remainder of the segment.
@@ -910,7 +910,7 @@ class RewardPCALowRank:
     Explore-then-commit low-rank bandit with reward-PCA subspace estimation
     and oracle segment-boundary restarts.
 
-    Captures the paradigm of Jang et al. (ICML 2024) adapted to the
+    Adaptation of Jang et al. (ICML 2024) to the
     piecewise-stationary setting: at each segment boundary, play random
     actions, estimate the subspace from second-order reward statistics,
     then exploit with projected LinUCB.
@@ -1821,14 +1821,14 @@ class LowOFUL:
     Low-rank OFUL: learns a rank-r subspace from the action-reward outer
     products, then runs UCB in the learned r-dimensional subspace.
 
-    Captures the core idea of Jun et al. (2019) / Lu et al. (2021):
+    PCA-based subspace recovery (in the spirit of Jun et al. 2019, Lu et al. 2021):
     maintain a running estimate of the reward parameter via nuclear-norm
     regularized ridge regression, extract the top-r subspace, and exploit
     in that subspace.
 
-    Key property: assumes STATIONARY subspace.  Under nonstationarity the
-    subspace estimate degrades because past data from old segments pollutes
-    the estimate — this is the critical weakness SPSC addresses.
+    Assumes stationary subspace. Under nonstationarity the subspace
+    estimate degrades because past data from old segments pollutes the
+    estimate, the critical weakness SPSC addresses.
 
     Resets at oracle segment boundaries are NOT given (this is the point:
     show that stationary low-rank methods fail under nonstationarity).
@@ -1930,17 +1930,17 @@ class LowOFUL:
 
 
 # ---------------------------------------------------------------------------
-# SOTA Baseline: VOFUL (Kim & Paik 2022 spirit)
+# SOTA Baseline: VOFUL (variance-weighted PCA)
 # ---------------------------------------------------------------------------
 
 class VOFUL:
     """
     Variance-aware Optimistic algorithm for Low-rank linear bandits.
 
-    Captures the core idea of Kim & Paik (2022): use variance-weighted
-    action-reward covariance to estimate the low-rank subspace, giving
-    tighter subspace recovery than unweighted PCA, then exploit via
-    r-dimensional ridge UCB.
+    Variance-weighted PCA for low-rank subspace recovery: weight the
+    action-reward covariance by the per-action expected variance to
+    give tighter subspace recovery than unweighted PCA, then exploit
+    via r-dimensional ridge UCB.
 
     The variance weighting helps when different actions have different
     signal-to-noise ratios.  Formally:

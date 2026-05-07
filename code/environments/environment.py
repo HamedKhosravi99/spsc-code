@@ -116,8 +116,8 @@ class LowRankLDSEnvironment:
         All eigenvalues of A_k have magnitude exactly spectral_radius.
         Sigma_eta_k = sigma_eta * I  (isotropic innovations).
         Together these give stationary covariance Sigma_w = sigma_eta/(1-rho^2) * I,
-        so all r LDS components have equal variance — crucial for full-rank subspace
-        recovery from probe observations.
+        so all r LDS components have equal variance, which is needed for
+        full-rank subspace recovery from probe observations.
         """
         self.A_list = []
         self.Sigma_eta_list = []
