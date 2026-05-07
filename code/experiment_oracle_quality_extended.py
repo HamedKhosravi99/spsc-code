@@ -6,9 +6,7 @@ Re-runs the K_oracle ablation at extended K_oracle range and higher
 seed count to make the "Alg.1 degrades, Adaptive flat" claim land
 clearly with publication-quality error bars.
 
-Setup (matches the original sweep2 in
-`/Users/hkhosravi7/Downloads/source/code/experiment_synthetic_comparison.py`,
-with extended K_oracle range and 20 seeds):
+Setup (extended K_oracle range and 20 seeds):
 
   - True environment: piecewise low-rank LDS with K_real = 5 segments,
     d = 60, r = 5, T = 5000.
