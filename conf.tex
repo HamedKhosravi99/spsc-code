@@ -130,7 +130,7 @@ collected across multiple ad campaigns at ZOZOTOWN.
 
 \paragraph{Where the literature stops.}
 Stationary low-rank
-bandits~\citep{jun2019bilinear,jedra2024low,lu2021low,jang2024efficient}
+bandits~\citep{jun2019bilinear,jedra2024low,jang2024efficient}
 deliver the $\tilO(r\sqrt T)$ rate but assume a fixed factor; any
 non-trivial subspace change voids the analysis ($\tilO$ suppresses
 polylog factors in $T,d,r,1/\delta$). Non-stationary linear
@@ -1067,7 +1067,7 @@ Algorithm & Reference & Regret scaling & Key difference vs.\ SPSC \\
 \midrule
 LinUCB       & \citet{abbasi2011improved}  & $O(d\sqrt{T})$                       & Ambient; no subspace exploitation. \\
 LowOFUL      & \citet{jun2019bilinear}     & $\tilO(r\sqrt{T})$                   & Needs oracle subspace $B$. \\
-LowRank-Reward & \citet{lu2021low}     & $\tilO(r\sqrt{T})$                   & Stationary; learns $B$ from rewards. \\
+LowRank-Reward & \citet{lu2021low}     & $\tilO((d_1{+}d_2)^{3/2}\sqrt{rT})$  & Stationary; ambient prefactor in $(d_1{+}d_2)^{3/2}$. \\
 BOSS         & \citet{duong2024beyond}       & $\tilO(r\sqrt{dT})$                  & Stationary; no online change adaptation. \\
 Jedra        & \citet{jedra2024low}  & $\tilO(r^{5/4}(m{+}n)^{3/4}\sqrt{T})$ & Stationary; no probe cost. \\
 \midrule
