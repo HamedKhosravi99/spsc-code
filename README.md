@@ -1,83 +1,94 @@
-# Catching a Moving Subspace: Low-Rank Bandits Beyond Stationarity
+# SPSC: Single-Play Subspace-Calibrated Optimism
 
-This repository contains the **conference version** of the SPSC paper.
-It studies linear contextual bandits in which the reward parameter
-lies in a piecewise-constant rank-$r$ subspace that shifts at unknown
-change points, and introduces **SPSC** (Single-Play Subspace-Calibrated
-Optimism) and its detector-based variant **SPSC-Adaptive**.
+Reference implementation of **SPSC** and **SPSC-Adaptive** for
+piecewise low-rank linear contextual bandits, together with scripts
+that reproduce every experiment in the accompanying paper.
 
-A journal-length version of the paper, with the full theory and an
-extended experimental library, will be developed in a separate
-repository.
+The setting is linear contextual bandits in which the reward
+parameter lies in a piecewise-constant rank-$r$ subspace that shifts
+at unknown change points: stationary low-rank bandits exploit the
+rank but break under any subspace change, and non-stationary linear
+bandits adapt to drift but pay the ambient $\widetilde O(d\sqrt T)$
+rate. SPSC interleaves isotropic probes with windowed projected
+ridge-UCB exploitation in the learned $r$-dimensional subspace;
+SPSC-Adaptive detects segment boundaries online via a CUSUM-style
+two-window comparison.
 
 ## Repository layout
 
 ```
 .
-├── conf.tex                 # main paper (LaTeX source)
-├── conf.pdf                 # built paper (camera-ready PDF)
-├── appendix_tables.tex      # per-cell tables included by conf.tex
-├── checklist.tex            # NeurIPS responsibility checklist
-├── neurips_2026.sty         # NeurIPS 2026 style file
-├── references.bib           # bibliography
-├── code/                    # experiment scripts (Python)
-│   ├── algorithm.py         #   SPSC and SPSC-Adaptive implementations
-│   ├── environments/        #   benchmark environments
-│   └── experiment_*.py      #   one script per benchmark / sensitivity study
-├── figures/                 # all figures referenced by conf.tex
-└── requirements.txt         # Python dependencies for the code/
+├── code/
+│   ├── algorithm.py                       # SPSC / SPSC-Adaptive / baselines
+│   ├── environments/                      # benchmark environments
+│   ├── experiment_*.py                    # one script per benchmark / sweep
+│   └── ablation_warfarin_random_subspace.py
+└── requirements.txt                       # Python dependencies
 ```
 
-## Building the paper
-
-A pre-built `conf.pdf` is checked in at the repository root. To rebuild
-from source:
-
-```bash
-pdflatex conf.tex
-bibtex   conf
-pdflatex conf.tex
-pdflatex conf.tex
-```
-
-(or simply `latexmk -pdf conf.tex`).
-
-## Reproducing experiments
+## Installation
 
 ```bash
 pip install -r requirements.txt
-python code/experiment_synthetic_extended.py # 40-cell phase-transition grid (Table tab:app-synthetic)
-python code/plot_phase_transition_hq.py      # render Fig. 1 from the appendix table
-python code/experiment_pendigits_extended.py # Pendigits operating-regime grid
-python code/experiment_real_satimage_regime.py
+```
+
+NumPy / SciPy / Matplotlib only; no GPU or external ML libraries
+required.
+
+## Reproducing the experiments
+
+```bash
+# Synthetic phase-transition grid
+python code/experiment_synthetic_extended.py
+
+# UCI / MovieLens benchmarks
+python code/experiment_pendigits_extended.py
+python code/experiment_satimage_extended.py
+python code/experiment_covertype_grid.py
+python code/experiment_mnist_grid.py
+python code/experiment_fashion_mnist_grid.py
 python code/experiment_movielens_real_grid.py
-python code/experiment_openbandit.py         # ZOZOTOWN / Open Bandit logs
+
+# Clinical
+python code/experiment_warfarin_extended.py
+python code/experiment_vancomycin_extended.py
 python code/ablation_warfarin_random_subspace.py
-python code/experiment_assumption_violation.py
+
+# Production logs
+python code/experiment_openbandit.py
+
+# Comparison with stationary low-rank methods
 python code/experiment_boss_jedra_grid.py
+
+# Sensitivity / robustness
 python code/experiment_rank_misspec.py
-# (and so on for the remaining experiment_*.py scripts)
+python code/experiment_assumption_violation.py
+python code/experiment_robustness_abc.py
+python code/experiment_oracle_quality_extended.py
 ```
 
 Each script writes per-seed JSON results into `code/results/`.
 
-## Highlights
+## Algorithm summary
 
-- **Identification boundary (Theorem 2.2).** Three probe-side
-  conditions, known noise variance, bounded state-noise coupling, and
-  full-dimensional probe support, are individually necessary (in the
+- **Identification boundary.** Three probe-side conditions, known
+  noise variance, bounded state-noise coupling, and full-dimensional
+  probe support, are individually necessary (in the
   unrestricted-second-moment scope) and jointly sufficient for
   recovering the rank-$r$ subspace from quadratic functionals of
   scalar rewards.
-- **Algorithm (SPSC, SPSC-Adaptive).** Interleaves isotropic probes
-  with windowed projected ridge-UCB exploitation in the learned
+- **SPSC / SPSC-Adaptive.** Interleaves isotropic probes with
+  windowed projected ridge-UCB exploitation in the learned
   $r$-dimensional subspace; SPSC-Adaptive detects segment boundaries
   online via a CUSUM-style two-window comparison.
-- **Costed dynamic regret (Theorem 4.1).**
+- **Costed dynamic regret.**
   $\widetilde O(r\sqrt{T}) + \widetilde O(T^{2/3}) + O(W V_{\mathrm{in}})$,
-  replacing the ambient $\widetilde O(d\sqrt{T})$ rate with the
+  replacing the ambient $\widetilde O(d\sqrt T)$ rate with the
   intrinsic rank.
-- **Experiments (eleven benchmarks).** Synthetic phase-transition
-  grid; UCI/MovieLens (Covertype, Pendigits, Satimage, MNIST,
-  Fashion-MNIST, MovieLens); clinical (Warfarin, Vancomycin); the
-  Russac small-$d$ stress test; Open Bandit production logs.
+
+## Benchmarks covered
+
+Synthetic phase-transition grid; UCI/MovieLens (Covertype, Pendigits,
+Satimage, MNIST, Fashion-MNIST, MovieLens); clinical (Warfarin,
+Vancomycin); a small-$d$ piecewise-stationary stress test; Open
+Bandit production logs.
