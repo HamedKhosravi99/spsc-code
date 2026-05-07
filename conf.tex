@@ -623,8 +623,8 @@ App.~\ref{app:percell} (Table~\ref{tab:app-synthetic}).
   \label{fig:synthetic-phase}
 \end{figure}
 
-SPSC achieves $13$--$34\%$ reductions whenever $d\ge 45$ with every
-$r$-curve tracking $\sqrt{r/d}$: use SPSC when
+SPSC achieves $13$--$34\%$ reductions whenever $d\ge 45$ and
+$r\ge 3$ with every $r$-curve tracking $\sqrt{r/d}$: use SPSC when
 $d-r\gtrsim T^{1/6}$, and ambient LinUCB otherwise.
 
 \subsection{Real-data multi-baseline comparison}
@@ -657,7 +657,7 @@ Appendix~\ref{app:percell}.
 \setlength{\tabcolsep}{4pt}
 \begin{tabular}{lcc@{\hspace{8pt}}cc@{\hspace{8pt}}cc@{\hspace{8pt}}cc}
 \toprule
- & \multicolumn{2}{c}{$d{=}55$} & \multicolumn{2}{c}{$d{=}105$} & \multicolumn{2}{c}{$d{=}155/200$} & \multicolumn{2}{c}{best}\\
+ & \multicolumn{2}{c}{$d{=}55$} & \multicolumn{2}{c}{$d{=}105$} & \multicolumn{2}{c}{$d{=}200$} & \multicolumn{2}{c}{best}\\
 \cmidrule(lr){2-3}\cmidrule(lr){4-5}\cmidrule(lr){6-7}\cmidrule(lr){8-9}
 Dataset / $r$ & S/Lin & S/Best & S/Lin & S/Best & S/Lin & S/Best & cell & ratio\\
 \midrule

@@ -23,7 +23,7 @@ with extended K_oracle range and 20 seeds):
 
 Outputs:
   - JSON: `code/results/experiment_oracle_quality.json`  (per-seed data)
-  - Figure: `figures/experiment_synthetic_extended.png`
+  - Figure: `figures/experiment_oracle_quality.png`
             (single-panel high-DPI plot, paper-ready)
 
 Usage:

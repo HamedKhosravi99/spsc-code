@@ -46,7 +46,7 @@ pdflatex conf.tex
 
 ```bash
 pip install -r requirements.txt
-python code/experiment1_phase_grid.py        # synthetic phase-transition grid
+python code/experiment1_final_figure.py      # synthetic phase-transition grid (Fig. 1)
 python code/experiment_pendigits_extended.py # Pendigits operating-regime grid
 python code/experiment_real_satimage_regime.py
 python code/experiment_movielens_real_grid.py
