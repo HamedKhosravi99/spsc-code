@@ -2507,8 +2507,9 @@ SW-LinUCB; probe overhead is a $0.9\%$ fraction.
 
 \begin{table}[!htbp]
 \centering
-\caption{Russac et al.\ benchmark. Final control regret and costed
-regret (mean$\pm$SE, 30 seeds).}
+\caption{Final control and costed regret on the small-$d$
+piecewise-stationary stress test of \citet{russac2019weighted}
+(mean$\pm$SE, 30 seeds).}
 \label{tab:exp9}
 \small
 \begin{tabular}{lrrl}
@@ -2528,7 +2529,12 @@ Reset-LinUCB (oracle)               & $4{,}647 \pm 147$ & $4{,}647$ & $+11.5\%$\
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\textwidth]{experiment9_sota_benchmark.png}
-\caption{Russac et al.\ NeurIPS 2019 benchmark.}
+\caption{Small-$d$ piecewise-stationary stress test of
+\citet{russac2019weighted} ($d{=}2$, $r{=}1$, $K{=}4$,
+$T{=}6{,}000$, 30 seeds). \textbf{(a)} Cumulative control regret;
+vertical dotted lines mark the three change points.
+\textbf{(b)} Final control regret per method; SPSC is the best
+non-oracle baseline.}
 \label{fig:exp9}
 \end{figure}
 
