@@ -2535,17 +2535,24 @@ Reset-LinUCB (oracle)               & $4{,}647 \pm 147$ & $4{,}647$ & $+11.5\%$\
 \section{Warfarin: random-subspace ablation}
 \label{app:warfarin_ablation}
 
-To decompose SPSC's Warfarin gain into (i) dimensionality reduction
-and (ii) the \emph{learned} subspace itself, we replace
-$\widehat U_t$ with a fresh random rank-$r$ projection every segment
-and run SPSC otherwise unchanged. Results on $d{=}93$ across
-$r\in\{1,2,3,5,10\}$ (10 seeds): the random-subspace variant retains
-about half of the SPSC-vs-LinUCB gap, confirming that
-\emph{dimensionality reduction explains roughly half} the win and the
-learned subspace explains the rest. The learned subspace captures
-$2$--$6\times$ more signal variance than a random rank-$r$ projection
-at every $r$, directly quantifying the value of the probe-based
-identification.
+The Warfarin gain reported in \S\ref{sec:exp_warfarin} admits two
+distinct explanations: projection of the $93$-dimensional regression
+onto an $r$-dimensional subspace, which alone reduces the effective
+dimension and stabilizes the ridge estimate; and identification of
+the \emph{correct} rank-$r$ subspace via the probe-based estimator.
+The two cannot be separated from a single regret comparison, since
+SPSC performs both simultaneously. We disentangle them by replacing
+the learned subspace $\widehat U_t$ with a fresh random rank-$r$
+projection at every segment, leaving every other component of SPSC
+unchanged; the remaining setup mirrors \S\ref{sec:exp_warfarin}
+($d{=}93$, $K{=}8$, $T{=}5{,}000$, $r$ swept over $\{1,2,3,5,10\}$,
+$10$ seeds). The random-subspace variant captures roughly half of
+the SPSC-vs-LinUCB regret gap, so dimensionality reduction accounts
+for approximately half of the gain and identification of the
+correct subspace for the remainder. Consistent with this
+decomposition, the learned subspace retains between $2\times$ and
+$6\times$ more signal variance than a random rank-$r$ projection at
+every $r$, quantifying the value of the probe-based identification.
 
 \begin{figure}[!htbp]
 \centering
