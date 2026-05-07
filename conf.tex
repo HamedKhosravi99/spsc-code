@@ -592,8 +592,10 @@ the Russac small-$d$ stress test (\S\ref{sec:exp_russac}); and Open
 Bandit production logs (\S\ref{sec:exp_openbandit}). Baselines:
 LinUCB~\citep{abbasi2011improved}, D-LinUCB~\citep{russac2019weighted},
 SW-LinUCB~\citep{cheung2019learning}, Restart-LinUCB, LowRank-Reward,
-LowOFUL~\citep{jun2019bilinear}, VOFUL~\citep{kim2022improved}, LinTS,
-SW-LinTS, and adapted BOSS~\citep{duong2024beyond}/Jedra~\citep{jedra2024low};
+LowOFUL~\citep{jun2019bilinear}, VOFUL,\footnote{LowOFUL, VOFUL, and
+LowRank-Reward are adaptations of stationary low-rank methods to our
+piecewise-low-rank setting; see App.~\ref{app:setup} for details.}
+LinTS, SW-LinTS, and adapted BOSS~\citep{duong2024beyond}/Jedra~\citep{jedra2024low};
 Oracle-LinUCB (true subspace) is an optimistic reference. Curves are
 means over $\ge 10$ seeds with $\pm 1$\,SE bands.
 
@@ -2115,20 +2117,30 @@ LinTS/SW-LinTS use posterior variance $\sigma^2 = \delta^2$.
 Oracle-LinUCB knows the true $B_k^\star$ and runs LinUCB in the
 projected $\R^r$.
 
-\paragraph{Subspace-aware baselines (LowOFUL, VOFUL): favorable adaptation.}
-Both LowOFUL and VOFUL were designed for a \emph{fixed} low-rank
-representation, so running them in our piecewise setting requires a
-choice for the subspace they consume. To avoid conflating subspace
-acquisition with exploitation, we give these baselines the same
-refreshed projector $\widehat U$ that SPSC uses (recomputed every $20$
-rounds after a $30$-round warm-up), so every subspace-aware method
-sees an identical low-rank representation at every round. This is a
-\emph{favorable} adaptation, since it removes representation quality as a
-possible source of SPSC's empirical gains, and any remaining gap is
-attributable to SPSC's windowed head and drift handling rather than to
-better subspace estimation. Running LowOFUL/VOFUL with their own
-stationary subspace estimators (not shown) yields strictly worse
-baseline numbers and larger SPSC margins.
+\paragraph{Subspace-aware baselines (LowOFUL, VOFUL, LowRank-Reward): adaptation to the piecewise-low-rank setting.}
+The published versions of these methods do not directly apply in our
+setting: LowOFUL~\citep{jun2019bilinear} requires oracle access to
+the rank-$r$ subspace $B^\star$; the algorithms of \citet{lu2021low}
+are either theoretically optimal but not efficiently implementable
+(LowGLOC) or rely on low-rank matrix-completion machinery
+(LowGLOC-LP) that does not transfer to our action-set bandit setup;
+and the variance-aware OFUL family (VOFUL/VOFUL2) is a full-$d$
+variance-aware confidence-set construction with no rank exploitation.
+To obtain competitive baselines for the piecewise-low-rank regime,
+each maintains its own running estimate of the segment subspace via
+reward-outer-product PCA: LowOFUL accumulates
+$M = \sum_t (y_t x_t)(y_t x_t)^\top$ and re-estimates the top-$r$
+eigenspace every $20$ rounds (after a $30$-round warm-up);
+LowRank-Reward applies the same estimator on a sliding window
+$W{=}200$ with oracle resets at segment boundaries; VOFUL applies a
+variance-weighted variant
+$M = \sum_t w_t\,(y_t x_t)(y_t x_t)^\top$ with
+$w_t = 1/(\|x_t\|^2 + \sigma_\varepsilon^2)$. These adaptations
+\emph{strengthen} the baselines: granting them online subspace
+recovery removes representation quality as a confound, so any
+remaining gap to SPSC reflects probe-based identification, the
+windowed head, and drift handling rather than failure to exploit
+low-rank structure.
 
 \paragraph{Implementation and compute.}
 All experiments use NumPy/SciPy only. A full $(d,r)$ grid (9 cells,
