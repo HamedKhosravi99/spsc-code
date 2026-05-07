@@ -2561,19 +2561,20 @@ is learned signal.}
 \label{app:boss_jedra_detail}
 
 Stationary low-rank methods exploit the same rank structure as SPSC
-but assume stationarity. The question is whether identifying a
-\emph{changing} subspace online (SPSC) outperforms exploiting a
-\emph{fixed} low-rank reward offline, even when the latter is given
-oracle segment-boundary restarts.
-
-BOSS~\citep{duong2024beyond} and Jedra~\citep{jedra2024low} are
-stationary low-rank methods. To give them a fair comparison to SPSC
-we restart each at the \emph{true} segment boundaries (an oracle
-advantage we do not give SPSC) and otherwise leave their
-hyperparameters at the authors' recommended defaults. The benchmark
-is piecewise LDS, $K{=}10, T{=}5{,}000, \sigma_\varepsilon{=}0.3$, 40
-actions, 10 seeds, probe cost $c{=}0.1$, on a grid
-$d\in\{55,105,200\}\times r\in\{5,10,20\}$ (eight cells:
+but assume the subspace is fixed, so without segment-aware restarts
+they would fail trivially in the piecewise-stationary setting. To
+isolate the contribution of \emph{online} subspace identification
+rather than mere low-rank exploitation, we provide
+BOSS~\citep{duong2024beyond} and Jedra~\citep{jedra2024low} with the
+true segment boundaries (an oracle advantage SPSC does not receive),
+restart each at every boundary, and otherwise leave their
+hyperparameters at the authors' recommended defaults. The question
+is then whether identifying a \emph{changing} subspace online still
+outperforms exploiting a \emph{fixed} low-rank reward offline, even
+under this oracle advantage. The benchmark is piecewise LDS,
+$K{=}10, T{=}5{,}000, \sigma_\varepsilon{=}0.3$, 40 actions, 10
+seeds, probe cost $c{=}0.1$, on a grid $d\in\{55,105,200\}\times
+r\in\{5,10,20\}$ (eight cells:
 $(55,5),(55,10),(105,5),(105,10),(105,20),(200,5),(200,10),(200,20)$).
 
 Results (cf.\ Table~\ref{tab:boss_jedra_grid}): SPSC Alg.\,1 wins
