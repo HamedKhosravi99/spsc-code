@@ -110,13 +110,13 @@ dynamic-regret rate in this setting.
 \section{Introduction}
 \label{sec:intro}
 
-High-dimensional sequential decisions --- personalized recommendation,
-clinical dosing, ad allocation --- share two structural facts that the
+High-dimensional sequential decisions (personalized recommendation,
+clinical dosing, ad allocation) share two structural facts that the
 linear-bandit literature has so far treated only in isolation: rewards
 live on a low-dimensional latent subspace, and that subspace drifts.
 User preferences, clinical responses, and ad-creative effects occupy
 a thin slice of the ambient $\R^d$ with intrinsic rank $r\ll d$; but
-the slice is \emph{not static} --- tastes drift, cohorts change,
+the slice is \emph{not static}: tastes drift, cohorts change,
 treatment regimes get revised, and the latent factor itself moves
 across unknown change points. Production deployments make both
 facts visible: Spotify's homepage contextual bandit explicitly
@@ -168,8 +168,8 @@ enables. Our results are tight along three axes.
 full-dimensional probe support) are individually necessary in the
 unrestricted-second-moment problem and jointly sufficient for
 recovering $\range(B_k^\star)$ from quadratic functionals of scalar
-rewards. The necessity half --- three matching impossibility results
-(Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}) --- is what
+rewards. The necessity half, three matching impossibility results
+(Propositions~\ref{prop:nonid_a}--\ref{prop:nonid_c}), is what
 distinguishes this from a generic identifiability statement: it
 characterizes the boundary of the solvable region, not just a
 sufficient interior point.
@@ -2562,11 +2562,11 @@ is learned signal.}
 \label{app:boss_jedra_detail}
 
 Low-rank-exploitation methods are the closest baseline class to
-SPSC: they leverage the same rank structure but assume stationarity.
-We therefore ask whether identifying a \emph{changing} subspace
-online (SPSC) outperforms exploiting a \emph{fixed} low-rank reward
-offline, even when the latter is granted oracle segment-boundary
-restarts (the strongest variant of the baseline).
+SPSC: they exploit the same rank structure but assume stationarity.
+The question is whether identifying a \emph{changing} subspace online
+(SPSC) outperforms exploiting a \emph{fixed} low-rank reward offline,
+even when the latter is given oracle segment-boundary restarts (the
+strongest version of the baseline).
 
 BOSS~\citep{duong2024beyond} and Jedra~\citep{jedra2024low} are
 stationary low-rank methods. To give them a fair comparison to SPSC
@@ -2593,11 +2593,11 @@ capability.
 \label{app:vancomycin_full}
 
 The body table reports Vancomycin at a single rank, but the true
-rank of the pharmacokinetic response is unknown a priori. We sweep
-$r$ here to verify that SPSC-Adaptive's advantage is not an artifact
-of a fortuitous rank choice. Setup: $d{=}93$, $K{=}8$,
-$T{=}5{,}000$, $\sigma_\varepsilon{=}0.3$, 10 seeds, probe period
-10, window 200, probe cost $c{=}0.1$ (per-rank breakdown of the
+rank of the pharmacokinetic response is not known in advance. We
+sweep $r$ here to confirm that SPSC-Adaptive's advantage holds
+across rank choices. Setup: $d{=}93$, $K{=}8$, $T{=}5{,}000$,
+$\sigma_\varepsilon{=}0.3$, 10 seeds, probe period 10, window 200,
+probe cost $c{=}0.1$ (per-rank breakdown of the
 Table~\ref{tab:vancomycin_body} summary in the main body).
 SPSC-Adaptive beats every non-oracle baseline at every rank.
 
